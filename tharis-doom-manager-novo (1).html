@@ -585,7 +585,20 @@ function drawMagicCard(canvas,c){
   ctx.clearRect(0,0,w,h);
   // A ilustração ocupa praticamente toda a carta, preservando a proporção.
   if(img){
-   ctx.save();ctx.beginPath();ctx.rect(w*.055,h*.035,w*.89,h*.93);ctx.clip();
+   ctx.save();ctx.beginPath();
+   // Máscara orgânica acompanha o contorno interno das bordas douradas:
+   // cantos superiores curvos e laterais recuadas, sem invadir a moldura.
+   ctx.moveTo(w*.115,h*.045);
+   ctx.bezierCurveTo(w*.082,h*.045,w*.060,h*.075,w*.055,h*.125);
+   ctx.lineTo(w*.050,h*.245);
+   ctx.bezierCurveTo(w*.045,h*.345,w*.052,h*.465,w*.060,h*.555);
+   ctx.bezierCurveTo(w*.066,h*.625,w*.083,h*.675,w*.125,h*.700);
+   ctx.lineTo(w*.875,h*.700);
+   ctx.bezierCurveTo(w*.917,h*.675,w*.934,h*.625,w*.940,h*.555);
+   ctx.bezierCurveTo(w*.948,h*.465,w*.955,h*.345,w*.950,h*.245);
+   ctx.lineTo(w*.945,h*.125);
+   ctx.bezierCurveTo(w*.940,h*.075,w*.918,h*.045,w*.885,h*.045);
+   ctx.closePath();ctx.clip();
    const zoom=Math.max(1,(+c.imageZoom||100)/100);
    const scale=Math.max(w*.89/img.naturalWidth,h*.93/img.naturalHeight)*zoom;
    const dw=img.naturalWidth*scale,dh=img.naturalHeight*scale;
