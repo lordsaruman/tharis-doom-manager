@@ -63,12 +63,12 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
      <div class="field"><label>Raridade / moldura</label><select id="rarity"><option value="Bronze">Bronze</option><option value="Prata">Prata</option><option value="Ouro">Ouro</option><option value="Dark">Dark</option><option value="Esmeralda">Esmeralda</option><option value="Rubi">Rubi</option><option value="Topázio">Topázio</option></select></div>
      <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
      <div class="field"><label>Alinhamento</label><input id="alignment" placeholder="Ex.: Leal e Bom"></div>
-     <div class="field"><label>Traço / atributo</label><input id="trait" placeholder="Ex.: Celestial"></div>
+     <div class="field"><label>Características</label><input id="trait" placeholder="Ex.: Bastião, Celestial, Morto-vivo"></div>
      <div class="field"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
      <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
      <div class="field"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
      <div class="field span2"><label>Habilidades</label><textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea></div>
-     <div class="field span2"><label>Descrição complementar</label><textarea id="description" placeholder="Texto adicional, regras ou detalhes"></textarea></div>
+     <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
      <div class="field span2"><label>Ilustração (PNG, JPG ou WEBP)</label><input id="image" type="file" accept="image/*"><div class="hint">A imagem é incorporada ao registro local da carta.</div></div>
     </div>
@@ -127,75 +127,68 @@ function render(){
 }
 function drawCreatureCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
- // Abertura interna medida pela arte MODELO CRIATURA (420 x 771).
  const ix=w*.061,iy=h*.066,iw=w*.878,ih=h*.622;
- const wrap=(text,x,y,maxWidth,lineHeight,maxLines,font,color)=>{
-  ctx.font=font;ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+ const drawWrapped=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color)=>{
   const words=String(text||'').trim().split(/\s+/).filter(Boolean);
-  const lines=[];let line='';
-  for(const word of words){
-   const test=line?line+' '+word:word;
-   if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}
-   else line=test;
-  }
-  if(line)lines.push(line);
-  if(lines.length>maxLines){
-   lines.length=maxLines;let last=lines[maxLines-1];
-   while(last.length&&ctx.measureText(last+'…').width>maxWidth)last=last.slice(0,-1);
-   lines[maxLines-1]=last+'…';
-  }
-  const firstY=y-((lines.length-1)*lineHeight)/2;
-  lines.forEach((ln,i)=>ctx.fillText(ln,x,firstY+i*lineHeight,maxWidth));
- };
- const paintFrameAndText=()=>{
-  // A moldura PNG contém transparência: não preencher o canvas com preto.
-  if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  const stat=(value,x,y,size)=>{
-   if(value===undefined||value===null||value==='')return;
-   ctx.font='normal '+(w*size)+'px Georgia';ctx.fillStyle='#29231b';
-   ctx.shadowColor='rgba(255,244,216,.8)';ctx.shadowBlur=1;
-   ctx.fillText(String(value),w*x,h*y);
-   ctx.shadowBlur=0;
+  if(!words.length)return;
+  let size=baseSize,lines=[];
+  const makeLines=()=>{
+   lines=[];let line='';
+   for(const word of words){
+    let part=word;
+    if(ctx.measureText(part).width>maxWidth){
+     if(line){lines.push(line);line=''}
+     while(part.length>1&&ctx.measureText(part).width>maxWidth){let cut=part.length;while(cut>1&&ctx.measureText(part.slice(0,cut)).width>maxWidth)cut--;lines.push(part.slice(0,cut));part=part.slice(cut)}
+    }
+    const test=line?line+' '+part:part;
+    if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=part}else line=test;
+   }
+   if(line)lines.push(line);
   };
-  // Centro geométrico das quatro esferas, conforme o modelo enviado.
-  stat(c.life,.50,.041,.076);
-  stat(c.cost??0,.95,.042,.066);
-  stat(c.power,.115,.951,.071);
-  stat(c.defense,.885,.951,.071);
-  // Nome na placa horizontal: serifada, caixa alta e centralizada.
-  ctx.fillStyle='#3b2a19';ctx.shadowColor='rgba(255,238,199,.7)';ctx.shadowBlur=1;
-  ctx.font='normal '+(w*.050)+'px Georgia';
-  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
+  while(size>=minSize){ctx.font='italic '+size+'px Georgia';makeLines();if(lines.length*lineHeight<=maxHeight)break;size-=.5}
+  ctx.save();ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
+  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+  const total=lines.length*lineHeight,first=y-total/2+lineHeight/2;
+  lines.forEach((line,i)=>ctx.fillText(line,x,first+i*lineHeight,maxWidth));
+  ctx.restore();
+ };
+ const paint=()=>{
+  if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
+  const stat=(value,x,y,size)=>{if(value!==undefined&&value!==null&&value!=='') {ctx.font='normal '+(w*size)+'px Georgia';ctx.fillText(String(value),w*x,h*y)}};
+  // Números ampliados para acompanhar o tamanho dos algarismos do MODELO CRIATURA.
+  stat(c.life,.50,.041,.094);
+  stat(c.cost??0,.95,.042,.086);
+  stat(c.power,.115,.951,.091);
+  stat(c.defense,.885,.951,.091);
   ctx.shadowBlur=0;
-  // Característica/facção em itálico, na linha logo abaixo da placa.
-  if(c.trait)wrap(c.trait,w*.5,h*.741,w*.66,h*.023,1,'italic '+(w*.024)+'px Georgia','#4c4030');
-  // Painel inferior: texto centralizado, serifado e em itálico como a amostra.
-  // Reserva o miolo para o emblema ilustrado presente no modelo de referência.
-  const body=[c.effect,c.description].filter(Boolean).join(' ');
-  if(body)wrap(body,w*.5,h*.865,w*.70,h*.026,4,'italic '+(w*.023)+'px Georgia','#35291d');
-  if(c.flavor){
-   // Linha curta inteiramente dentro do painel, acima do flavor e longe da borda inferior.
-   ctx.strokeStyle='rgba(150,112,55,.75)';ctx.lineWidth=Math.max(1,w*.002);
-   ctx.beginPath();ctx.moveTo(w*.23,h*.895);ctx.lineTo(w*.77,h*.895);ctx.stroke();
-   wrap(c.flavor,w*.5,h*.929,w*.70,h*.021,3,'italic '+(w*.021)+'px Georgia','#35291d');
-  }
+  // Nome na faixa de título.
+  ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
+  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
+  // Campo Características: mesma posição visual ocupada por BASTIÃO na referência.
+  if(c.trait)drawWrapped(c.trait,w*.5,h*.741,w*.66,h*.025,w*.024,w*.019,w*.023,'#4c4030');
+  // Habilidades restritas ao painel claro, com quebra automática e ajuste de fonte.
+  // O recorte termina antes da linha dourada que separa o flavor.
+  const abilityTop=h*.765,abilityBottom=h*.872;
+  const abilityHeight=abilityBottom-abilityTop;
+  if(c.effect)drawWrapped(c.effect,w*.5,(abilityTop+abilityBottom)/2,w*.70,abilityHeight,w*.027,w*.017,w*.029,'#35291d');
+  // Divisória dentro da área inferior, sem tocar nas bordas ornamentais.
+  ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
+  ctx.beginPath();ctx.moveTo(w*.23,h*.884);ctx.lineTo(w*.77,h*.884);ctx.stroke();
+  if(c.flavor)drawWrapped(c.flavor,w*.5,h*.929,w*.70,h*.075,w*.021,w*.016,w*.022,'#35291d');
  };
  ctx.clearRect(0,0,w,h);
  if(c.image){
   const img=new Image();
   const drawArt=()=>{
    ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();
-   const z=Math.max(1,(+c.imageZoom||100)/100);
-   const dw=iw*z,dh=ih*z;
-   const dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200;
-   const dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;
-   ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();
-   paintFrameAndText();
+   const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z;
+   const dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;
+   ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();paint();
   };
-  img.onload=drawArt;img.onerror=paintFrameAndText;img.src=c.image;
+  img.onload=drawArt;img.onerror=paint;img.src=c.image;
   if(img.complete&&img.naturalWidth)drawArt();
- }else paintFrameAndText();
+ }else paint();
 }
 function drawMagicCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
