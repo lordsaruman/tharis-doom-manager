@@ -658,11 +658,18 @@ function drawMagicCard(canvas,c){
   drawFit(c.effect||'',w*.5,h*.765,w*.76,h*.087,w*.030,w*.017,'#f2e6d0');
   // Flavor fecha a composição na parte inferior.
   drawFit(c.flavor||'',w*.5,h*.866,w*.72,h*.078,w*.024,w*.014,'#d8c7a8',true);
-  // Moldura ornamental aplicada por cima da arte, sem a antiga divisão central.
+  // Reaplica os elementos originais do Molde Magias por cima da ilustração.
+  // As faixas laterais preservam arabescos e bordas; a faixa central mantém
+  // a coluna dourada original; topo e base recuperam os ornamentos da moldura.
   if(magicFrame.complete&&magicFrame.naturalWidth){
    ctx.save();
-   [[0,0,w,h*.075],[0,h*.925,w,h*.075],[0,0,w*.105,h],[w*.895,0,w*.105,h]].forEach(([x,y,pw,ph])=>{
-    ctx.save();ctx.beginPath();ctx.rect(x,y,pw,ph);ctx.clip();ctx.drawImage(magicFrame,0,0,w,h);ctx.restore();
+   [
+    [0,0,w*.125,h], [w*.875,0,w*.125,h],
+    [w*.425,h*.035,w*.15,h*.665],
+    [0,0,w,h*.105], [0,h*.925,w,h*.075]
+   ].forEach(([x,y,pw,ph])=>{
+    ctx.save();ctx.beginPath();ctx.rect(x,y,pw,ph);ctx.clip();
+    ctx.drawImage(magicFrame,0,0,w,h);ctx.restore();
    });
    ctx.restore();
   }else{
