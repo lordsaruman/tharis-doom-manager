@@ -112,7 +112,17 @@ Object.values({...alignmentInsignias,...factionInsignias,factionSheet:factionIns
 
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
-function persist(){localStorage.setItem(KEY,JSON.stringify(cards));render()}
+function persist(){
+ try{localStorage.setItem(KEY,JSON.stringify(cards));render();return true}
+ catch(error){
+  console.error('Falha ao salvar cartas no armazenamento local:',error);
+  const quota=error?.name==='QuotaExceededError'||error?.name==='NS_ERROR_DOM_QUOTA_REACHED';
+  alert(quota
+   ?'Não foi possível salvar: o armazenamento deste navegador está cheio. Exporte/guarde suas cartas e remova dados ou imagens grandes para liberar espaço.'
+   :'Não foi possível salvar as cartas neste navegador. Verifique as permissões de armazenamento e tente novamente.');
+  return false;
+ }
+}
 function sigil(faction,size=20){
  const cel=faction==='Monte Celéstia', baa=faction==='Baator';
  if(!cel&&!baa)return `<span class="sigil" style="width:${size}px;height:${size}px;font-size:${size*.55}px">✦</span>`;
@@ -310,7 +320,15 @@ function openEditor(c=null){
  Object.keys(vals).forEach(k=>{const el=$(k),value=c?.[k]??vals[k];if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
 function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
-function save(){const c=collect();if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');$('image').focus();return}const i=cards.findIndex(x=>x.id===c.id);if(i>=0)cards[i]=c;else cards.push(c);persist();$('modal').classList.remove('open')}
+function save(){
+ const c=collect();
+ if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}
+ if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');$('image').focus();return}
+ const previous=cards.slice(),i=cards.findIndex(x=>x.id===c.id);
+ if(i>=0)cards[i]=c;else cards.push(c);
+ if(persist())$('modal').classList.remove('open');
+ else cards=previous;
+}
 async function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;if(c.creationMode==='ready'){const readyImg=new Image();readyImg.onload=()=>{const ctx=cv.getContext('2d');ctx.fillStyle='#09090c';ctx.fillRect(0,0,cv.width,cv.height);const scale=Math.min(cv.width/readyImg.width,cv.height/readyImg.height),dw=readyImg.width*scale,dh=readyImg.height*scale;ctx.drawImage(readyImg,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\\w\\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()};readyImg.src=c.image;return}const waitForImage=src=>new Promise(resolve=>{if(!src)return resolve();const img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;if(img.complete)resolve()});await Promise.all([waitForImage(c.image),waitForImage(c.type==='Magias'?'Molde%20Magias.png':c.type==='Criatura'?'Modelo%20Carta%20Ouro.png':'')]);drawCard(cv,c);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('creationMode').addEventListener('change',updateCreationMode);$('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtn').onclick=save;$('pngBtn').onclick=exportPNG;
 $('deleteBtn').onclick=()=>{if(editingId&&confirm('Excluir esta carta?')){cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}};
