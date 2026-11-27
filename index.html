@@ -580,30 +580,28 @@ function drawCreatureCard(canvas,c){
 }
 function drawMagicCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
- ctx.clearRect(0,0,w,h);
  const drawLayout=img=>{
   ctx.clearRect(0,0,w,h);
-  // A ilustração ocupa praticamente toda a carta, preservando a proporção.
+  ctx.fillStyle='#08090d';ctx.fillRect(0,0,w,h);
+  // Ilustração dentro da abertura interna, com margem generosa para não
+  // recortar os arabescos dourados do molde original.
   if(img){
    ctx.save();ctx.beginPath();
-   // Máscara orgânica acompanha o contorno interno das bordas douradas:
-   // cantos superiores curvos e laterais recuadas, sem invadir a moldura.
-   ctx.moveTo(w*.115,h*.045);
-   ctx.bezierCurveTo(w*.082,h*.045,w*.060,h*.075,w*.055,h*.125);
-   ctx.lineTo(w*.050,h*.245);
-   ctx.bezierCurveTo(w*.045,h*.345,w*.052,h*.465,w*.060,h*.555);
-   ctx.bezierCurveTo(w*.066,h*.625,w*.083,h*.675,w*.125,h*.700);
-   ctx.lineTo(w*.875,h*.700);
-   ctx.bezierCurveTo(w*.917,h*.675,w*.934,h*.625,w*.940,h*.555);
-   ctx.bezierCurveTo(w*.948,h*.465,w*.955,h*.345,w*.950,h*.245);
-   ctx.lineTo(w*.945,h*.125);
-   ctx.bezierCurveTo(w*.940,h*.075,w*.918,h*.045,w*.885,h*.045);
+   ctx.moveTo(w*.105,h*.025);
+   ctx.bezierCurveTo(w*.055,h*.025,w*.028,h*.065,w*.028,h*.13);
+   ctx.lineTo(w*.025,h*.78);
+   ctx.bezierCurveTo(w*.025,h*.91,w*.065,h*.975,w*.13,h*.975);
+   ctx.lineTo(w*.87,h*.975);
+   ctx.bezierCurveTo(w*.935,h*.975,w*.975,h*.91,w*.975,h*.78);
+   ctx.lineTo(w*.972,h*.13);
+   ctx.bezierCurveTo(w*.972,h*.065,w*.945,h*.025,w*.895,h*.025);
    ctx.closePath();ctx.clip();
    const zoom=Math.max(1,(+c.imageZoom||100)/100);
-   const scale=Math.max(w*.89/img.naturalWidth,h*.93/img.naturalHeight)*zoom;
+   const baseW=w*.95,baseH=h*.95;
+   const scale=Math.max(baseW/img.naturalWidth,baseH/img.naturalHeight)*zoom;
    const dw=img.naturalWidth*scale,dh=img.naturalHeight*scale;
-   const dx=w*.055+(w*.89-dw)/2+(+c.imageX||0)*(dw-w*.89)/200;
-   const dy=h*.035+(h*.93-dh)/2+(+c.imageY||0)*(dh-h*.93)/200;
+   const dx=(w-dw)/2+(+c.imageX||0)*(dw-baseW)/200;
+   const dy=(h-dh)/2+(+c.imageY||0)*(dh-baseH)/200;
    ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();
   }else{
    const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,'#292b34');bg.addColorStop(1,'#090b10');
@@ -611,17 +609,44 @@ function drawMagicCard(canvas,c){
    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#bca777';ctx.font=(w*.05)+'px Georgia';
    ctx.fillText('ILUSTRAÇÃO',w*.5,h*.43);
   }
-  // Faixa inferior escura e translúcida: mantém a arte visível por trás.
-  const top=h*.695,bottom=h*.968;
+  // Escurecimento leve e translúcido somente atrás dos textos; não há
+  // retângulo opaco e a ilustração continua visível.
+  const top=h*.695,bottom=h*.958;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
-  shade.addColorStop(0,'rgba(7,8,12,.30)');
-  shade.addColorStop(.12,'rgba(7,8,12,.78)');
-  shade.addColorStop(1,'rgba(5,6,10,.88)');
-  ctx.fillStyle=shade;ctx.fillRect(w*.065,top,w*.87,bottom-top);
-  // Filetes discretos para separar a área de texto da ilustração.
-  ctx.strokeStyle='rgba(211,174,105,.48)';ctx.lineWidth=Math.max(1,w*.002);
-  ctx.beginPath();ctx.moveTo(w*.16,top+h*.006);ctx.lineTo(w*.84,top+h*.006);ctx.stroke();
-  ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle='#f3d58f';
+  shade.addColorStop(0,'rgba(5,6,10,0)');
+  shade.addColorStop(.20,'rgba(5,6,10,.20)');
+  shade.addColorStop(.55,'rgba(5,6,10,.34)');
+  shade.addColorStop(1,'rgba(5,6,10,.43)');
+  ctx.save();
+  ctx.beginPath();ctx.moveTo(w*.15,top);ctx.lineTo(w*.85,top);
+  ctx.lineTo(w*.85,bottom);ctx.lineTo(w*.15,bottom);ctx.closePath();ctx.clip();
+  ctx.fillStyle=shade;ctx.fillRect(w*.12,top,w*.76,bottom-top);
+  ctx.restore();
+
+  // A própria imagem Molde Magias é desenhada inteira por cima. O preto
+  // é convertido em transparência por pixel, mantendo os dourados,
+  // brilhos, coluna central e demais detalhes originais sem recortes.
+  if(magicFrame.complete&&magicFrame.naturalWidth){
+   const overlay=document.createElement('canvas');overlay.width=w;overlay.height=h;
+   const ox=overlay.getContext('2d',{willReadFrequently:true});
+   ox.drawImage(magicFrame,0,0,w,h);
+   const pixels=ox.getImageData(0,0,w,h),d=pixels.data;
+   for(let k=0;k<d.length;k+=4){
+    const r=d[k],g=d[k+1],b=d[k+2],hi=Math.max(r,g,b),lo=Math.min(r,g,b);
+    const chroma=hi-lo;
+    const lum=.2126*r+.7152*g+.0722*b;
+    // Remove o fundo preto/cinza escuro; preserva pixels coloridos
+    // dos arabescos, inclusive sombras douradas e detalhes metálicos.
+    let alpha=Math.max(0,Math.min(1,(lum-9)/54));
+    if(chroma>24)alpha=Math.max(alpha,Math.min(1,(chroma-12)/42));
+    d[k+3]=Math.round(d[k+3]*alpha);
+   }
+   ox.putImageData(pixels,0,0);
+   ctx.drawImage(overlay,0,0);
+  }else{
+   ctx.strokeStyle='#c99b4e';ctx.lineWidth=Math.max(3,w*.012);ctx.strokeRect(w*.025,h*.012,w*.95,h*.976);
+  }
+
   const wrapLines=(text,font,maxWidth)=>{
    ctx.font=font;const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n'),lines=[];
    paragraphs.forEach(p=>{
@@ -639,47 +664,24 @@ function drawMagicCard(canvas,c){
    if(!text)return;
    let size=startSize,lines=[];
    while(size>=minSize){
-    const font=(italic?'italic ':'')+size+'px Georgia';
-    lines=wrapLines(text,font,maxWidth);
-    const lineH=size*1.24;
-    if(lines.length*lineH<=maxHeight)break;
+    lines=wrapLines(text,(italic?'italic ':'')+size+'px Georgia',maxWidth);
+    if(lines.length*size*1.24<=maxHeight)break;
     size-=.5;
    }
-   ctx.font=(italic?'italic ':'')+Math.max(minSize,size)+'px Georgia';
+   size=Math.max(minSize,size);ctx.font=(italic?'italic ':'')+size+'px Georgia';
    ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='top';
-   const lineH=Math.max(minSize,size)*1.24;
-   const total=lines.length*lineH;
+   const lineH=size*1.24,total=lines.length*lineH;
    let yy=y+(maxHeight-total)/2;
    lines.forEach(line=>{if(line)ctx.fillText(line,x,yy,maxWidth);yy+=lineH});
   };
-  // Nome na primeira linha da faixa inferior.
-  drawFit(String(c.name||'NOVA MAGIA').toUpperCase(),w*.5,h*.718,w*.76,h*.038,w*.047,w*.027,'#f1d18a');
-  // Efeito logo abaixo do nome, com redução automática para caber.
-  drawFit(c.effect||'',w*.5,h*.765,w*.76,h*.087,w*.030,w*.017,'#f2e6d0');
-  // Flavor fecha a composição na parte inferior.
-  drawFit(c.flavor||'',w*.5,h*.866,w*.72,h*.078,w*.024,w*.014,'#d8c7a8',true);
-  // Reaplica os elementos originais do Molde Magias por cima da ilustração.
-  // As faixas laterais preservam arabescos e bordas; a faixa central mantém
-  // a coluna dourada original; topo e base recuperam os ornamentos da moldura.
-  if(magicFrame.complete&&magicFrame.naturalWidth){
-   ctx.save();
-   [
-    [0,0,w*.125,h], [w*.875,0,w*.125,h],
-    [w*.425,h*.035,w*.15,h*.665],
-    [0,0,w,h*.105], [0,h*.925,w,h*.075]
-   ].forEach(([x,y,pw,ph])=>{
-    ctx.save();ctx.beginPath();ctx.rect(x,y,pw,ph);ctx.clip();
-    ctx.drawImage(magicFrame,0,0,w,h);ctx.restore();
-   });
-   ctx.restore();
-  }else{
-   ctx.strokeStyle='#c99b4e';ctx.lineWidth=Math.max(3,w*.012);ctx.strokeRect(w*.025,h*.012,w*.95,h*.976);
-  }
-  // Custo na esfera superior direita e alinhamento no pequeno medalhão abaixo.
+  drawFit(String(c.name||'NOVA MAGIA').toUpperCase(),w*.5,h*.718,w*.70,h*.038,w*.047,w*.027,'#f1d18a');
+  drawFit(c.effect||'',w*.5,h*.765,w*.70,h*.087,w*.030,w*.017,'#f2e6d0');
+  drawFit(c.flavor||'',w*.5,h*.866,w*.68,h*.078,w*.024,w*.014,'#d8c7a8',true);
+
+  // Custo e alinhamento continuam nos medalhões originais do modelo.
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff1c9';
   ctx.font='bold '+(w*.064)+'px Georgia';ctx.shadowColor='#000';ctx.shadowBlur=3;
-  ctx.fillText(String(c.cost??0),w*.947,h*.035);
-  ctx.shadowBlur=0;
+  ctx.fillText(String(c.cost??0),w*.947,h*.035);ctx.shadowBlur=0;
   const alignImg=alignmentInsignias[c.alignment];
   if(alignImg&&alignImg.complete&&alignImg.naturalWidth){
    ctx.save();ctx.beginPath();ctx.arc(w*.947,h*.115,w*.032,0,Math.PI*2);ctx.clip();
