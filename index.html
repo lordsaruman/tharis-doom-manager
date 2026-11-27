@@ -273,6 +273,56 @@ footer:before{
  .inspector-card-frame{width:min(78%,320px)}
 }
 
+
+
+/* BIBLIOTECA · ALINHAMENTO E CONTENÇÃO DOS ATRIBUTOS */
+.library-workspace>.grid .cardtile{
+ display:flex;flex-direction:column;min-width:0;align-items:stretch;
+}
+.library-workspace>.grid .tile-title{
+ min-height:2.5em;display:flex;align-items:center;justify-content:center;
+ text-align:center;overflow-wrap:anywhere;
+}
+.library-workspace>.grid .tile-meta{
+ min-height:1.5em;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+ align-items:center;gap:4px;text-align:center;
+}
+.library-workspace>.grid .tile-meta span{
+ min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.library-workspace>.grid .tile-stats{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ align-items:stretch;gap:3px;width:100%;
+}
+.library-workspace>.grid .tile-stats span{
+ min-width:0;min-height:43px;box-sizing:border-box;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ padding:4px 1px;overflow:hidden;
+}
+.library-workspace>.grid .tile-stats small{
+ width:100%;font-size:clamp(6px,1.8vw,8px);line-height:1.15;
+ text-align:center;white-space:nowrap;letter-spacing:0;
+}
+.library-workspace>.grid .tile-stats b{
+ display:block;max-width:100%;font-size:clamp(9px,2.5vw,12px);
+ line-height:1.2;text-align:center;font-variant-numeric:tabular-nums;
+ white-space:normal;overflow-wrap:anywhere;word-break:break-word;
+}
+.library-workspace>.grid .faction-line{
+ display:flex;align-items:center;justify-content:flex-start;gap:6px;
+ min-width:0;min-height:27px;margin-top:auto;padding-top:7px;
+}
+.library-workspace>.grid .faction-line .sigil{width:19px;height:19px;flex:0 0 19px}
+.library-workspace>.grid .faction-line>span:last-child{
+ min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.inspector-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+.inspector-stats span{min-width:0;overflow:hidden}
+.inspector-stats b{
+ max-width:100%;font-size:clamp(10px,3vw,17px);overflow-wrap:anywhere;
+ text-align:center;line-height:1.2;
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
