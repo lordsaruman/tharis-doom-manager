@@ -164,7 +164,7 @@ function drawCreatureCard(canvas,c){
    if(!fitToBox||lines.length*actualLineHeight<=maxHeight||size<=minSize)break;
    size=Math.max(minSize,size-.25);
   }
-  if(fitToBox)actualLineHeight=Math.min(maxHeight/Math.max(1,lines.length),Math.max(actualLineHeight,size*1.25));
+  if(fitToBox)actualLineHeight=Math.min(maxHeight/Math.max(1,lines.length),Math.max(actualLineHeight,size*1.10));
   ctx.save();
   ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
   ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;
@@ -194,7 +194,7 @@ function drawCreatureCard(canvas,c){
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
   ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();
   // Flavor limitado à faixa inferior interna; mantém quebras de parágrafo.
-  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.50,h*.060,w*.029,w*.019,h*.023,'#35291d',true);
+  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.50,h*.060,w*.027,w*.018,h*.020,'#35291d',true);
  };
  ctx.clearRect(0,0,w,h);
  if(c.image){
