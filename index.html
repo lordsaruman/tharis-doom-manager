@@ -361,7 +361,7 @@ footer:before{
      <div class="field"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
      <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
      <div class="field"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
-     <div class="field span2"><label>Habilidades</label><textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea></div>
+     <div class="field span2"><label id="effectLabel">Habilidades</label><textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea></div>
      <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
      <div class="field span2"><label id="imageLabel">Ilustração (PNG, JPG ou WEBP)</label><input id="image" type="file" accept="image/*"><div class="hint" id="imageHint">A imagem é incorporada ao registro local da carta.</div></div>
@@ -598,15 +598,16 @@ function drawMagicCard(canvas,c){
    ctx.font=(w*.05)+'px Georgia';ctx.fillText('ILUSTRAÇÃO',w*.5,h*.43);
   }
 
-  // Sombra sutil e translúcida para leitura, aplicada antes do molde.
-  // Assim nenhum detalhe dourado do PNG recebe uma camada escura por cima.
-  const top=h*.715,bottom=h*.955;
+  // Degradê escuro e translúcido em toda a largura da ilustração,
+  // começando na altura do nome e aumentando suavemente até a base.
+  // É pintado antes do molde para manter todos os ornamentos dourados intactos.
+  const top=h*.665,bottom=h*.985;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
   shade.addColorStop(0,'rgba(5,6,10,0)');
-  shade.addColorStop(.18,'rgba(5,6,10,.12)');
-  shade.addColorStop(.55,'rgba(5,6,10,.27)');
-  shade.addColorStop(1,'rgba(5,6,10,.38)');
-  ctx.fillStyle=shade;ctx.fillRect(w*.13,top,w*.74,bottom-top);
+  shade.addColorStop(.18,'rgba(5,6,10,.10)');
+  shade.addColorStop(.48,'rgba(5,6,10,.24)');
+  shade.addColorStop(1,'rgba(5,6,10,.42)');
+  ctx.fillStyle=shade;ctx.fillRect(w*.075,top,w*.85,bottom-top);
 
   // Usa o arquivo Molde Magias.png integralmente, sem recortar,
   // remover pixels pretos, alterar transparência ou redesenhar ornamentos.
@@ -645,7 +646,7 @@ function drawMagicCard(canvas,c){
   };
   // Composição inferior: nome, efeito e flavor.
   drawFit(String(c.name||'NOVA MAGIA').toUpperCase(),w*.5,h*.718,w*.70,h*.038,w*.047,w*.027,'#f1d18a');
-  drawFit(c.effect||'',w*.5,h*.765,w*.70,h*.087,w*.030,w*.017,'#f2e6d0');
+  drawFit(c.effect||'',w*.5,h*.765,w*.70,h*.087,w*.030,w*.017,'#f1d18a');
   drawFit(c.flavor||'',w*.5,h*.866,w*.68,h*.078,w*.024,w*.014,'#d8c7a8',true);
 
   // Custo e alinhamento nos espaços previstos no molde.
@@ -688,11 +689,12 @@ function drawCard(canvas,c){
  if(c.faction==='Monte Celéstia'||c.faction==='Baator'){ctx.beginPath();ctx.arc(w*.88,h*.075,w*.035,0,Math.PI*2);ctx.fillStyle='#15151b';ctx.fill();ctx.strokeStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.stroke();ctx.fillStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.font='bold '+(w*.045)+'px Georgia';ctx.textAlign='center';ctx.fillText(c.faction==='Baator'?'⌁':'✧',w*.88,h*.091)}
 }
 function updateCreationMode(){const ready=$('creationMode').value==='ready';$('cropControls').style.display=ready?'none':'grid';$('imageLabel').textContent=ready?'Imagem completa da carta (PNG, JPG ou WEBP)':'Ilustração (PNG, JPG ou WEBP)';$('imageHint').textContent=ready?'Envie a imagem final da carta. Os campos preenchidos ficam apenas como dados de cadastro e não alteram a imagem.':(cloudUser?'A imagem será armazenada no Supabase Storage.':'A imagem fica incorporada ao registro local até conectar sua conta.');drawCard($('preview'),collect())}
+function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLabel').textContent=magic?'Efeito':'Habilidades';$('effect').placeholder=magic?'Descreva o efeito da magia':'Habilidades e efeitos da carta'}
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
  const vals={creationMode:'normal',name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
- Object.keys(vals).forEach(k=>{const el=$(k),value=c?.[k]??vals[k];if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
+ Object.keys(vals).forEach(k=>{const el=$(k),value=c?.[k]??vals[k];if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
 function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 async function save(){
@@ -717,7 +719,7 @@ async function save(){
  if(persist())$('modal').classList.remove('open');else cards=previous;
 }
 async function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;if(c.creationMode==='ready'){const readyImg=new Image();readyImg.onload=()=>{const ctx=cv.getContext('2d');ctx.fillStyle='#09090c';ctx.fillRect(0,0,cv.width,cv.height);const scale=Math.min(cv.width/readyImg.width,cv.height/readyImg.height),dw=readyImg.width*scale,dh=readyImg.height*scale;ctx.drawImage(readyImg,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\\w\\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()};readyImg.src=c.image;return}const waitForImage=src=>new Promise(resolve=>{if(!src)return resolve();const img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;if(img.complete)resolve()});await Promise.all([waitForImage(c.image),waitForImage(c.type==='Magias'?'Molde%20Magias.png':c.type==='Criatura'?'Modelo%20Carta%20Ouro.png':'')]);drawCard(cv,c);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
-$('creationMode').addEventListener('change',updateCreationMode);$('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtn').onclick=save;$('pngBtn').onclick=exportPNG;
+$('creationMode').addEventListener('change',updateCreationMode);$('type').addEventListener('change',updateEffectLabel);$('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtn').onclick=save;$('pngBtn').onclick=exportPNG;
 
 $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))return;
  if(cloudUser){const c=cards.find(x=>x.id===editingId);try{const {error}=await sb.from('cards').delete().eq('id',editingId);if(error)throw error;if(c?.imagePath)await sb.storage.from('tharis-cartas').remove([c.imagePath]);cards=cards.filter(x=>x.id!==editingId);render();$('modal').classList.remove('open')}catch(error){alert('Não foi possível excluir online: '+error.message)}}
