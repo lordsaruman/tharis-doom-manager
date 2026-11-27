@@ -601,12 +601,13 @@ function drawMagicCard(canvas,c){
   // Degradê escuro e translúcido em toda a largura da ilustração,
   // começando na altura do nome e aumentando suavemente até a base.
   // É pintado antes do molde para manter todos os ornamentos dourados intactos.
-  const top=h*.665,bottom=h*.985;
+  const top=h*.655,bottom=h*.985;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
   shade.addColorStop(0,'rgba(5,6,10,0)');
-  shade.addColorStop(.18,'rgba(5,6,10,.10)');
-  shade.addColorStop(.48,'rgba(5,6,10,.24)');
-  shade.addColorStop(1,'rgba(5,6,10,.42)');
+  shade.addColorStop(.12,'rgba(5,6,10,.16)');
+  shade.addColorStop(.38,'rgba(5,6,10,.34)');
+  shade.addColorStop(.70,'rgba(5,6,10,.52)');
+  shade.addColorStop(1,'rgba(5,6,10,.66)');
   ctx.fillStyle=shade;ctx.fillRect(w*.075,top,w*.85,bottom-top);
 
   // Usa o arquivo Molde Magias.png integralmente, sem recortar,
@@ -615,40 +616,57 @@ function drawMagicCard(canvas,c){
    ctx.drawImage(magicFrame,0,0,w,h);
   }
 
-  const wrapLines=(text,font,maxWidth)=>{
-   ctx.font=font;
-   const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n'),lines=[];
-   paragraphs.forEach(p=>{
-    if(!p.trim()){lines.push('');return}
+  const drawRichText=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color,fitToBox=false)=>{
+  const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
+  if(!paragraphs.some(p=>p.trim()))return;
+  let size=baseSize,lines=[];
+  const build=()=>{
+   lines=[];
+   paragraphs.forEach(paragraph=>{
+    const words=paragraph.split(/\s+/).filter(Boolean);
+    if(!words.length){lines.push('');return}
     let line='';
-    p.trim().split(/\s+/).forEach(word=>{
-     const test=line?line+' '+word:word;
-     if(line&&ctx.measureText(test).width>maxWidth){lines.push(line);line=word}else line=test;
+    words.forEach(word=>{
+     let piece=word;
+     if(ctx.measureText(piece).width>maxWidth){
+      if(line){lines.push(line);line=''}
+      while(piece.length>1&&ctx.measureText(piece).width>maxWidth){
+       let cut=piece.length;
+       while(cut>1&&ctx.measureText(piece.slice(0,cut)).width>maxWidth)cut--;
+       lines.push(piece.slice(0,cut));piece=piece.slice(cut);
+      }
+     }
+     const candidate=line?line+' '+piece:piece;
+     if(ctx.measureText(candidate).width>maxWidth&&line){lines.push(line);line=piece}else line=candidate;
     });
     if(line)lines.push(line);
    });
-   return lines;
   };
-  const drawFit=(text,x,y,maxWidth,maxHeight,startSize,minSize,color,italic=false)=>{
-   if(!text)return;
-   let size=startSize,lines=[];
-   while(size>=minSize){
-    lines=wrapLines(text,(italic?'italic ':'')+size+'px Georgia',maxWidth);
-    if(lines.length*size*1.24<=maxHeight)break;
-    size-=.5;
-   }
-   size=Math.max(minSize,size);
-   ctx.font=(italic?'italic ':'')+size+'px Georgia';
-   ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='top';
-   const lineH=size*1.24,total=lines.length*lineH;
-   let yy=y+(maxHeight-total)/2;
-   lines.forEach(line=>{if(line)ctx.fillText(line,x,yy,maxWidth);yy+=lineH});
-  };
-  // Composição inferior: nome, efeito e flavor.
-  drawFit(String(c.name||'NOVA MAGIA').toUpperCase(),w*.5,h*.718,w*.70,h*.038,w*.047,w*.027,'#f1d18a');
-  drawFit(c.effect||'',w*.5,h*.765,w*.70,h*.087,w*.030,w*.017,'#f1d18a');
-  drawFit(c.flavor||'',w*.5,h*.866,w*.68,h*.078,w*.024,w*.014,'#d8c7a8',true);
-
+  let actualLineHeight=lineHeight;
+  while(true){
+   ctx.font='italic '+size+'px Georgia';
+   build();
+   actualLineHeight=fitToBox?Math.min(lineHeight,maxHeight/Math.max(1,lines.length)):lineHeight;
+   if(!fitToBox||lines.length*actualLineHeight<=maxHeight||size<=minSize)break;
+   size=Math.max(minSize,size-.25);
+  }
+  if(fitToBox)actualLineHeight=Math.min(maxHeight/Math.max(1,lines.length),Math.max(actualLineHeight,size*1.10));
+  ctx.save();
+  ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
+  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const total=Math.min(lines.length*actualLineHeight,maxHeight),first=y-total/2+actualLineHeight/2;
+  lines.forEach((line,i)=>{if(line&&i*actualLineHeight<maxHeight)ctx.fillText(line,x,first+i*actualLineHeight,maxWidth)});
+  ctx.restore();
+ };
+ // Efeito e ambientação usam a mesma lógica de quebra, fonte e ajuste
+ // empregada nas habilidades e no flavor das cartas de criatura.
+ if(c.effect)drawRichText(c.effect,w*.5,h*.809,w*.70,h*.087,w*.037,w*.018,h*.027,'#f1d18a',true);
+ // Divisória dourada entre o efeito e o texto de ambientação.
+ ctx.save();ctx.strokeStyle='rgba(201,164,92,.95)';ctx.lineWidth=Math.max(1.5,w*.0025);
+ ctx.shadowColor='rgba(201,164,92,.45)';ctx.shadowBlur=3;
+ ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();ctx.restore();
+ if(c.flavor)drawRichText(c.flavor,w*.5,h*.926,w*.50,h*.070,w*.024,w*.016,h*.018,'#d8c7a8',true);
   // Custo e alinhamento nos espaços previstos no molde.
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff1c9';
   ctx.font='bold '+(w*.064)+'px Georgia';ctx.shadowColor='#000';ctx.shadowBlur=3;
