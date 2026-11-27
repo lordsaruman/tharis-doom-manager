@@ -128,62 +128,82 @@ function render(){
 function drawCreatureCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
  const ix=w*.061,iy=h*.066,iw=w*.878,ih=h*.622;
- const drawWrapped=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color)=>{
-  const words=String(text||'').trim().split(/\s+/).filter(Boolean);
-  if(!words.length)return;
+ // Quebra linhas respeitando linhas e parágrafos digitados no campo.
+ const drawRichText=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color)=>{
+  const paragraphs=String(text||'').replace(/\r/g,'').split('\n');
+  if(!paragraphs.some(p=>p.trim()))return;
   let size=baseSize,lines=[];
-  const makeLines=()=>{
-   lines=[];let line='';
-   for(const word of words){
-    let part=word;
-    if(ctx.measureText(part).width>maxWidth){
-     if(line){lines.push(line);line=''}
-     while(part.length>1&&ctx.measureText(part).width>maxWidth){let cut=part.length;while(cut>1&&ctx.measureText(part.slice(0,cut)).width>maxWidth)cut--;lines.push(part.slice(0,cut));part=part.slice(cut)}
-    }
-    const test=line?line+' '+part:part;
-    if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=part}else line=test;
-   }
-   if(line)lines.push(line);
+  const build=()=>{
+   lines=[];
+   paragraphs.forEach((paragraph,index)=>{
+    const words=paragraph.trim().split(/\s+/).filter(Boolean);
+    if(!words.length){lines.push('');return}
+    let line='';
+    words.forEach(word=>{
+     let piece=word;
+     if(ctx.measureText(piece).width>maxWidth){
+      if(line){lines.push(line);line=''}
+      while(piece.length>1&&ctx.measureText(piece).width>maxWidth){
+       let cut=piece.length;
+       while(cut>1&&ctx.measureText(piece.slice(0,cut)).width>maxWidth)cut--;
+       lines.push(piece.slice(0,cut));piece=piece.slice(cut);
+      }
+     }
+     const candidate=line?line+' '+piece:piece;
+     if(ctx.measureText(candidate).width>maxWidth&&line){lines.push(line);line=piece}else line=candidate;
+    });
+    if(line)lines.push(line);
+    if(index<paragraphs.length-1)lines.push('');
+   });
   };
-  while(size>=minSize){ctx.font='italic '+size+'px Georgia';makeLines();if(lines.length*lineHeight<=maxHeight)break;size-=.5}
-  ctx.save();ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
-  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+  while(size>minSize){
+   ctx.font='italic '+size+'px Georgia';build();
+   const height=lines.length*lineHeight;
+   if(height<=maxHeight)break;
+   size=Math.max(minSize,size-.5);
+  }
+  ctx.save();
+  ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
+  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;
+  ctx.textAlign='center';ctx.textBaseline='middle';
   const total=lines.length*lineHeight,first=y-total/2+lineHeight/2;
-  lines.forEach((line,i)=>ctx.fillText(line,x,first+i*lineHeight,maxWidth));
+  lines.forEach((line,i)=>{if(line)ctx.fillText(line,x,first+i*lineHeight,maxWidth)});
   ctx.restore();
  };
  const paint=()=>{
   if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
-  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
-  const stat=(value,x,y,size)=>{if(value!==undefined&&value!==null&&value!=='') {ctx.font='normal '+(w*size)+'px Georgia';ctx.fillText(String(value),w*x,h*y)}};
-  // Números ampliados para acompanhar o tamanho dos algarismos do MODELO CRIATURA.
-  stat(c.life,.50,.041,.094);
-  stat(c.cost??0,.95,.042,.086);
-  stat(c.power,.115,.951,.091);
-  stat(c.defense,.885,.951,.091);
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';
+  ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
+  const stat=(value,x,y,size)=>{if(value!==undefined&&value!==null&&value!==''){ctx.font='normal '+(w*size)+'px Georgia';ctx.fillText(String(value),w*x,h*y)}};
+  // Números maiores; custo ligeiramente elevado para o centro vertical da esfera.
+  stat(c.life,.50,.041,.105);
+  stat(c.cost??0,.95,.036,.090);
+  stat(c.power,.115,.941,.105);
+  stat(c.defense,.885,.941,.105);
   ctx.shadowBlur=0;
-  // Nome na faixa de título.
   ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
-  // Campo Características: mesma posição visual ocupada por BASTIÃO na referência.
-  if(c.trait)drawWrapped(c.trait,w*.5,h*.741,w*.66,h*.025,w*.024,w*.019,w*.023,'#4c4030');
-  // Habilidades restritas ao painel claro, com quebra automática e ajuste de fonte.
-  // O recorte termina antes da linha dourada que separa o flavor.
+  if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.66,h*.025,w*.024,w*.019,w*.023,'#4c4030');
+  // Habilidades: painel central claro, com margens internas e parágrafos preservados.
   const abilityTop=h*.765,abilityBottom=h*.872;
-  const abilityHeight=abilityBottom-abilityTop;
-  if(c.effect)drawWrapped(c.effect,w*.5,(abilityTop+abilityBottom)/2,w*.70,abilityHeight,w*.027,w*.017,w*.029,'#35291d');
-  // Divisória dentro da área inferior, sem tocar nas bordas ornamentais.
+  if(c.effect)drawRichText(c.effect,w*.5,(abilityTop+abilityBottom)/2,w*.66,abilityBottom-abilityTop,w*.029,w*.018,w*.030,'#35291d');
+  // Linha divisória dentro da área branca e afastada da moldura.
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
-  ctx.beginPath();ctx.moveTo(w*.23,h*.884);ctx.lineTo(w*.77,h*.884);ctx.stroke();
-  if(c.flavor)drawWrapped(c.flavor,w*.5,h*.929,w*.70,h*.075,w*.021,w*.016,w*.022,'#35291d');
+  ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();
+  // Flavor limitado à faixa inferior interna; mantém quebras de parágrafo.
+  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.62,h*.068,w*.023,w*.017,w*.024,'#35291d');
  };
  ctx.clearRect(0,0,w,h);
  if(c.image){
   const img=new Image();
   const drawArt=()=>{
+   // Cover sem deformar: mantém a proporção original e preenche a janela de ilustração.
    ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();
-   const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z;
-   const dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;
+   const zoom=Math.max(1,(+c.imageZoom||100)/100);
+   const scale=Math.max(iw/img.naturalWidth,ih/img.naturalHeight)*zoom;
+   const dw=img.naturalWidth*scale,dh=img.naturalHeight*scale;
+   const dx=ix+(iw-dw)/2+(+c.imageX||0)*(dw-iw)/200;
+   const dy=iy+(ih-dh)/2+(+c.imageY||0)*(dh-ih)/200;
    ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();paint();
   };
   img.onload=drawArt;img.onerror=paint;img.src=c.image;
