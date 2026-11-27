@@ -155,19 +155,22 @@ function drawCreatureCard(canvas,c){
     if(line)lines.push(line);
    });
   };
-  // Habilidades mantêm fonte fixa; apenas o flavor pode reduzir a fonte para caber na faixa.
+  // Habilidades mantêm fonte fixa; o flavor ajusta fonte e entrelinha para ocupar a faixa sem transbordar.
+  let actualLineHeight=lineHeight;
   while(true){
    ctx.font='italic '+size+'px Georgia';
    build();
-   if(!fitToBox||lines.length*lineHeight<=maxHeight||size<=minSize)break;
+   actualLineHeight=fitToBox?Math.min(lineHeight,maxHeight/Math.max(1,lines.length)):lineHeight;
+   if(!fitToBox||lines.length*actualLineHeight<=maxHeight||size<=minSize)break;
    size=Math.max(minSize,size-.25);
   }
+  if(fitToBox)actualLineHeight=Math.min(maxHeight/Math.max(1,lines.length),Math.max(actualLineHeight,size*1.25));
   ctx.save();
   ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
   ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;
   ctx.textAlign='center';ctx.textBaseline='middle';
-  const total=Math.min(lines.length*lineHeight,maxHeight),first=y-total/2+lineHeight/2;
-  lines.forEach((line,i)=>{if(line&&i*lineHeight<maxHeight)ctx.fillText(line,x,first+i*lineHeight,maxWidth)});
+  const total=Math.min(lines.length*actualLineHeight,maxHeight),first=y-total/2+actualLineHeight/2;
+  lines.forEach((line,i)=>{if(line&&i*actualLineHeight<maxHeight)ctx.fillText(line,x,first+i*actualLineHeight,maxWidth)});
   ctx.restore();
  };
  const paint=()=>{
@@ -191,7 +194,7 @@ function drawCreatureCard(canvas,c){
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
   ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();
   // Flavor limitado à faixa inferior interna; mantém quebras de parágrafo.
-  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.46,h*.060,w*.029,w*.019,h*.023,'#35291d',true);
+  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.50,h*.060,w*.029,w*.019,h*.023,'#35291d',true);
  };
  ctx.clearRect(0,0,w,h);
  if(c.image){
