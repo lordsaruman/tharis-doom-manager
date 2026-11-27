@@ -148,7 +148,7 @@ function sigil(faction,size=20){
 }
 function refreshSelects(){
  const all=[...new Set([...FACTIONS,...cards.map(c=>c.faction).filter(Boolean)])];
- $('factionOptions').innerHTML=all.map(x=>`<option value="${escapeHtml(x)}">`).join('');
+ const factionOptions=$('factionOptions');if(factionOptions)factionOptions.innerHTML=all.map(x=>`<option value="${escapeHtml(x)}">`).join('');
  const fill=(id,values,label)=>{const old=$(id).value;$(id).innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option>${escapeHtml(v)}</option>`).join('');$(id).value=old};
  fill('filterFaction',all,'Todas as facções');fill('filterRarity',[...new Set(cards.map(c=>c.rarity).filter(Boolean))].sort(),'Todas as raridades');fill('filterType',[...new Set(cards.map(c=>c.type).filter(Boolean))].sort(),'Todos os tipos');
  $('factionLegend').innerHTML=all.map(f=>`<span class="faction-chip">${sigil(f,22)}${escapeHtml(f)}</span>`).join('');
