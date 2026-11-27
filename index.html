@@ -454,7 +454,7 @@ async function sendAsset(replace=false){
    if(yes){$('assetUploadBtn').disabled=false;return await sendAsset(true)}
    $('assetStatus').textContent='Envio cancelado. O arquivo existente foi mantido.';return;
   }
-  if(!response.ok)throw new Error(result.error||'Falha ao enviar a imagem.');
+  if(!response.ok)throw new Error((result.error||'Falha ao enviar a imagem.')+(result.detail?' Detalhe do GitHub: '+result.detail:'')+' (HTTP '+response.status+')');
   $('assetStatus').textContent=(result.replaced?'Imagem substituída':'Imagem enviada')+' com sucesso: '+result.path;
   $('assetFile').value='';assetFileObject=null;
   if(result.commit)console.info('Commit do GitHub:',result.commit);
