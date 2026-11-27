@@ -90,7 +90,8 @@ const $=id=>document.getElementById(id);
 const FACTIONS=['Elfos','Moiras','Kalassíria','Elturel',"Baldur's Gate",'Casas Galadhom','Monte Celéstia','Baator'];
 const KEY='tharisDoomManagerV2';
 let cards=[],editingId=null,imageData='';
-const creatureFrame=new Image();creatureFrame.crossOrigin='anonymous';creatureFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};creatureFrame.src='https://raw.githubusercontent.com/lordsaruman/tharis-doom-manager/preview/ajustes-gerenciador/Modelo%20Carta%20Ouro.png';
+const creatureFrame=new Image();creatureFrame.crossOrigin='anonymous';creatureFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};creatureFrame.src='Modelo%20Carta%20Ouro.png';
+const magicFrame=new Image();magicFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};magicFrame.src='Molde%20Magias.png';
 
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
@@ -172,8 +173,36 @@ function drawCreatureCard(canvas,c){
  }
  paint();
 }
+function drawMagicCard(canvas,c){
+ const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
+ ctx.clearRect(0,0,w,h);
+ if(magicFrame.complete&&magicFrame.naturalWidth)ctx.drawImage(magicFrame,0,0,w,h);
+ else {ctx.fillStyle='#171923';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#d5ad58';ctx.lineWidth=5;ctx.strokeRect(5,5,w-10,h-10)}
+ const panel=(x,y,pw,ph)=>{ctx.fillStyle='rgba(12,13,18,.72)';ctx.fillRect(x,y,pw,ph)};
+ panel(w*.075,h*.105,w*.85,h*.075);
+ ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#f4e5c5';ctx.font='bold '+(w*.043)+'px Georgia';
+ ctx.fillText(String(c.name||'NOVA MAGIA').toUpperCase().slice(0,25),w*.5,h*.142,w*.82);
+ const ix=w*.075,iy=h*.225,iw=w*.37,ih=h*.43;
+ const drawText=()=>{
+  panel(w*.55,h*.225,w*.37,h*.43);
+  ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#f4e9d5';ctx.font='bold '+(w*.032)+'px Georgia';
+  if(c.faction)ctx.fillText(String(c.faction).toUpperCase().slice(0,22),w*.575,h*.245,w*.32);
+  const wrap=(text,x,y,max,lh,limit)=>{let line='',n=0;for(const word of String(text||'').split(/\s+/)){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){ctx.fillText(line,x,y+n*lh);line=word;n++;if(n>=limit-1)break}else line=test}if(line&&n<limit)ctx.fillText(line,x,y+n*lh)};
+  ctx.font=(w*.027)+'px Georgia';wrap(c.trait||'',w*.575,h*.30,w*.32,h*.035,2);
+  ctx.font=(w*.026)+'px Georgia';wrap(c.effect||c.description||'',w*.575,h*.38,w*.32,h*.043,6);
+  panel(w*.09,h*.70,w*.82,h*.18);ctx.fillStyle='#f0e3cc';ctx.font=(w*.026)+'px Georgia';
+  wrap(c.description||'',w*.13,h*.725,w*.74,h*.035,2);
+  if(c.flavor){ctx.font='italic '+(w*.023)+'px Georgia';ctx.fillStyle='#e1cda8';wrap(c.flavor,w*.13,h*.81,w*.74,h*.03,2)}
+  ctx.textAlign='left';ctx.font='bold '+(w*.035)+'px Georgia';ctx.fillStyle='#f7d88f';ctx.fillText('CUSTO '+String(c.cost??0),w*.13,h*.925);
+  if(c.alignment){ctx.textAlign='right';ctx.font=(w*.022)+'px Georgia';ctx.fillStyle='#eee0c8';ctx.fillText(String(c.alignment).slice(0,30),w*.86,h*.93)}
+ };
+ const drawArt=img=>{ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z,dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();drawText()};
+ if(c.image){const img=new Image();img.onload=()=>drawArt(img);img.onerror=drawText;img.src=c.image;if(img.complete&&img.naturalWidth)drawArt(img)}
+ else {panel(ix,iy,iw,ih);ctx.textAlign='center';ctx.fillStyle='#e6d4b0';ctx.font=(w*.045)+'px Georgia';ctx.fillText('ILUSTRAÇÃO',ix+iw/2,iy+ih/2);drawText()}
+}
 function drawCard(canvas,c){
  if(c.type==='Criatura'){drawCreatureCard(canvas,c);return}
+ if(c.type==='Magias'){drawMagicCard(canvas,c);return}
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
  const palettes={Bronze:['#6d482d','#c18b55'],Prata:['#555d68','#c8d0d8'],Ouro:['#72551e','#e8c66d'],Dark:['#191923','#8e6ba8'],Esmeralda:['#164b3d','#70c49c'],Rubi:['#5b2029','#d66a73'],Topázio:['#674c1c','#e5b84e']};
  const [base,edge]=palettes[c.rarity]||palettes.Bronze;
@@ -201,7 +230,7 @@ function openEditor(c=null){
 }
 function collect(){return {id:editingId||crypto.randomUUID(),name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 function save(){const c=collect();if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}const i=cards.findIndex(x=>x.id===c.id);if(i>=0)cards[i]=c;else cards.push(c);persist();$('modal').classList.remove('open')}
-function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;drawCard(cv,c);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
+async function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;const waitForImage=src=>new Promise(resolve=>{if(!src)return resolve();const img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;if(img.complete)resolve()});await Promise.all([waitForImage(c.image),waitForImage(c.type==='Magias'?'Molde%20Magias.png':c.type==='Criatura'?'Modelo%20Carta%20Ouro.png':'')]);drawCard(cv,c);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtn').onclick=save;$('pngBtn').onclick=exportPNG;
 $('deleteBtn').onclick=()=>{if(editingId&&confirm('Excluir esta carta?')){cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}};
 $('image').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect())};r.readAsDataURL(f)};
