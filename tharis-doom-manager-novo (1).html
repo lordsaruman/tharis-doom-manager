@@ -153,18 +153,14 @@ function drawCreatureCard(canvas,c){
      if(ctx.measureText(candidate).width>maxWidth&&line){lines.push(line);line=piece}else line=candidate;
     });
     if(line)lines.push(line);
-    if(index<paragraphs.length-1)lines.push('');
    });
   };
-  while(size>minSize){
-   ctx.font='italic '+size+'px Georgia';build();
-   const height=lines.length*lineHeight;
-   if(height<=maxHeight)break;
-   size=Math.max(minSize,size-.5);
-  }
+  // Fonte fixa: a quantidade de linhas não altera o tamanho tipográfico.
+  ctx.font='italic '+baseSize+'px Georgia';
+  build();
   ctx.save();
   ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
-  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;
+  ctx.font='italic '+baseSize+'px Georgia';ctx.fillStyle=color;
   ctx.textAlign='center';ctx.textBaseline='middle';
   const total=lines.length*lineHeight,first=y-total/2+lineHeight/2;
   lines.forEach((line,i)=>{if(line)ctx.fillText(line,x,first+i*lineHeight,maxWidth)});
