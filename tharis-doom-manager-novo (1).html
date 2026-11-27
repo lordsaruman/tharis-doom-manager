@@ -194,14 +194,32 @@ function drawCreatureCard(canvas,c){
   stat(c.power,.105,.945,.105);
   stat(c.defense,.895,.945,.105);
   ctx.shadowBlur=0;
-  // Espaços das bandeiras para receber as insígnias oficiais enviadas pelo usuário.
-  const drawFlagSlot=(x,y)=>{const fw=w*.105,fh=h*.022,left=w*x-fw/2,top=h*y;ctx.save();ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left+fw,top);ctx.lineTo(left+fw*.88,top+fh);ctx.lineTo(left+fw*.12,top+fh);ctx.closePath();ctx.fillStyle='rgba(25,20,17,.92)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.0025);ctx.stroke();ctx.restore()};
-  if(c.alignment){
-   drawFlagSlot(.95,.052);
-   const emblem=alignmentInsignias[c.alignment];
-   if(emblem&&emblem.complete&&emblem.naturalWidth){const size=w*.038;ctx.drawImage(emblem,w*.95-size/2,h*.052-size*.52,size,size)}
+  // Uma única bandeira vertical reúne todas as insígnias ativas.
+  // A altura aumenta automaticamente conforme novas insígnias forem adicionadas.
+  const insigniaItems=[];
+  const alignmentEmblem=alignmentInsignias[c.alignment];
+  if(alignmentEmblem&&alignmentEmblem.complete&&alignmentEmblem.naturalWidth)insigniaItems.push(alignmentEmblem);
+  if(insigniaItems.length){
+   const emblemSize=w*.088, gap=w*.012, pad=w*.012;
+   const flagWidth=w*.112, flagHeight=pad*2+insigniaItems.length*emblemSize+(insigniaItems.length-1)*gap;
+   const flagX=w*.95-flagWidth/2, flagY=h*.052;
+   ctx.save();
+   ctx.beginPath();
+   ctx.moveTo(flagX,flagY);
+   ctx.lineTo(flagX+flagWidth,flagY);
+   ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.82);
+   ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);
+   ctx.lineTo(flagX,flagY+flagHeight*.82);
+   ctx.closePath();
+   ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();
+   ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();
+   insigniaItems.forEach((emblem,index)=>{
+    const x=w*.95-emblemSize/2;
+    const y=flagY+pad+index*(emblemSize+gap);
+    ctx.drawImage(emblem,x,y,emblemSize,emblemSize);
+   });
+   ctx.restore();
   }
-  if(c.faction)drawFlagSlot(.95,.080);
   ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
