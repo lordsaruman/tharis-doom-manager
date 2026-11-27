@@ -826,10 +826,10 @@ const OCR_REGIONS={
   trait:{x:.16,y:.731,w:.68,h:.034,mode:'line'},
   effect:{x:.12,y:.766,w:.76,h:.067,mode:'block'},
   flavor:{x:.15,y:.842,w:.70,h:.079,mode:'block'},
-  life:{x:.415,y:.004,w:.17,h:.078,mode:'number'},
-  cost:{x:.875,y:.000,w:.12,h:.064,mode:'number'},
-  power:{x:.025,y:.905,w:.17,h:.080,mode:'number'},
-  defense:{x:.805,y:.905,w:.17,h:.080,mode:'number'}
+  life:{x:.445,y:.006,w:.11,h:.075,mode:'number'},
+  cost:{x:.910,y:.003,w:.08,h:.065,mode:'number'},
+  power:{x:.045,y:.910,w:.12,h:.075,mode:'number'},
+  defense:{x:.840,y:.910,w:.12,h:.075,mode:'number'}
  },
  magic:{
   name:{x:.16,y:.680,w:.68,h:.060,mode:'line'},
@@ -898,13 +898,13 @@ async function runCardOCR(file){
   }});
   const recognize=async(region)=>{
    const crop=makeOCRCrop(img,region);
-   await worker.setParameters({tessedit_pageseg_mode:region.mode==='number'?'13':region.mode==='line'?'7':'6',preserve_interword_spaces:'1',tessedit_char_whitelist:region.mode==='number'?'0123456789':''});
+   await worker.setParameters({tessedit_pageseg_mode:region.mode==='number'?'10':region.mode==='line'?'7':'6',preserve_interword_spaces:'1',tessedit_char_whitelist:region.mode==='number'?'0123456789':''});
    const result=await worker.recognize(crop);
    return {text:cleanOCRText(result.data.text),confidence:Number(result.data.confidence)||0};
   };
   // A esfera central superior existe no molde de criaturas e contém o valor de Vida.
   // No molde de magia, essa mesma região é apenas ilustração.
-  const centerLife=await recognize({x:.415,y:.004,w:.17,h:.078,mode:'number'});
+  const centerLife=await recognize(OCR_REGIONS.creature.life);
   const lifeValue=numericOCR(centerLife.text);
   const ratio=img.naturalWidth/Math.max(1,img.naturalHeight);
   const cardKind=lifeValue&&centerLife.confidence>=24?'creature':(ratio<.455?'creature':'magic');
