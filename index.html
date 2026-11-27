@@ -603,11 +603,11 @@ function drawMagicCard(canvas,c){
   // É pintado antes do molde para manter todos os ornamentos dourados intactos.
   const top=h*.655,bottom=h*.985;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
-  shade.addColorStop(0,'rgba(5,6,10,0)');
-  shade.addColorStop(.12,'rgba(5,6,10,.16)');
-  shade.addColorStop(.38,'rgba(5,6,10,.34)');
-  shade.addColorStop(.70,'rgba(5,6,10,.52)');
-  shade.addColorStop(1,'rgba(5,6,10,.66)');
+  shade.addColorStop(0,'rgba(5,6,10,.10)');
+  shade.addColorStop(.12,'rgba(5,6,10,.30)');
+  shade.addColorStop(.38,'rgba(5,6,10,.52)');
+  shade.addColorStop(.70,'rgba(5,6,10,.70)');
+  shade.addColorStop(1,'rgba(5,6,10,.82)');
   ctx.fillStyle=shade;ctx.fillRect(w*.075,top,w*.85,bottom-top);
 
   // Usa o arquivo Molde Magias.png integralmente, sem recortar,
