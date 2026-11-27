@@ -127,51 +127,75 @@ function render(){
 }
 function drawCreatureCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
- // Proporções e alinhamentos calibrados pelo MODELO CRIATURA enviado ao repositório.
- const ix=w*.105,iy=h*.075,iw=w*.79,ih=h*.615;
- const drawFrameAndText=()=>{
+ // Abertura interna medida pela arte MODELO CRIATURA (420 x 771).
+ const ix=w*.061,iy=h*.066,iw=w*.878,ih=h*.622;
+ const wrap=(text,x,y,maxWidth,lineHeight,maxLines,font,color)=>{
+  ctx.font=font;ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+  const words=String(text||'').trim().split(/\s+/).filter(Boolean);
+  const lines=[];let line='';
+  for(const word of words){
+   const test=line?line+' '+word:word;
+   if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}
+   else line=test;
+  }
+  if(line)lines.push(line);
+  if(lines.length>maxLines){
+   lines.length=maxLines;let last=lines[maxLines-1];
+   while(last.length&&ctx.measureText(last+'…').width>maxWidth)last=last.slice(0,-1);
+   lines[maxLines-1]=last+'…';
+  }
+  const firstY=y-((lines.length-1)*lineHeight)/2;
+  lines.forEach((ln,i)=>ctx.fillText(ln,x,firstY+i*lineHeight,maxWidth));
+ };
+ const paintFrameAndText=()=>{
+  // A moldura PNG contém transparência: não preencher o canvas com preto.
   if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
-  else {ctx.strokeStyle='#d5ad58';ctx.lineWidth=5;ctx.strokeRect(5,5,w-10,h-10)}
   ctx.textAlign='center';ctx.textBaseline='middle';
-  const stat=(value,x,y,size)=>{if(value!==''&&value!==null&&value!==undefined){ctx.font='bold '+(w*size)+'px Georgia';ctx.lineWidth=2;ctx.strokeStyle='#f4e4bd';ctx.strokeText(String(value),w*x,h*y);ctx.fillStyle='#332315';ctx.fillText(String(value),w*x,h*y)}};
-  stat(c.life,.50,.046,.065);stat(c.cost??0,.91,.045,.055);stat(c.power,.115,.953,.06);stat(c.defense,.89,.953,.06);
-  // Nome centralizado na placa horizontal imediatamente abaixo da arte.
-  ctx.shadowColor='#f8e7bd';ctx.shadowBlur=2;ctx.fillStyle='#302315';
-  ctx.font='bold '+(w*.061)+'px Georgia';
-  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase().slice(0,28),w*.5,h*.696,w*.76);
-  ctx.shadowBlur=0;
-  // Característica centralizada na linha própria, logo abaixo do nome.
-  ctx.fillStyle='#574832';ctx.font='italic '+(w*.027)+'px Georgia';
-  if(c.trait)ctx.fillText(String(c.trait).slice(0,55),w*.5,h*.739,w*.68);
-  // Habilidades e descrição centralizadas no painel inferior, com quebra por largura.
-  const wrapCentered=(text,x,y,maxWidth,lineHeight,maxLines,font,color)=>{
-   ctx.font=font;ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
-   const words=String(text||'').trim().split(/\\s+/).filter(Boolean);let lines=[],line='';
-   for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}
-   if(line)lines.push(line);
-   if(lines.length>maxLines){lines=lines.slice(0,maxLines);let last=lines[maxLines-1];while(last.length&&ctx.measureText(last+'…').width>maxWidth)last=last.slice(0,-1);lines[maxLines-1]=last+'…'}
-   lines.forEach((ln,i)=>ctx.fillText(ln,x,y+i*lineHeight,maxWidth));
+  const stat=(value,x,y,size)=>{
+   if(value===undefined||value===null||value==='')return;
+   ctx.font='normal '+(w*size)+'px Georgia';ctx.fillStyle='#29231b';
+   ctx.shadowColor='rgba(255,244,216,.8)';ctx.shadowBlur=1;
+   ctx.fillText(String(value),w*x,h*y);
+   ctx.shadowBlur=0;
   };
-  const abilityText=[c.effect,c.description].filter(Boolean).join(' ');
-  if(abilityText)wrapCentered(abilityText,w*.5,h*.795,w*.68,h*.033,4,(w*.027)+'px Georgia','#30291f');
-  // Texto de ambientação centralizado na área final, separado por filete dourado.
+  // Centro geométrico das quatro esferas, conforme o modelo enviado.
+  stat(c.life,.50,.041,.076);
+  stat(c.cost??0,.95,.042,.066);
+  stat(c.power,.115,.951,.071);
+  stat(c.defense,.885,.951,.071);
+  // Nome na placa horizontal: serifada, caixa alta e centralizada.
+  ctx.fillStyle='#3b2a19';ctx.shadowColor='rgba(255,238,199,.7)';ctx.shadowBlur=1;
+  ctx.font='normal '+(w*.050)+'px Georgia';
+  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
+  ctx.shadowBlur=0;
+  // Característica/facção em itálico, na linha logo abaixo da placa.
+  if(c.trait)wrap(c.trait,w*.5,h*.741,w*.66,h*.023,1,'italic '+(w*.024)+'px Georgia','#4c4030');
+  // Painel inferior: texto centralizado, serifado e em itálico como a amostra.
+  // Reserva o miolo para o emblema ilustrado presente no modelo de referência.
+  const body=[c.effect,c.description].filter(Boolean).join(' ');
+  if(body)wrap(body,w*.5,h*.865,w*.70,h*.026,4,'italic '+(w*.023)+'px Georgia','#35291d');
   if(c.flavor){
-   ctx.strokeStyle='#b68b3d';ctx.lineWidth=Math.max(1,w*.004);ctx.beginPath();ctx.moveTo(w*.16,h*.887);ctx.lineTo(w*.84,h*.887);ctx.stroke();
-   wrapCentered(c.flavor,w*.5,h*.918,w*.68,h*.025,3,'italic '+(w*.022)+'px Georgia','#574832');
+   // Linha curta inteiramente dentro do painel, acima do flavor e longe da borda inferior.
+   ctx.strokeStyle='rgba(150,112,55,.75)';ctx.lineWidth=Math.max(1,w*.002);
+   ctx.beginPath();ctx.moveTo(w*.23,h*.895);ctx.lineTo(w*.77,h*.895);ctx.stroke();
+   wrap(c.flavor,w*.5,h*.929,w*.70,h*.021,3,'italic '+(w*.021)+'px Georgia','#35291d');
   }
  };
- ctx.clearRect(0,0,w,h);ctx.fillStyle='#17171a';ctx.fillRect(0,0,w,h);
+ ctx.clearRect(0,0,w,h);
  if(c.image){
   const img=new Image();
   const drawArt=()=>{
    ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();
-   const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z;
-   const dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;
-   ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();drawFrameAndText();
+   const z=Math.max(1,(+c.imageZoom||100)/100);
+   const dw=iw*z,dh=ih*z;
+   const dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200;
+   const dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;
+   ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();
+   paintFrameAndText();
   };
-  img.onload=drawArt;img.onerror=drawFrameAndText;img.src=c.image;
+  img.onload=drawArt;img.onerror=paintFrameAndText;img.src=c.image;
   if(img.complete&&img.naturalWidth)drawArt();
- }else drawFrameAndText();
+ }else paintFrameAndText();
 }
 function drawMagicCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
