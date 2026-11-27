@@ -527,7 +527,11 @@ function drawCreatureCard(canvas,c){
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
   // Habilidades: painel central claro, com margens internas e parágrafos preservados.
   const abilityTop=h*.765,abilityBottom=h*.872;
-  if(c.effect)drawRichText(c.effect,w*.5,(abilityTop+abilityBottom)/2,w*.72,abilityBottom-abilityTop,w*.037,w*.030,h*.027,'#35291d');
+  if(c.effect)drawRichText(
+   c.effect,w*.5,(abilityTop+abilityBottom)/2,
+   w*.72,abilityBottom-abilityTop,
+   w*.037,w*.018,h*.027,'#35291d',true
+  );
   // Linha divisória dentro da área branca e afastada da moldura.
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
   ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();
