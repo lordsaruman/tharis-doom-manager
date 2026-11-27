@@ -206,9 +206,8 @@ function drawMagicCard(canvas,c){
   if(c.faction)ctx.fillText(String(c.faction).toUpperCase().slice(0,22),w*.575,h*.245,w*.32);
   const wrap=(text,x,y,max,lh,limit)=>{let line='',n=0;for(const word of String(text||'').split(/\s+/)){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){ctx.fillText(line,x,y+n*lh);line=word;n++;if(n>=limit-1)break}else line=test}if(line&&n<limit)ctx.fillText(line,x,y+n*lh)};
   ctx.font=(w*.027)+'px Georgia';wrap(c.trait||'',w*.575,h*.30,w*.32,h*.035,2);
-  ctx.font=(w*.026)+'px Georgia';wrap(c.effect||c.description||'',w*.575,h*.38,w*.32,h*.043,6);
-  panel(w*.09,h*.70,w*.82,h*.18);ctx.fillStyle='#f0e3cc';ctx.font=(w*.026)+'px Georgia';
-  wrap(c.description||'',w*.13,h*.725,w*.74,h*.035,2);
+  ctx.font=(w*.026)+'px Georgia';wrap(c.effect||'',w*.575,h*.38,w*.32,h*.043,6);
+  panel(w*.09,h*.70,w*.82,h*.18);
   if(c.flavor){ctx.font='italic '+(w*.023)+'px Georgia';ctx.fillStyle='#e1cda8';wrap(c.flavor,w*.13,h*.81,w*.74,h*.03,2)}
   ctx.textAlign='left';ctx.font='bold '+(w*.035)+'px Georgia';ctx.fillStyle='#f7d88f';ctx.fillText('CUSTO '+String(c.cost??0),w*.13,h*.925);
   if(c.alignment){ctx.textAlign='right';ctx.font=(w*.022)+'px Georgia';ctx.fillStyle='#eee0c8';ctx.fillText(String(c.alignment).slice(0,30),w*.86,h*.93)}
