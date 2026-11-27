@@ -339,6 +339,7 @@ footer:before{
 .faction-pick img,.faction-pick .sigil{width:25px!important;height:25px!important;flex:0 0 25px}
 .faction-pick span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:520px){.faction-picker{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#ocrPanel{padding:13px;border:1px solid #8d713f;border-radius:10px;background:linear-gradient(145deg,#29231a,#19191d);gap:9px}#ocrPanel textarea{width:100%;margin-top:8px;background:#111216;color:#e8dfce;border:1px solid #51452f;border-radius:7px;padding:9px;font:12px/1.45 ui-monospace,monospace}#ocrBtn{border:1px solid #a98a4d;color:#f0d9aa;background:#302719;border-radius:7px;padding:8px 12px;cursor:pointer}#ocrBtn:disabled{opacity:.55;cursor:wait}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -430,7 +431,7 @@ footer:before{
      <div class="field span2"><label id="effectLabel">Habilidades</label><textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea></div>
      <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
-     <div class="field span2"><label id="imageLabel">Ilustração (PNG, JPG ou WEBP)</label><input id="image" type="file" accept="image/*"><div class="hint" id="imageHint">A imagem é incorporada ao registro local da carta.</div></div>
+     <div class="field span2"><label id="imageLabel">Ilustração (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">A imagem é incorporada ao registro local da carta.</div></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
     </div>
    </div>
    <div class="preview-wrap">
@@ -816,7 +817,39 @@ function drawCard(canvas,c){
  ctx.textAlign='left';ctx.font=(w*.025)+'px sans-serif';ctx.fillStyle='#ddd';ctx.fillText([c.life?'V '+c.life:'',c.power?'A '+c.power:'',c.defense?'D '+c.defense:''].filter(Boolean).join('  '),w*.11,h*.955);
  if(c.faction==='Monte Celéstia'||c.faction==='Baator'){ctx.beginPath();ctx.arc(w*.88,h*.075,w*.035,0,Math.PI*2);ctx.fillStyle='#15151b';ctx.fill();ctx.strokeStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.stroke();ctx.fillStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.font='bold '+(w*.045)+'px Georgia';ctx.textAlign='center';ctx.fillText(c.faction==='Baator'?'⌁':'✧',w*.88,h*.091)}
 }
-function updateCreationMode(){const ready=$('creationMode').value==='ready';$('cropControls').style.display=ready?'none':'grid';$('imageLabel').textContent=ready?'Imagem completa da carta (PNG, JPG ou WEBP)':'Ilustração (PNG, JPG ou WEBP)';$('imageHint').textContent=ready?'Envie a imagem final da carta. Os campos preenchidos ficam apenas como dados de cadastro e não alteram a imagem.':(cloudUser?'A imagem será armazenada no Supabase Storage.':'A imagem fica incorporada ao registro local até conectar sua conta.');drawCard($('preview'),collect())}
+function updateCreationMode(){const ready=$('creationMode').value==='ready';$('cropControls').style.display=ready?'none':'grid';$('ocrPanel').style.display=ready?'block':'none';$('imageLabel').textContent=ready?'Imagem completa da carta (PNG ou JPG)':'Ilustração (PNG ou JPG)';$('imageHint').textContent=ready?'Envie a imagem final da carta. O reconhecimento preencherá os dados sem modificar a imagem.':(cloudUser?'A imagem será armazenada no Supabase Storage.':'A imagem fica incorporada ao registro local até conectar sua conta.');drawCard($('preview'),collect())}
+let ocrBusy=false;
+async function runCardOCR(file){
+ if(!file)return;
+ if(!/^image\/(png|jpeg)$/.test(file.type)){$('ocrStatus').textContent='Formato não suportado. Use PNG ou JPG.';return}
+ if(ocrBusy)return;ocrBusy=true;$('ocrBtn').disabled=true;$('ocrStatus').textContent='Preparando o reconhecimento…';$('ocrRaw').value='';
+ try{
+  if(!window.Tesseract)await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';script.onload=resolve;script.onerror=()=>reject(new Error('Não foi possível carregar o mecanismo de leitura. Verifique sua conexão.'));document.head.appendChild(script)});
+  $('ocrStatus').textContent='Lendo a carta. Isso pode levar alguns segundos…';
+  const result=await Tesseract.recognize(file,'por+eng',{logger:m=>{if(m.status==='recognizing text')$('ocrStatus').textContent='Reconhecendo texto… '+Math.round((m.progress||0)*100)+'%'}});
+  const lines=(result.data.lines||[]).map(l=>({text:(l.text||'').trim(),y0:l.bbox?.y0??0,y1:l.bbox?.y1??0,x0:l.bbox?.x0??0,x1:l.bbox?.x1??0})).filter(l=>l.text);
+  const raw=lines.map(l=>l.text).join('\n');$('ocrRaw').value=raw;
+  if(!lines.length)throw new Error('Nenhum texto legível foi encontrado. Tente uma imagem mais nítida.');
+  const h=Math.max(1,...lines.map(l=>l.y1)),w=Math.max(1,...lines.map(l=>l.x1));
+  const top=lines.filter(l=>l.y0/h<.24).sort((a,b)=>a.y0-b.y0);
+  const titleLine=top.find(l=>/[A-Za-zÀ-ÿ]{2,}/.test(l.text)&&!/^\d+$/.test(l.text)&&!/^(criatura|magia|item|construção|construcao)$/i.test(l.text));
+  if(titleLine)$('name').value=titleLine.text.replace(/[|_]+/g,' ').trim().slice(0,60);
+  const costCandidates=lines.filter(l=>l.y0/h<.38&&l.x0/w<.34).flatMap(l=>[...l.text.matchAll(/\b\d{1,2}\b/g)].map(m=>({n:m[0],line:l})));
+  if(costCandidates.length){const candidate=costCandidates.find(x=>x.line.y0/h<.22)||costCandidates[0];$('cost').value=candidate.n}
+  const body=lines.filter(l=>l.y0/h>=.28&&l.y0/h<.91).sort((a,b)=>a.y0-b.y0);
+  const flavorLines=lines.filter(l=>l.y0/h>=.82).sort((a,b)=>a.y0-b.y0);
+  const bodyLines=body.filter(l=>!/^\d{1,2}$/.test(l.text)&&!/^(ataque|defesa|vida|custo)$/i.test(l.text));
+  const effectLines=bodyLines.filter(l=>!flavorLines.includes(l));
+  if(effectLines.length)$('effect').value=effectLines.map(l=>l.text).join('\n').trim();
+  if(flavorLines.length)$('flavor').value=flavorLines.map(l=>l.text).join('\n').trim();
+  const all=raw.toLowerCase();
+  if(/\b(magia|feitiço|feitico)\b/.test(all)&&/\b(efeito)\b/.test(all)){$('type').value='Magias';updateEffectLabel()}
+  drawCard($('preview'),collect());
+  $('ocrStatus').textContent='Leitura concluída. Revise os campos preenchidos e corrija qualquer erro antes de salvar.';
+ }catch(error){console.error('OCR:',error);$('ocrStatus').textContent='Não foi possível concluir a leitura: '+(error.message||error)}
+ finally{ocrBusy=false;$('ocrBtn').disabled=false}
+}
+$('ocrBtn').addEventListener('click',()=>{const file=$('image').files?.[0];if(file)runCardOCR(file);else $('ocrStatus').textContent='Selecione primeiro a imagem PNG ou JPG da carta.'});
 function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLabel').textContent=magic?'Efeito':'Habilidades';$('effect').placeholder=magic?'Descreva o efeito da magia':'Habilidades e efeitos da carta'}
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imagePath=c?.imagePath||'';
@@ -855,7 +888,7 @@ $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))
  if(cloudUser){const c=cards.find(x=>x.id===editingId);try{const {error}=await sb.from('cards').delete().eq('id',editingId);if(error)throw error;if(c?.imagePath)await sb.storage.from('tharis-cartas').remove([c.imagePath]);cards=cards.filter(x=>x.id!==editingId);render();$('modal').classList.remove('open')}catch(error){alert('Não foi possível excluir online: '+error.message)}}
  else{cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}
 };
-$('image').onchange=e=>{const f=e.target.files[0];if(!f)return;imagePath='';const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect())};r.readAsDataURL(f)};
+$('image').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!/^image\/(png|jpeg)$/.test(f.type)){alert('Envie somente uma imagem PNG ou JPG.');e.target.value='';return}imagePath='';const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect());if($('creationMode').value==='ready')runCardOCR(f)};r.readAsDataURL(f)};
 function updateCropLabels(){$('zoomValue').textContent=$('imageZoom').value+'%';$('imageXValue').textContent=$('imageX').value;$('imageYValue').textContent=$('imageY').value}
 ['name','faction','type','rarity','cost','alignment','trait','life','power','defense','description','effect','flavor','imageZoom','imageX','imageY'].forEach(id=>$(id).addEventListener('input',()=>{updateCropLabels();drawCard($('preview'),collect())}));
 ['search','filterFaction','filterRarity','filterType','sort'].forEach(id=>$(id).addEventListener('input',render));
