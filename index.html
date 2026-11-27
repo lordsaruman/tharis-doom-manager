@@ -103,7 +103,9 @@ const alignmentInsignias={
 alignmentInsignias.Luz.src='INSIGNIA%20LUZ.png';
 alignmentInsignias.Neutro.src='INSIGNIA%20NEUTRO.png';
 alignmentInsignias.Sombra.src='INSIGNIA%20SOMBRAS.png';
-Object.values(alignmentInsignias).forEach(img=>img.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())});
+const factionInsignias={Moiras:new Image()};
+factionInsignias.Moiras.src='INSIGNIAS%20MOIRAS.png';
+Object.values({...alignmentInsignias,...factionInsignias}).forEach(img=>img.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())});
 
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
@@ -199,6 +201,8 @@ function drawCreatureCard(canvas,c){
   const insigniaItems=[];
   const alignmentEmblem=alignmentInsignias[c.alignment];
   if(alignmentEmblem&&alignmentEmblem.complete&&alignmentEmblem.naturalWidth)insigniaItems.push(alignmentEmblem);
+  const factionEmblem=factionInsignias[c.faction];
+  if(factionEmblem&&factionEmblem.complete&&factionEmblem.naturalWidth)insigniaItems.push(factionEmblem);
   if(insigniaItems.length){
    const emblemSize=w*.088, gap=w*.012, pad=w*.012;
    const flagWidth=w*.112, flagHeight=pad*2+insigniaItems.length*emblemSize+(insigniaItems.length-1)*gap;
