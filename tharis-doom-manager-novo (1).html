@@ -129,13 +129,13 @@ function drawCreatureCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
  const ix=w*.061,iy=h*.066,iw=w*.878,ih=h*.622;
  // Quebra linhas respeitando linhas e parágrafos digitados no campo.
- const drawRichText=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color)=>{
+ const drawRichText=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color,fitToBox=false)=>{
   const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
   if(!paragraphs.some(p=>p.trim()))return;
   let size=baseSize,lines=[];
   const build=()=>{
    lines=[];
-   paragraphs.forEach((paragraph,index)=>{
+   paragraphs.forEach(paragraph=>{
     const words=paragraph.split(/\s+/).filter(Boolean);
     if(!words.length){lines.push('');return}
     let line='';
@@ -155,15 +155,19 @@ function drawCreatureCard(canvas,c){
     if(line)lines.push(line);
    });
   };
-  // Fonte fixa: a quantidade de linhas não altera o tamanho tipográfico.
-  ctx.font='italic '+baseSize+'px Georgia';
-  build();
+  // Habilidades mantêm fonte fixa; apenas o flavor pode reduzir a fonte para caber na faixa.
+  while(true){
+   ctx.font='italic '+size+'px Georgia';
+   build();
+   if(!fitToBox||lines.length*lineHeight<=maxHeight||size<=minSize)break;
+   size=Math.max(minSize,size-.5);
+  }
   ctx.save();
   ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
-  ctx.font='italic '+baseSize+'px Georgia';ctx.fillStyle=color;
+  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;
   ctx.textAlign='center';ctx.textBaseline='middle';
-  const total=lines.length*lineHeight,first=y-total/2+lineHeight/2;
-  lines.forEach((line,i)=>{if(line)ctx.fillText(line,x,first+i*lineHeight,maxWidth)});
+  const total=Math.min(lines.length*lineHeight,maxHeight),first=y-total/2+lineHeight/2;
+  lines.forEach((line,i)=>{if(line&&i*lineHeight<maxHeight)ctx.fillText(line,x,first+i*lineHeight,maxWidth)});
   ctx.restore();
  };
  const paint=()=>{
@@ -187,7 +191,7 @@ function drawCreatureCard(canvas,c){
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
   ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();
   // Flavor limitado à faixa inferior interna; mantém quebras de parágrafo.
-  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.54,h*.068,w*.031,w*.026,h*.026,'#35291d');
+  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.46,h*.060,w*.031,w*.022,h*.024,'#35291d',true);
  };
  ctx.clearRect(0,0,w,h);
  if(c.image){
