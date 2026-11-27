@@ -57,6 +57,7 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
   <div class="editor">
    <div>
     <div class="formgrid">
+     <div class="field span2"><label>Modelo de criação</label><select id="creationMode"><option value="normal">Carta tradicional</option><option value="ready">CARTA PRONTA</option></select><div class="hint">Selecione CARTA PRONTA para identificar cartas cujo visual já está definido.</div></div>
      <div class="field span2"><label>Nome da carta *</label><input id="name" maxlength="60" placeholder="Nome da carta"></div>
      <div class="field"><label>Facção</label><input id="faction" list="factionOptions" placeholder="Escolha ou digite"><datalist id="factionOptions"></datalist></div>
      <div class="field"><label>Tipo</label><select id="type"><option>Criatura</option><option>Construção</option><option>Magias</option><option>Itens</option></select></div>
@@ -264,10 +265,10 @@ function drawCard(canvas,c){
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
- const vals={name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
+ const vals={creationMode:'normal',name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
  Object.keys(vals).forEach(k=>$(k).value=c?.[k]??vals[k]);$('image').value='';updateCropLabels();$('modal').classList.add('open');drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
-function collect(){return {id:editingId||crypto.randomUUID(),name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
+function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 function save(){const c=collect();if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}const i=cards.findIndex(x=>x.id===c.id);if(i>=0)cards[i]=c;else cards.push(c);persist();$('modal').classList.remove('open')}
 async function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;const waitForImage=src=>new Promise(resolve=>{if(!src)return resolve();const img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;if(img.complete)resolve()});await Promise.all([waitForImage(c.image),waitForImage(c.type==='Magias'?'Molde%20Magias.png':c.type==='Criatura'?'Modelo%20Carta%20Ouro.png':'')]);drawCard(cv,c);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtn').onclick=save;$('pngBtn').onclick=exportPNG;
