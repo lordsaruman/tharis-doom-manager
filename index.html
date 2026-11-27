@@ -239,6 +239,7 @@ footer:before{
 .inspector-stats small{font:9px 'Cinzel',Georgia,serif;color:#a99470}
 .inspector-stats b{font:600 17px 'Cinzel',Georgia,serif;color:#d7b878}
 .tile-stats.magic-stats,.inspector-stats.magic-stats{grid-template-columns:minmax(0,1fr)}
+#modal.magic-type #traitField{display:none}
 .tile-stats.magic-stats span,.inspector-stats.magic-stats span{grid-column:1}
 .inspector-edit{width:100%;margin-top:5px}
 .cardtile.is-selected{border-color:#c5a36b;box-shadow:0 0 0 1px #b8955966,0 8px 24px #0008}
@@ -426,7 +427,7 @@ footer:before{
      <div class="field"><label>Raridade / moldura</label><select id="rarity"><option value="Bronze">Bronze</option><option value="Prata">Prata</option><option value="Ouro">Ouro</option><option value="Dark">Dark</option><option value="Esmeralda">Esmeralda</option><option value="Rubi">Rubi</option><option value="Topázio">Topázio</option></select></div>
      <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
      <div class="field"><label>Alinhamento</label><select id="alignment"><option value="">Selecione um alinhamento</option><option>Luz</option><option>Neutro</option><option>Sombra</option></select></div>
-     <div class="field"><label>Características</label><input id="trait" placeholder="Ex.: Bastião, Celestial, Morto-vivo"></div>
+     <div class="field" id="traitField"><label>Características</label><input id="trait" placeholder="Ex.: Bastião, Celestial, Morto-vivo"></div>
      <div id="combatFields" style="display:contents">
       <div class="field"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
       <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
@@ -785,7 +786,7 @@ function drawMagicCard(canvas,c){
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#e9c56f';
   ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.shadowColor='rgba(0,0,0,.72)';ctx.shadowBlur=2;
-  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.724,w*.79);
+  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.744,w*.79);
   ctx.shadowBlur=0;
   // Custo centralizado na esfera, com a mesma cor, sombra e escala da criatura.
   ctx.fillStyle='#29231b';ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
