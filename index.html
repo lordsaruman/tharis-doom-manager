@@ -19,12 +19,13 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
 @media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.editor{grid-template-columns:1fr}.preview-wrap{order:-1}.preview-wrap canvas{width:min(70vw,270px)}}
 @media(max-width:520px){.formgrid{grid-template-columns:1fr}.span2{grid-column:auto}.stats{gap:8px}.stat{padding:10px}.stat strong{font-size:20px}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header>
  <div class="brand"><div class="brand-mark">✦</div><div><h1>THARIS DOOM</h1><small>CARD MANAGER · NOVA EDIÇÃO</small></div></div>
  <div class="actions">
-  <button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
+  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
   <input type="file" id="importFile" accept=".json,application/json" hidden>
  </div>
 </header>
@@ -49,8 +50,19 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
   <div id="library" class="grid"></div>
  </div>
 </main>
-<footer>Tharis Doom · Os dados ficam salvos neste navegador. Faça backups JSON regularmente.</footer>
+<footer>Tharis Doom · Biblioteca online compartilhada com backup local e exportação JSON.</footer>
 
+
+<div class="modal" id="authModal">
+ <div class="dialog" style="width:min(430px,100%)">
+  <div class="dialog-head"><h2>Acesso ao Tharis Doom</h2><button id="authCloseBtn">✕ Fechar</button></div>
+  <p class="hint">Entre com seu e-mail e senha cadastrados no Supabase para acessar a biblioteca compartilhada.</p>
+  <div class="field"><label>E-mail</label><input id="authEmail" type="email" autocomplete="username" placeholder="seu@email.com"></div>
+  <div class="field"><label>Senha</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Sua senha"></div>
+  <div class="actions"><button class="primary" id="loginBtn">Entrar e sincronizar</button><button id="logoutBtn" style="display:none">Sair</button></div>
+  <p class="hint" id="authMessage">A biblioteca local permanece preservada. O login ativa o acesso online.</p>
+ </div>
+</div>
 <div class="modal" id="modal">
  <div class="dialog">
   <div class="dialog-head"><h2 id="modalTitle">Nova carta</h2><button id="closeBtn">✕ Fechar</button></div>
@@ -92,7 +104,11 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
 const $=id=>document.getElementById(id);
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
 const KEY='tharisDoomManagerV2';
-let cards=[],editingId=null,imageData='';
+let cards=[],editingId=null,imageData='',imagePath='',cloudUser=null;
+const SUPABASE_URL='https://zzwabaaeexidmzyzuvdd.supabase.co';
+const SUPABASE_KEY='sb_publishable_hOAgiQUZtzOg0kolL606mQ_RGoootVu';
+const sb=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
+
 const creatureFrame=new Image();creatureFrame.crossOrigin='anonymous';creatureFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};creatureFrame.src='Modelo%20Carta%20Ouro.png';
 const magicFrame=new Image();magicFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};magicFrame.src='Molde%20Magias.png';
 const alignmentInsignias={
@@ -312,27 +328,43 @@ function drawCard(canvas,c){
  ctx.textAlign='left';ctx.font=(w*.025)+'px sans-serif';ctx.fillStyle='#ddd';ctx.fillText([c.life?'V '+c.life:'',c.power?'A '+c.power:'',c.defense?'D '+c.defense:''].filter(Boolean).join('  '),w*.11,h*.955);
  if(c.faction==='Monte Celéstia'||c.faction==='Baator'){ctx.beginPath();ctx.arc(w*.88,h*.075,w*.035,0,Math.PI*2);ctx.fillStyle='#15151b';ctx.fill();ctx.strokeStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.stroke();ctx.fillStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.font='bold '+(w*.045)+'px Georgia';ctx.textAlign='center';ctx.fillText(c.faction==='Baator'?'⌁':'✧',w*.88,h*.091)}
 }
-function updateCreationMode(){const ready=$('creationMode').value==='ready';$('cropControls').style.display=ready?'none':'grid';$('imageLabel').textContent=ready?'Imagem completa da carta (PNG, JPG ou WEBP)':'Ilustração (PNG, JPG ou WEBP)';$('imageHint').textContent=ready?'Envie a imagem final da carta. Os campos preenchidos ficam apenas como dados de cadastro e não alteram a imagem.':'A imagem é incorporada ao registro local da carta.';drawCard($('preview'),collect())}
+function updateCreationMode(){const ready=$('creationMode').value==='ready';$('cropControls').style.display=ready?'none':'grid';$('imageLabel').textContent=ready?'Imagem completa da carta (PNG, JPG ou WEBP)':'Ilustração (PNG, JPG ou WEBP)';$('imageHint').textContent=ready?'Envie a imagem final da carta. Os campos preenchidos ficam apenas como dados de cadastro e não alteram a imagem.':(cloudUser?'A imagem será armazenada no Supabase Storage.':'A imagem fica incorporada ao registro local até conectar sua conta.');drawCard($('preview'),collect())}
 function openEditor(c=null){
- editingId=c?.id||null;imageData=c?.image||'';
+ editingId=c?.id||null;imageData=c?.image||'';imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
  const vals={creationMode:'normal',name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
  Object.keys(vals).forEach(k=>{const el=$(k),value=c?.[k]??vals[k];if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
-function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
-function save(){
+function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
+async function save(){
  const c=collect();
  if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}
  if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');$('image').focus();return}
+ if(cloudUser){
+  $('saveBtn').disabled=true;$('saveBtn').textContent='Salvando online…';
+  try{
+   const path=await uploadCardImage(c);
+   const payload={id:c.id,name:c.name,faction:c.faction||null,card_type:c.type||null,rarity:c.rarity||null,card_data:{...c,image:'',imagePath:path},image_path:path,updated_by:cloudUser.id,updated_at:new Date().toISOString()};
+   const {error}=await sb.from('cards').upsert(payload);
+   if(error)throw error;
+   c.imagePath=path;c.image=path?await signedImage(path):'';const i=cards.findIndex(x=>x.id===c.id);if(i>=0)cards[i]=c;else cards.push(c);
+   render();$('modal').classList.remove('open');$('cloudStatus').textContent='Online · sincronizado';
+  }catch(error){console.error(error);alert('Não foi possível salvar online: '+(error.message||error));}
+  finally{$('saveBtn').disabled=false;$('saveBtn').textContent='Salvar carta'}
+  return;
+ }
  const previous=cards.slice(),i=cards.findIndex(x=>x.id===c.id);
  if(i>=0)cards[i]=c;else cards.push(c);
- if(persist())$('modal').classList.remove('open');
- else cards=previous;
+ if(persist())$('modal').classList.remove('open');else cards=previous;
 }
 async function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;if(c.creationMode==='ready'){const readyImg=new Image();readyImg.onload=()=>{const ctx=cv.getContext('2d');ctx.fillStyle='#09090c';ctx.fillRect(0,0,cv.width,cv.height);const scale=Math.min(cv.width/readyImg.width,cv.height/readyImg.height),dw=readyImg.width*scale,dh=readyImg.height*scale;ctx.drawImage(readyImg,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\\w\\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()};readyImg.src=c.image;return}const waitForImage=src=>new Promise(resolve=>{if(!src)return resolve();const img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;if(img.complete)resolve()});await Promise.all([waitForImage(c.image),waitForImage(c.type==='Magias'?'Molde%20Magias.png':c.type==='Criatura'?'Modelo%20Carta%20Ouro.png':'')]);drawCard(cv,c);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('creationMode').addEventListener('change',updateCreationMode);$('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtn').onclick=save;$('pngBtn').onclick=exportPNG;
-$('deleteBtn').onclick=()=>{if(editingId&&confirm('Excluir esta carta?')){cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}};
-$('image').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect())};r.readAsDataURL(f)};
+
+$('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))return;
+ if(cloudUser){const c=cards.find(x=>x.id===editingId);try{const {error}=await sb.from('cards').delete().eq('id',editingId);if(error)throw error;if(c?.imagePath)await sb.storage.from('tharis-cartas').remove([c.imagePath]);cards=cards.filter(x=>x.id!==editingId);render();$('modal').classList.remove('open')}catch(error){alert('Não foi possível excluir online: '+error.message)}}
+ else{cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}
+};
+$('image').onchange=e=>{const f=e.target.files[0];if(!f)return;imagePath='';const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect())};r.readAsDataURL(f)};
 function updateCropLabels(){$('zoomValue').textContent=$('imageZoom').value+'%';$('imageXValue').textContent=$('imageX').value;$('imageYValue').textContent=$('imageY').value}
 ['name','faction','type','rarity','cost','alignment','trait','life','power','defense','description','effect','flavor','imageZoom','imageX','imageY'].forEach(id=>$(id).addEventListener('input',()=>{updateCropLabels();drawCard($('preview'),collect())}));
 ['search','filterFaction','filterRarity','filterType','sort'].forEach(id=>$(id).addEventListener('input',render));
@@ -340,6 +372,61 @@ $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]
 $('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Tharis Doom Manager',version:2,exportedAt:new Date().toISOString(),cards},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tharis-doom-backup.json';a.click();URL.revokeObjectURL(a.href)};
 $('importBtn').onclick=()=>$('importFile').click();
 $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result),incoming=Array.isArray(data)?data:data.cards;if(!Array.isArray(incoming))throw Error('Formato inválido');if(confirm(`Importar ${incoming.length} cartas? Isso substituirá a biblioteca atual.`)){cards=incoming.map(c=>({...c,id:c.id||crypto.randomUUID()}));persist();alert('Importação concluída.')}}catch(err){alert('Não foi possível importar: '+err.message)}e.target.value=''};r.readAsText(f)};
+
+async function uploadCardImage(c){
+ if(!c.image)return c.imagePath||null;
+ if(!c.image.startsWith('data:'))return c.imagePath||null;
+ const response=await fetch(c.image);const blob=await response.blob();
+ const ext=(blob.type.split('/')[1]||'png').replace('jpeg','jpg');
+ const path=cloudUser.id+'/'+c.id+'.'+ext;
+ const {error}=await sb.storage.from('tharis-cartas').upload(path,blob,{upsert:true,contentType:blob.type||'image/png'});
+ if(error)throw error;return path;
+}
+async function signedImage(path){
+ if(!path)return '';
+ const {data,error}=await sb.storage.from('tharis-cartas').createSignedUrl(path,3600);
+ if(error)throw error;return data.signedUrl;
+}
+async function loadCloudCards(){
+ $('cloudStatus').textContent='Online · carregando biblioteca…';
+ const {data,error}=await sb.from('cards').select('*').order('updated_at',{ascending:false});
+ if(error)throw error;
+ if((data||[]).length===0&&cards.length){
+  if(confirm('Sua biblioteca online ainda está vazia, mas este navegador possui '+cards.length+' carta(s). Deseja enviar essas cartas para a nuvem agora?')){
+   const local=cards.slice();cards=[];
+   for(const c of local){
+    const path=await uploadCardImage(c);
+    const payload={id:c.id,name:c.name,faction:c.faction||null,card_type:c.type||null,rarity:c.rarity||null,card_data:{...c,image:'',imagePath:path},image_path:path,created_by:cloudUser.id,updated_by:cloudUser.id};
+    const {error:saveError}=await sb.from('cards').upsert(payload);if(saveError)throw saveError;
+   }
+   const {data:again,error:againError}=await sb.from('cards').select('*').order('updated_at',{ascending:false});if(againError)throw againError;
+   return setCardsFromCloud(again||[]);
+  }
+ }
+ setCardsFromCloud(data||[]);
+}
+async function setCardsFromCloud(rows){
+ const converted=[];
+ for(const row of rows){
+  const base=row.card_data||{};const path=row.image_path||base.imagePath||null;
+  let image='';if(path)image=await signedImage(path);
+  converted.push({...base,id:row.id,name:row.name,faction:row.faction||base.faction||'',type:row.card_type||base.type||'Criatura',rarity:row.rarity||base.rarity||'Bronze',image,imagePath:path,updated:row.updated_at?new Date(row.updated_at).getTime():Date.now()});
+ }
+ cards=converted;render();$('cloudStatus').textContent='Online · '+cards.length+' carta(s) sincronizada(s)';
+}
+async function handleSession(session){
+ cloudUser=session?.user||null;
+ $('authBtn').textContent=cloudUser?'Conta · '+(cloudUser.email||'conectada'):'Entrar';
+ $('logoutBtn').style.display=cloudUser?'inline-block':'none';
+ if(cloudUser){try{await loadCloudCards();$('authModal').classList.remove('open')}catch(error){$('cloudStatus').textContent='Erro na sincronização';$('authMessage').textContent='Falha ao carregar biblioteca: '+error.message;console.error(error)}}
+ else{$('cloudStatus').textContent='Modo local · não conectado';}
+}
+$('authBtn').onclick=()=>{$('authMessage').textContent=cloudUser?'Você está conectado ao Tharis Doom online.':'Entre com seu usuário do Supabase.';$('authModal').classList.add('open')};
+$('authCloseBtn').onclick=()=>$('authModal').classList.remove('open');
+$('loginBtn').onclick=async()=>{if(!sb){alert('Não foi possível iniciar o cliente Supabase.');return}const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}$('loginBtn').disabled=true;$('authMessage').textContent='Conectando…';try{const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await handleSession(data.session)}catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}finally{$('loginBtn').disabled=false}};
+$('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}cloudUser=null;load();render();handleSession(null);$('authModal').classList.remove('open')};
+if(sb){sb.auth.getSession().then(({data})=>handleSession(data.session));sb.auth.onAuthStateChange((_event,session)=>{if(session?.user?.id!==cloudUser?.id)handleSession(session)})}
+
 load();render();
 })();
 </script>
