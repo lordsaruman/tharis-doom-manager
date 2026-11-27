@@ -908,7 +908,7 @@ async function runCardOCR(file){
   const creatureProbe=await recognize({x:.415,y:.004,w:.17,h:.078,mode:'number'});
   const probeValue=numericOCR(creatureProbe.text);
   const ratio=img.naturalWidth/Math.max(1,img.naturalHeight);
-  const cardKind=probeValue&&creatureProbe.confidence>=24?'creature':(ratio<.455?'creature':'magic');
+  const cardKind=probeValue&&creatureProbe.confidence>=24?'creature':(ratio>=.516?'creature':'magic');
   const layout=OCR_REGIONS[cardKind],results={};
   const fields=Object.keys(layout);
   for(let i=0;i<fields.length;i++){
