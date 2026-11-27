@@ -57,13 +57,13 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
   <div class="editor">
    <div>
     <div class="formgrid">
-     <div class="field span2"><label>Modelo de criação</label><select id="creationMode"><option value="normal">Carta tradicional</option><option value="ready">CARTA PRONTA</option></select><div class="hint">Selecione CARTA PRONTA para identificar cartas cujo visual já está definido.</div></div>
+     <div class="field span2"><label>Modelo de criação</label><select id="creationMode"><option value="normal">Criar Carta</option><option value="ready">CARTA PRONTA</option></select><div class="hint">Selecione CARTA PRONTA para identificar cartas cujo visual já está definido.</div></div>
      <div class="field span2"><label>Nome da carta *</label><input id="name" maxlength="60" placeholder="Nome da carta"></div>
-     <div class="field"><label>Facção</label><input id="faction" list="factionOptions" placeholder="Escolha ou digite"><datalist id="factionOptions"></datalist></div>
+     <div class="field"><label>Facção</label><select id="faction"><option value="">Selecione uma facção</option><option>Kalassiria</option><option>Monte Celéstia</option><option>Baator</option><option>Moiras</option><option>Caras Galadhon</option><option>Yalugoth</option><option>Thay</option><option>Baldur's Gate</option></select></div>
      <div class="field"><label>Tipo</label><select id="type"><option>Criatura</option><option>Construção</option><option>Magias</option><option>Itens</option></select></div>
      <div class="field"><label>Raridade / moldura</label><select id="rarity"><option value="Bronze">Bronze</option><option value="Prata">Prata</option><option value="Ouro">Ouro</option><option value="Dark">Dark</option><option value="Esmeralda">Esmeralda</option><option value="Rubi">Rubi</option><option value="Topázio">Topázio</option></select></div>
      <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
-     <div class="field"><label>Alinhamento</label><input id="alignment" placeholder="Ex.: Leal e Bom"></div>
+     <div class="field"><label>Alinhamento</label><select id="alignment"><option value="">Selecione um alinhamento</option><option>Luz</option><option>Neutro</option><option>Sombra</option></select></div>
      <div class="field"><label>Características</label><input id="trait" placeholder="Ex.: Bastião, Celestial, Morto-vivo"></div>
      <div class="field"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
      <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
@@ -90,7 +90,7 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const FACTIONS=['Elfos','Moiras','Kalassíria','Elturel',"Baldur's Gate",'Casas Galadhom','Monte Celéstia','Baator'];
+const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
 const KEY='tharisDoomManagerV2';
 let cards=[],editingId=null,imageData='';
 const creatureFrame=new Image();creatureFrame.crossOrigin='anonymous';creatureFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};creatureFrame.src='Modelo%20Carta%20Ouro.png';
@@ -185,6 +185,10 @@ function drawCreatureCard(canvas,c){
   stat(c.power,.105,.945,.105);
   stat(c.defense,.895,.945,.105);
   ctx.shadowBlur=0;
+  // Espaços das bandeiras para receber as insígnias oficiais enviadas pelo usuário.
+  const drawFlagSlot=(x,y)=>{const fw=w*.105,fh=h*.022,left=w*x-fw/2,top=h*y;ctx.save();ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left+fw,top);ctx.lineTo(left+fw*.88,top+fh);ctx.lineTo(left+fw*.12,top+fh);ctx.closePath();ctx.fillStyle='rgba(25,20,17,.92)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.0025);ctx.stroke();ctx.restore()};
+  if(c.alignment)drawFlagSlot(.95,.052);
+  if(c.faction)drawFlagSlot(.95,.080);
   ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
@@ -269,7 +273,7 @@ function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
  const vals={creationMode:'normal',name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
- Object.keys(vals).forEach(k=>$(k).value=c?.[k]??vals[k]);$('image').value='';updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
+ Object.keys(vals).forEach(k=>{const el=$(k),value=c?.[k]??vals[k];if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
 function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 function save(){const c=collect();if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');$('image').focus();return}const i=cards.findIndex(x=>x.id===c.id);if(i>=0)cards[i]=c;else cards.push(c);persist();$('modal').classList.remove('open')}
