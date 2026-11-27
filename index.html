@@ -819,35 +819,132 @@ function drawCard(canvas,c){
 }
 function updateCreationMode(){const ready=$('creationMode').value==='ready';$('cropControls').style.display=ready?'none':'grid';$('ocrPanel').style.display=ready?'block':'none';$('imageLabel').textContent=ready?'Imagem completa da carta (PNG ou JPG)':'Ilustração (PNG ou JPG)';$('imageHint').textContent=ready?'Envie a imagem final da carta. O reconhecimento preencherá os dados sem modificar a imagem.':(cloudUser?'A imagem será armazenada no Supabase Storage.':'A imagem fica incorporada ao registro local até conectar sua conta.');drawCard($('preview'),collect())}
 let ocrBusy=false;
+const OCR_REGIONS={
+ creature:{
+  name:{x:.15,y:.686,w:.70,h:.044,mode:'line'},
+  trait:{x:.17,y:.724,w:.66,h:.040,mode:'line'},
+  effect:{x:.13,y:.763,w:.74,h:.116,mode:'block'},
+  flavor:{x:.17,y:.887,w:.66,h:.083,mode:'block'},
+  life:{x:.415,y:.004,w:.17,h:.078,mode:'number'},
+  cost:{x:.875,y:.000,w:.12,h:.064,mode:'number'},
+  power:{x:.025,y:.895,w:.17,h:.100,mode:'number'},
+  defense:{x:.805,y:.895,w:.17,h:.100,mode:'number'}
+ },
+ magic:{
+  name:{x:.16,y:.680,w:.68,h:.060,mode:'line'},
+  effect:{x:.13,y:.750,w:.74,h:.135,mode:'block'},
+  flavor:{x:.15,y:.887,w:.70,h:.090,mode:'block'},
+  cost:{x:.895,y:.000,w:.105,h:.075,mode:'number'}
+ }
+};
+function loadOCRImage(file){
+ return new Promise((resolve,reject)=>{
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};
+  img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Não foi possível abrir a imagem enviada.'))};
+  img.src=url;
+ });
+}
+function makeOCRCrop(img,region){
+ const sx=Math.max(0,Math.round(img.naturalWidth*region.x));
+ const sy=Math.max(0,Math.round(img.naturalHeight*region.y));
+ const sw=Math.max(1,Math.min(img.naturalWidth-sx,Math.round(img.naturalWidth*region.w)));
+ const sh=Math.max(1,Math.min(img.naturalHeight-sy,Math.round(img.naturalHeight*region.h)));
+ const scale=3,margin=18,canvas=document.createElement('canvas');
+ canvas.width=sw*scale+margin*2;canvas.height=sh*scale+margin*2;
+ const ctx=canvas.getContext('2d',{willReadFrequently:true});
+ ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+ ctx.drawImage(img,sx,sy,sw,sh,margin,margin,sw*scale,sh*scale);
+ const pixels=ctx.getImageData(0,0,canvas.width,canvas.height),d=pixels.data;
+ let sum=0,count=0;
+ for(let y=margin;y<canvas.height-margin;y+=2)for(let x=margin;x<canvas.width-margin;x+=2){
+  const i=(y*canvas.width+x)*4;sum+=.299*d[i]+.587*d[i+1]+.114*d[i+2];count++;
+ }
+ const invert=count>0&&sum/count<122;
+ for(let i=0;i<d.length;i+=4){
+  let g=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+  g=Math.max(0,Math.min(255,(g-128)*1.42+128));
+  if(invert)g=255-g;
+  d[i]=d[i+1]=d[i+2]=g;
+ }
+ ctx.putImageData(pixels,0,0);
+ return canvas;
+}
+function cleanOCRText(value){
+ return String(value||'').replace(/\r/g,'').replace(/[|¦]/g,'I').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+}
+function numericOCR(value){
+ const match=String(value||'').match(/\d{1,2}/);
+ return match?String(Number(match[0])):'';
+}
 async function runCardOCR(file){
  if(!file)return;
  if(!/^image\/(png|jpeg)$/.test(file.type)){$('ocrStatus').textContent='Formato não suportado. Use PNG ou JPG.';return}
- if(ocrBusy)return;ocrBusy=true;$('ocrBtn').disabled=true;$('ocrStatus').textContent='Preparando o reconhecimento…';$('ocrRaw').value='';
+ if(ocrBusy)return;
+ ocrBusy=true;$('ocrBtn').disabled=true;$('ocrStatus').textContent='Preparando leitura por regiões…';$('ocrRaw').value='';
+ let worker=null;
  try{
-  if(!window.Tesseract)await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';script.onload=resolve;script.onerror=()=>reject(new Error('Não foi possível carregar o mecanismo de leitura. Verifique sua conexão.'));document.head.appendChild(script)});
-  $('ocrStatus').textContent='Lendo a carta. Isso pode levar alguns segundos…';
-  const result=await Tesseract.recognize(file,'por+eng',{logger:m=>{if(m.status==='recognizing text')$('ocrStatus').textContent='Reconhecendo texto… '+Math.round((m.progress||0)*100)+'%'}});
-  const lines=(result.data.lines||[]).map(l=>({text:(l.text||'').trim(),y0:l.bbox?.y0??0,y1:l.bbox?.y1??0,x0:l.bbox?.x0??0,x1:l.bbox?.x1??0})).filter(l=>l.text);
-  const raw=lines.map(l=>l.text).join('\n');$('ocrRaw').value=raw;
-  if(!lines.length)throw new Error('Nenhum texto legível foi encontrado. Tente uma imagem mais nítida.');
-  const h=Math.max(1,...lines.map(l=>l.y1)),w=Math.max(1,...lines.map(l=>l.x1));
-  const top=lines.filter(l=>l.y0/h<.24).sort((a,b)=>a.y0-b.y0);
-  const titleLine=top.find(l=>/[A-Za-zÀ-ÿ]{2,}/.test(l.text)&&!/^\d+$/.test(l.text)&&!/^(criatura|magia|item|construção|construcao)$/i.test(l.text));
-  if(titleLine)$('name').value=titleLine.text.replace(/[|_]+/g,' ').trim().slice(0,60);
-  const costCandidates=lines.filter(l=>l.y0/h<.38&&l.x0/w<.34).flatMap(l=>[...l.text.matchAll(/\b\d{1,2}\b/g)].map(m=>({n:m[0],line:l})));
-  if(costCandidates.length){const candidate=costCandidates.find(x=>x.line.y0/h<.22)||costCandidates[0];$('cost').value=candidate.n}
-  const body=lines.filter(l=>l.y0/h>=.28&&l.y0/h<.91).sort((a,b)=>a.y0-b.y0);
-  const flavorLines=lines.filter(l=>l.y0/h>=.82).sort((a,b)=>a.y0-b.y0);
-  const bodyLines=body.filter(l=>!/^\d{1,2}$/.test(l.text)&&!/^(ataque|defesa|vida|custo)$/i.test(l.text));
-  const effectLines=bodyLines.filter(l=>!flavorLines.includes(l));
-  if(effectLines.length)$('effect').value=effectLines.map(l=>l.text).join('\n').trim();
-  if(flavorLines.length)$('flavor').value=flavorLines.map(l=>l.text).join('\n').trim();
-  const all=raw.toLowerCase();
-  if(/\b(magia|feitiço|feitico)\b/.test(all)&&/\b(efeito)\b/.test(all)){$('type').value='Magias';updateEffectLabel()}
-  drawCard($('preview'),collect());
-  $('ocrStatus').textContent='Leitura concluída. Revise os campos preenchidos e corrija qualquer erro antes de salvar.';
- }catch(error){console.error('OCR:',error);$('ocrStatus').textContent='Não foi possível concluir a leitura: '+(error.message||error)}
- finally{ocrBusy=false;$('ocrBtn').disabled=false}
+  if(!window.Tesseract)await new Promise((resolve,reject)=>{
+   const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+   script.onload=resolve;script.onerror=()=>reject(new Error('Não foi possível carregar o mecanismo de leitura. Verifique sua conexão.'));
+   document.head.appendChild(script);
+  });
+  const img=await loadOCRImage(file);
+  $('ocrStatus').textContent='Identificando o modelo da carta…';
+  worker=await Tesseract.createWorker('por+eng',1,{logger:m=>{
+   if(m.status==='recognizing text')$('ocrStatus').textContent='Lendo regiões… '+Math.round((m.progress||0)*100)+'%';
+  }});
+  const recognize=async(region)=>{
+   const crop=makeOCRCrop(img,region);
+   await worker.setParameters({tessedit_pageseg_mode:region.mode==='number'?'10':region.mode==='line'?'7':'6',preserve_interword_spaces:'1'});
+   const result=await worker.recognize(crop);
+   return {text:cleanOCRText(result.data.text),confidence:Number(result.data.confidence)||0};
+  };
+  // A esfera central superior existe no molde de criaturas e contém o valor de Vida.
+  // No molde de magia, essa mesma região é apenas ilustração.
+  const centerLife=await recognize({x:.415,y:.004,w:.17,h:.078,mode:'number'});
+  const lifeValue=numericOCR(centerLife.text);
+  const ratio=img.naturalWidth/Math.max(1,img.naturalHeight);
+  const cardKind=lifeValue&&centerLife.confidence>=24?'creature':(ratio<.455?'creature':'magic');
+  const layout=OCR_REGIONS[cardKind],results={};
+  const fields=Object.keys(layout);
+  for(let i=0;i<fields.length;i++){
+   const field=fields[i];
+   if(field==='life'&&cardKind==='creature'){
+    results.life={text:lifeValue,confidence:centerLife.confidence};
+    continue;
+   }
+   $('ocrStatus').textContent='Lendo '+({name:'nome',trait:'características',effect:'habilidades/efeito',flavor:'ambientação',life:'vida',cost:'custo',power:'ataque',defense:'defesa'}[field]||field)+'…';
+   results[field]=await recognize(layout[field]);
+  }
+  const rawOrder=cardKind==='creature'?['name','trait','life','cost','power','defense','effect','flavor']:['name','cost','effect','flavor'];
+  const labels={name:'NOME',trait:'CARACTERÍSTICAS',life:'VIDA',cost:'CUSTO',power:'ATAQUE',defense:'DEFESA',effect:'HABILIDADES / EFEITO',flavor:'AMBIENTAÇÃO'};
+  $('ocrRaw').value=rawOrder.map(k=>labels[k]+'\n'+(results[k]?.text||'(nenhum texto confiável)')+'  · confiança '+Math.round(results[k]?.confidence||0)+'%').join('\n\n');
+  const accepted=(field,min=30)=>results[field]&&results[field].text&&results[field].confidence>=min;
+  const put=(field,value)=>{if(value!==undefined&&value!==null&&String(value).trim())$(field).value=String(value).trim()};
+  if(accepted('name',35))put('name',results.name.text.replace(/\s{2,}/g,' ').slice(0,60));
+  if(accepted('cost',20)){const n=numericOCR(results.cost.text);if(n!=='')put('cost',n)}
+  if(cardKind==='creature'){
+   if(accepted('trait',28))put('trait',results.trait.text);
+   if(lifeValue&&centerLife.confidence>=24)put('life',lifeValue);
+   if(accepted('power',20)){const n=numericOCR(results.power.text);if(n!=='')put('power',n)}
+   if(accepted('defense',20)){const n=numericOCR(results.defense.text);if(n!=='')put('defense',n)}
+   $('type').value='Criatura';
+  }else{
+   $('type').value='Magias';
+  }
+  if(accepted('effect',28))put('effect',results.effect.text);
+  if(accepted('flavor',28))put('flavor',results.flavor.text);
+  updateEffectLabel();drawCard($('preview'),collect());
+  const count=rawOrder.filter(k=>accepted(k,k==='name'?35:k==='cost'||k==='life'||k==='power'||k==='defense'?20:28)).length;
+  $('ocrStatus').textContent='Leitura regional concluída ('+count+'/'+rawOrder.length+' regiões com confiança suficiente). Confira e corrija os campos antes de salvar. Facção, alinhamento e raridade continuam para seleção manual.';
+ }catch(error){
+  console.error('OCR:',error);$('ocrStatus').textContent='Não foi possível concluir a leitura: '+(error.message||error);
+ }finally{
+  if(worker)try{await worker.terminate()}catch(e){}
+  ocrBusy=false;$('ocrBtn').disabled=false;
+ }
 }
 $('ocrBtn').addEventListener('click',()=>{const file=$('image').files?.[0];if(file)runCardOCR(file);else $('ocrStatus').textContent='Selecione primeiro a imagem PNG ou JPG da carta.'});
 function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLabel').textContent=magic?'Efeito':'Habilidades';$('effect').placeholder=magic?'Descreva o efeito da magia':'Habilidades e efeitos da carta'}
