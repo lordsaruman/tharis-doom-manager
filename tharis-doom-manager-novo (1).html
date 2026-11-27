@@ -323,6 +323,13 @@ footer:before{
  text-align:center;line-height:1.2;
 }
 
+
+/* INSÍGNIAS PNG COM FUNDO TRANSPARENTE */
+.sigil-img{display:inline-block;object-fit:contain;flex:0 0 auto;vertical-align:middle;filter:drop-shadow(0 1px 2px #0009)}
+.faction-line .sigil-img{width:20px;height:20px}
+.inspector-faction .sigil-img{width:22px;height:22px}
+.faction-chip .sigil-img{width:22px;height:22px}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -471,12 +478,48 @@ function persist(){
   return false;
  }
 }
-function sigil(faction,size=20){
- const cel=faction==='Monte Celéstia', baa=faction==='Baator';
- if(!cel&&!baa)return `<span class="sigil" style="width:${size}px;height:${size}px;font-size:${size*.55}px">✦</span>`;
- const color=cel?'#e5c77b':'#c64b50';
- const art=cel?`<circle cx="12" cy="12" r="4.2" fill="none" stroke="${color}" stroke-width="1.8"/><path d="M12 1.8v3M12 19.2v3M1.8 12h3M19.2 12h3M4.8 4.8l2.1 2.1m10.2 10.2 2.1 2.1m0-14.4-2.1 2.1M6.9 17.1l-2.1 2.1" stroke="${color}" stroke-width="1.7" stroke-linecap="round"/>`:`<path d="M4 5.5 2.2 1.8 8.7 4.1 12 7l3.3-2.9 6.5-2.3L20 5.5l-1.2 6.8L12 21l-6.8-8.7z" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.3 11.5 12 9l3.7 2.5L12 16z" fill="${color}"/>`;
- return `<span class="sigil" style="width:${size}px;height:${size}px;border-color:${color}"><svg viewBox="0 0 24 24" fill="none">${art}</svg></span>`;
+const INSIGNIA_FILES={
+ 'Kalassiria':'INSIGNIA-KALASSIRIA.jpg',
+ 'Caras Galadhon':'INSIGNIA-CARAS-GALADHON.jpg',
+ 'Baator':'INSIGNIA-BAATOR.jfif.jpg',
+ 'Construção':'INSIGNIA-CONSTRUÇAO.jpg',
+ 'Construcao':'INSIGNIA-CONSTRUÇAO.jpg',
+ 'Magia':'INSIGNIA-MAGIA.jpg',
+ 'Magias':'INSIGNIA-MAGIA.jpg'
+};
+const INSIGNIA_DATA={};
+function prepareInsignia(key,file){
+ const img=new Image();
+ img.onload=()=>{
+  try{
+   const cv=document.createElement('canvas');cv.width=img.naturalWidth;cv.height=img.naturalHeight;
+   const cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(img,0,0);
+   const frame=cx.getImageData(0,0,cv.width,cv.height),px=frame.data;
+   for(let i=0;i<px.length;i+=4){
+    const min=Math.min(px[i],px[i+1],px[i+2]);
+    const max=Math.max(px[i],px[i+1],px[i+2]);
+    if(min>242&&max-min<18)px[i+3]=0;
+    else if(min>218&&max-min<24)px[i+3]=Math.round(px[i+3]*(242-min)/24);
+   }
+   cx.putImageData(frame,0,0);INSIGNIA_DATA[key]=cv.toDataURL('image/png');
+   if(typeof render==='function'){render();if(typeof updateCardInspector==='function')updateCardInspector();}
+  }catch(e){INSIGNIA_DATA[key]=null;}
+ };
+ img.src='assets/insignias/'+file;
+}
+Object.entries(INSIGNIA_FILES).forEach(([key,file])=>prepareInsignia(key,file));
+function sigil(faction,size=20,type=''){
+ const keys=[];
+ if(INSIGNIA_FILES[faction])keys.push(faction);
+ if(INSIGNIA_FILES[type]&&!keys.includes(type))keys.push(type);
+ if(!keys.length){
+  const cel=faction==='Monte Celéstia',baa=faction==='Baator';
+  if(!cel&&!baa)return `<span class="sigil" style="width:${size}px;height:${size}px;font-size:${size*.55}px">✦</span>`;
+  const color=cel?'#e5c77b':'#c64b50';
+  const art=cel?`<circle cx="12" cy="12" r="4.2" fill="none" stroke="${color}" stroke-width="1.8"/><path d="M12 1.8v3M12 19.2v3M1.8 12h3M19.2 12h3M4.8 4.8l2.1 2.1m10.2 10.2 2.1 2.1m0-14.4-2.1 2.1M6.9 17.1l-2.1 2.1" stroke="${color}" stroke-width="1.7" stroke-linecap="round"/>`:`<path d="M4 5.5 2.2 1.8 8.7 4.1 12 7l3.3-2.9 6.5-2.3L20 5.5l-1.2 6.8L12 21l-6.8-8.7z" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.3 11.5 12 9l3.7 2.5L12 16z" fill="${color}"/>`;
+  return `<span class="sigil" style="width:${size}px;height:${size}px;border-color:${color}"><svg viewBox="0 0 24 24" fill="none">${art}</svg></span>`;
+ }
+ return keys.map(key=>`<img class="sigil-img" src="${INSIGNIA_DATA[key]||('assets/insignias/'+INSIGNIA_FILES[key])}" alt="${escapeHtml(key)}" title="${escapeHtml(key)}" style="width:${size}px;height:${size}px">`).join('');
 }
 function refreshSelects(){
  const all=[...new Set([...FACTIONS,...cards.map(c=>c.faction).filter(Boolean)])];
@@ -495,7 +538,7 @@ function render(){
  list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t));
  const sort=$('sort').value;if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
  $('resultCount').textContent=`${list.length} de ${cards.length} cartas`;
- $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div><div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div><div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div><div class="faction-line">${sigil(c.faction)}<span>${escapeHtml(c.faction||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
+ $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div><div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div><div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div><div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
  document.querySelectorAll('canvas[data-card]').forEach(cv=>{const c=cards.find(x=>x.id===cv.dataset.card);if(c)drawCard(cv,c)});
  if(!list.some(x=>x.id===selectedCardId))selectedCardId=list[0]?.id||null;
  document.querySelectorAll('.cardtile[data-id]').forEach(tile=>tile.classList.toggle('is-selected',tile.dataset.id===selectedCardId));
@@ -508,7 +551,7 @@ function updateCardInspector(){
  if(!c)return;
  $('selectedCardName').textContent=c.name||'Sem nome';
  $('selectedCardMeta').textContent=[c.type||'Carta',c.rarity||'Sem raridade'].join(' · ');
- $('selectedCardFaction').innerHTML=sigil(c.faction)+'<span>'+escapeHtml(c.faction||'Sem facção')+'</span>';
+ $('selectedCardFaction').innerHTML=sigil(c.faction,20,c.type)+'<span>'+escapeHtml(c.faction||c.type||'Sem facção')+'</span>';
  $('selectedCardStats').innerHTML=[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']].map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');
  drawCard($('selectedCardCanvas'),c);
 }
