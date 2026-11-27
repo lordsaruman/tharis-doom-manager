@@ -777,10 +777,12 @@ function drawMagicCard(canvas,c){
  ctx.shadowColor='rgba(201,164,92,.45)';ctx.shadowBlur=3;
  ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();ctx.restore();
  if(c.flavor)drawRichText(c.flavor,w*.5,h*.926,w*.50,h*.070,w*.024,w*.016,h*.018,'#d8c7a8',true);
-  // Nome e custo seguem a mesma tipografia, cor e posicionamento da carta de criatura.
-  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#3b2a19';
+  // Nome no estilo da referência MODELO-MAGIA: serifado, dourado e centralizado.
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#e9c56f';
   ctx.font='normal '+(w*.050)+'px Georgia';
-  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
+  ctx.shadowColor='rgba(0,0,0,.72)';ctx.shadowBlur=2;
+  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.724,w*.79);
+  ctx.shadowBlur=0;
   // Custo centralizado na esfera, com a mesma cor, sombra e escala da criatura.
   ctx.fillStyle='#29231b';ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
   ctx.font='normal '+(w*.090)+'px Georgia';
