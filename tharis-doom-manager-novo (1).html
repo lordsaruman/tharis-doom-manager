@@ -821,14 +821,15 @@ function updateCreationMode(){const ready=$('creationMode').value==='ready';$('c
 let ocrBusy=false;
 const OCR_REGIONS={
  creature:{
-  name:{x:.15,y:.686,w:.70,h:.044,mode:'line'},
-  trait:{x:.17,y:.724,w:.66,h:.040,mode:'line'},
-  effect:{x:.13,y:.763,w:.74,h:.116,mode:'block'},
-  flavor:{x:.17,y:.887,w:.66,h:.083,mode:'block'},
+  // Coordenadas calibradas visualmente sobre assets/referencias/19-ELANDRA.png.
+  name:{x:.075,y:.688,w:.85,h:.041,mode:'line'},
+  trait:{x:.16,y:.731,w:.68,h:.034,mode:'line'},
+  effect:{x:.12,y:.766,w:.76,h:.067,mode:'block'},
+  flavor:{x:.15,y:.842,w:.70,h:.079,mode:'block'},
   life:{x:.415,y:.004,w:.17,h:.078,mode:'number'},
   cost:{x:.875,y:.000,w:.12,h:.064,mode:'number'},
-  power:{x:.025,y:.895,w:.17,h:.100,mode:'number'},
-  defense:{x:.805,y:.895,w:.17,h:.100,mode:'number'}
+  power:{x:.025,y:.905,w:.17,h:.080,mode:'number'},
+  defense:{x:.805,y:.905,w:.17,h:.080,mode:'number'}
  },
  magic:{
   name:{x:.16,y:.680,w:.68,h:.060,mode:'line'},
@@ -850,7 +851,7 @@ function makeOCRCrop(img,region){
  const sy=Math.max(0,Math.round(img.naturalHeight*region.y));
  const sw=Math.max(1,Math.min(img.naturalWidth-sx,Math.round(img.naturalWidth*region.w)));
  const sh=Math.max(1,Math.min(img.naturalHeight-sy,Math.round(img.naturalHeight*region.h)));
- const scale=3,margin=18,canvas=document.createElement('canvas');
+ const scale=4,margin=24,canvas=document.createElement('canvas');
  canvas.width=sw*scale+margin*2;canvas.height=sh*scale+margin*2;
  const ctx=canvas.getContext('2d',{willReadFrequently:true});
  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -897,7 +898,7 @@ async function runCardOCR(file){
   }});
   const recognize=async(region)=>{
    const crop=makeOCRCrop(img,region);
-   await worker.setParameters({tessedit_pageseg_mode:region.mode==='number'?'10':region.mode==='line'?'7':'6',preserve_interword_spaces:'1'});
+   await worker.setParameters({tessedit_pageseg_mode:region.mode==='number'?'13':region.mode==='line'?'7':'6',preserve_interword_spaces:'1',tessedit_char_whitelist:region.mode==='number'?'0123456789':''});
    const result=await worker.recognize(crop);
    return {text:cleanOCRText(result.data.text),confidence:Number(result.data.confidence)||0};
   };
