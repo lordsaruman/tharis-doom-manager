@@ -59,17 +59,22 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
     <div class="formgrid">
      <div class="field span2"><label>Nome da carta *</label><input id="name" maxlength="60" placeholder="Nome da carta"></div>
      <div class="field"><label>Facção</label><input id="faction" list="factionOptions" placeholder="Escolha ou digite"><datalist id="factionOptions"></datalist></div>
-     <div class="field"><label>Tipo</label><select id="type"><option>Criatura</option><option>Personagem</option><option>Equipamento</option><option>Magia</option><option>Local</option><option>Evento</option><option>Outro</option></select></div>
+     <div class="field"><label>Tipo</label><select id="type"><option>Criatura</option><option>Construção</option><option>Magias</option><option>Itens</option></select></div>
      <div class="field"><label>Raridade / moldura</label><select id="rarity"><option value="Bronze">Bronze</option><option value="Prata">Prata</option><option value="Ouro">Ouro</option><option value="Dark">Dark</option><option value="Esmeralda">Esmeralda</option><option value="Rubi">Rubi</option><option value="Topázio">Topázio</option></select></div>
      <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
      <div class="field"><label>Alinhamento</label><input id="alignment" placeholder="Ex.: Leal e Bom"></div>
      <div class="field"><label>Traço / atributo</label><input id="trait" placeholder="Ex.: Celestial"></div>
-     <div class="field"><label>Força / ataque</label><input id="power" placeholder="—"></div>
-     <div class="field"><label>Defesa / vida</label><input id="defense" placeholder="—"></div>
-     <div class="field span2"><label>Descrição</label><textarea id="description" placeholder="Texto principal da carta"></textarea></div>
-     <div class="field span2"><label>Efeito</label><textarea id="effect" placeholder="Efeito ou habilidade"></textarea></div>
+     <div class="field"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
+     <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
+     <div class="field"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
+     <div class="field span2"><label>Características</label><input id="trait" placeholder="Ex.: Humanoide, Celestial, Construto"></div>
+     <div class="field span2"><label>Habilidades</label><textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea></div>
+     <div class="field span2"><label>Descrição complementar</label><textarea id="description" placeholder="Texto adicional, regras ou detalhes"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
      <div class="field span2"><label>Ilustração (PNG, JPG ou WEBP)</label><input id="image" type="file" accept="image/*"><div class="hint">A imagem é incorporada ao registro local da carta.</div></div>
+     <div class="field span2"><label>Zoom da ilustração <span id="zoomValue">100%</span></label><input id="imageZoom" type="range" min="100" max="250" value="100"></div>
+     <div class="field"><label>Enquadramento horizontal <span id="imageXValue">0</span></label><input id="imageX" type="range" min="-100" max="100" value="0"></div>
+     <div class="field"><label>Enquadramento vertical <span id="imageYValue">0</span></label><input id="imageY" type="range" min="-100" max="100" value="0"></div>
     </div>
    </div>
    <div class="preview-wrap">
@@ -125,7 +130,7 @@ function drawCard(canvas,c){
  ctx.fillStyle='#100f14';ctx.fillRect(w*.07,h*.09,w*.86,h*.07);ctx.fillStyle='#f4e9d5';ctx.font=`bold ${w*.055}px Georgia`;ctx.textAlign='center';ctx.fillText((c.name||'NOVA CARTA').toUpperCase().slice(0,30),w/2,h*.137);
  const ix=w*.105,iy=h*.19,iw=w*.79,ih=h*.39;
  ctx.fillStyle='#0a0b0e';ctx.fillRect(ix,iy,iw,ih);
- if(c.image){const img=new Image();img.onload=()=>{ctx.drawImage(img,ix,iy,iw,ih);drawOverlay()};img.src=c.image}else{ctx.fillStyle='#27232d';ctx.fillRect(ix,iy,iw,ih);ctx.fillStyle='#b9a9c7';ctx.font=`${w*.11}px Georgia`;ctx.fillText('✦',w/2,iy+ih*.55);ctx.font=`${w*.035}px sans-serif`;ctx.fillText('ILUSTRAÇÃO',w/2,iy+ih*.72)}
+ if(c.image){const img=new Image();img.onload=()=>{ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z,dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();drawOverlay()};img.src=c.image}else{ctx.fillStyle='#27232d';ctx.fillRect(ix,iy,iw,ih);ctx.fillStyle='#b9a9c7';ctx.font=`${w*.11}px Georgia`;ctx.fillText('✦',w/2,iy+ih*.55);ctx.font=`${w*.035}px sans-serif`;ctx.fillText('ILUSTRAÇÃO',w/2,iy+ih*.72)}
  function drawOverlay(){
   ctx.strokeStyle=edge;ctx.lineWidth=3;ctx.strokeRect(ix,iy,iw,ih);
  }
@@ -135,25 +140,27 @@ function drawCard(canvas,c){
  const faction=(c.faction||'SEM FACÇÃO').toUpperCase();ctx.fillText(faction.slice(0,30),w*.11,h*.65);
  ctx.fillStyle='#d9d3dc';ctx.font=`${w*.027}px sans-serif`;
  const wrap=(text,x,y,max,lh,limit=4)=>{let words=String(text||'').split(/\s+/),line='',n=0;for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){ctx.fillText(line,x,y+n*lh);line=word;n++;if(n>=limit-1)break}else line=test}if(line&&n<limit)ctx.fillText(line,x,y+n*lh)};
- wrap(c.description||c.effect||c.trait||' ',w*.11,h*.70,w*.76,h*.038,4);
- if(c.flavor){ctx.font=`italic ${w*.024}px Georgia`;ctx.fillStyle='#b9aebd';wrap(c.flavor,w*.11,h*.85,w*.76,h*.03,2)}
+ wrap(c.trait||' ',w*.11,h*.685,w*.76,h*.03,1);
+ ctx.font=`${w*.025}px sans-serif`;wrap(c.effect||c.description||' ',w*.11,h*.73,w*.76,h*.034,4);
+ if(c.flavor){ctx.font=`italic ${w*.023}px Georgia`;ctx.fillStyle='#b9aebd';wrap(c.flavor,w*.11,h*.87,w*.76,h*.025,2)}
  ctx.fillStyle='#f1d58c';ctx.textAlign='right';ctx.font=`bold ${w*.04}px sans-serif`;ctx.fillText(String(c.cost??0),w*.87,h*.955);
- ctx.textAlign='left';ctx.font=`${w*.025}px sans-serif`;ctx.fillStyle='#ddd';ctx.fillText([c.power,c.defense].filter(Boolean).join(' / '),w*.11,h*.955);
+ ctx.textAlign='left';ctx.font=`${w*.025}px sans-serif`;ctx.fillStyle='#ddd';ctx.fillText([c.life?'V '+c.life:'',c.power?'A '+c.power:'',c.defense?'D '+c.defense:''].filter(Boolean).join('  '),w*.11,h*.955);
  if(c.faction==='Monte Celéstia'||c.faction==='Baator'){ctx.beginPath();ctx.arc(w*.88,h*.075,w*.035,0,Math.PI*2);ctx.fillStyle='#15151b';ctx.fill();ctx.strokeStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.stroke();ctx.fillStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.font=`bold ${w*.045}px Georgia`;ctx.textAlign='center';ctx.fillText(c.faction==='Baator'?'⌁':'✧',w*.88,h*.091)}
 }
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
- const vals={name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',power:'',defense:'',description:'',effect:'',flavor:''};
- Object.keys(vals).forEach(k=>$(k).value=c?.[k]??vals[k]);$('image').value='';$('modal').classList.add('open');drawCard($('preview'),{...vals,...(c||{}),image:imageData});
+ const vals={name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
+ Object.keys(vals).forEach(k=>$(k).value=c?.[k]??vals[k]);$('image').value='';updateCropLabels();$('modal').classList.add('open');drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
-function collect(){return {id:editingId||crypto.randomUUID(),name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,updated:Date.now()}}
+function collect(){return {id:editingId||crypto.randomUUID(),name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 function save(){const c=collect();if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}const i=cards.findIndex(x=>x.id===c.id);if(i>=0)cards[i]=c;else cards.push(c);persist();$('modal').classList.remove('open')}
 function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}const cv=document.createElement('canvas');cv.width=900;cv.height=1500;drawCard(cv,c);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtn').onclick=save;$('pngBtn').onclick=exportPNG;
 $('deleteBtn').onclick=()=>{if(editingId&&confirm('Excluir esta carta?')){cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}};
 $('image').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect())};r.readAsDataURL(f)};
-['name','faction','type','rarity','cost','alignment','trait','power','defense','description','effect','flavor'].forEach(id=>$(id).addEventListener('input',()=>drawCard($('preview'),collect())));
+function updateCropLabels(){$('zoomValue').textContent=$('imageZoom').value+'%';$('imageXValue').textContent=$('imageX').value;$('imageYValue').textContent=$('imageY').value}
+['name','faction','type','rarity','cost','alignment','trait','life','power','defense','description','effect','flavor','imageZoom','imageX','imageY'].forEach(id=>$(id).addEventListener('input',()=>{updateCropLabels();drawCard($('preview'),collect())}));
 ['search','filterFaction','filterRarity','filterType','sort'].forEach(id=>$(id).addEventListener('input',render));
 $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]');if(tile){const c=cards.find(x=>x.id===tile.dataset.id);if(c)openEditor(c)}});
 $('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Tharis Doom Manager',version:2,exportedAt:new Date().toISOString(),cards},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tharis-doom-backup.json';a.click();URL.revokeObjectURL(a.href)};
