@@ -582,73 +582,41 @@ function drawMagicCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
  const drawLayout=img=>{
   ctx.clearRect(0,0,w,h);
-  ctx.fillStyle='#08090d';ctx.fillRect(0,0,w,h);
-  // Ilustração dentro da abertura interna, com margem generosa para não
-  // recortar os arabescos dourados do molde original.
+  // A ilustração fica sob o molde inteiro, preenchendo o cartão.
+  // Não há máscara artesanal: as áreas de transparência pertencem ao PNG original.
   if(img){
-   ctx.save();ctx.beginPath();
-   ctx.moveTo(w*.105,h*.025);
-   ctx.bezierCurveTo(w*.055,h*.025,w*.028,h*.065,w*.028,h*.13);
-   ctx.lineTo(w*.025,h*.78);
-   ctx.bezierCurveTo(w*.025,h*.91,w*.065,h*.975,w*.13,h*.975);
-   ctx.lineTo(w*.87,h*.975);
-   ctx.bezierCurveTo(w*.935,h*.975,w*.975,h*.91,w*.975,h*.78);
-   ctx.lineTo(w*.972,h*.13);
-   ctx.bezierCurveTo(w*.972,h*.065,w*.945,h*.025,w*.895,h*.025);
-   ctx.closePath();ctx.clip();
-   const zoom=Math.max(1,(+c.imageZoom||100)/100);
-   const baseW=w*.95,baseH=h*.95;
-   const scale=Math.max(baseW/img.naturalWidth,baseH/img.naturalHeight)*zoom;
+   const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight)*(Math.max(1,(+c.imageZoom||100)/100));
    const dw=img.naturalWidth*scale,dh=img.naturalHeight*scale;
-   const dx=(w-dw)/2+(+c.imageX||0)*(dw-baseW)/200;
-   const dy=(h-dh)/2+(+c.imageY||0)*(dh-baseH)/200;
-   ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();
+   const dx=(w-dw)/2+(+c.imageX||0)*(dw-w)/200;
+   const dy=(h-dh)/2+(+c.imageY||0)*(dh-h)/200;
+   ctx.drawImage(img,dx,dy,dw,dh);
   }else{
-   const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,'#292b34');bg.addColorStop(1,'#090b10');
+   const bg=ctx.createLinearGradient(0,0,w,h);
+   bg.addColorStop(0,'#292b34');bg.addColorStop(1,'#090b10');
    ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
-   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#bca777';ctx.font=(w*.05)+'px Georgia';
-   ctx.fillText('ILUSTRAÇÃO',w*.5,h*.43);
+   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#bca777';
+   ctx.font=(w*.05)+'px Georgia';ctx.fillText('ILUSTRAÇÃO',w*.5,h*.43);
   }
-  // Escurecimento leve e translúcido somente atrás dos textos; não há
-  // retângulo opaco e a ilustração continua visível.
-  const top=h*.695,bottom=h*.958;
+
+  // Sombra sutil e translúcida para leitura, aplicada antes do molde.
+  // Assim nenhum detalhe dourado do PNG recebe uma camada escura por cima.
+  const top=h*.715,bottom=h*.955;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
   shade.addColorStop(0,'rgba(5,6,10,0)');
-  shade.addColorStop(.20,'rgba(5,6,10,.20)');
-  shade.addColorStop(.55,'rgba(5,6,10,.34)');
-  shade.addColorStop(1,'rgba(5,6,10,.43)');
-  ctx.save();
-  ctx.beginPath();ctx.moveTo(w*.15,top);ctx.lineTo(w*.85,top);
-  ctx.lineTo(w*.85,bottom);ctx.lineTo(w*.15,bottom);ctx.closePath();ctx.clip();
-  ctx.fillStyle=shade;ctx.fillRect(w*.12,top,w*.76,bottom-top);
-  ctx.restore();
+  shade.addColorStop(.18,'rgba(5,6,10,.12)');
+  shade.addColorStop(.55,'rgba(5,6,10,.27)');
+  shade.addColorStop(1,'rgba(5,6,10,.38)');
+  ctx.fillStyle=shade;ctx.fillRect(w*.13,top,w*.74,bottom-top);
 
-  // A própria imagem Molde Magias é desenhada inteira por cima. O preto
-  // é convertido em transparência por pixel, mantendo os dourados,
-  // brilhos, coluna central e demais detalhes originais sem recortes.
+  // Usa o arquivo Molde Magias.png integralmente, sem recortar,
+  // remover pixels pretos, alterar transparência ou redesenhar ornamentos.
   if(magicFrame.complete&&magicFrame.naturalWidth){
-   const overlay=document.createElement('canvas');overlay.width=w;overlay.height=h;
-   const ox=overlay.getContext('2d',{willReadFrequently:true});
-   ox.drawImage(magicFrame,0,0,w,h);
-   const pixels=ox.getImageData(0,0,w,h),d=pixels.data;
-   for(let k=0;k<d.length;k+=4){
-    const r=d[k],g=d[k+1],b=d[k+2],hi=Math.max(r,g,b),lo=Math.min(r,g,b);
-    const chroma=hi-lo;
-    const lum=.2126*r+.7152*g+.0722*b;
-    // Remove o fundo preto/cinza escuro; preserva pixels coloridos
-    // dos arabescos, inclusive sombras douradas e detalhes metálicos.
-    let alpha=Math.max(0,Math.min(1,(lum-9)/54));
-    if(chroma>24)alpha=Math.max(alpha,Math.min(1,(chroma-12)/42));
-    d[k+3]=Math.round(d[k+3]*alpha);
-   }
-   ox.putImageData(pixels,0,0);
-   ctx.drawImage(overlay,0,0);
-  }else{
-   ctx.strokeStyle='#c99b4e';ctx.lineWidth=Math.max(3,w*.012);ctx.strokeRect(w*.025,h*.012,w*.95,h*.976);
+   ctx.drawImage(magicFrame,0,0,w,h);
   }
 
   const wrapLines=(text,font,maxWidth)=>{
-   ctx.font=font;const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n'),lines=[];
+   ctx.font=font;
+   const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n'),lines=[];
    paragraphs.forEach(p=>{
     if(!p.trim()){lines.push('');return}
     let line='';
@@ -668,17 +636,19 @@ function drawMagicCard(canvas,c){
     if(lines.length*size*1.24<=maxHeight)break;
     size-=.5;
    }
-   size=Math.max(minSize,size);ctx.font=(italic?'italic ':'')+size+'px Georgia';
+   size=Math.max(minSize,size);
+   ctx.font=(italic?'italic ':'')+size+'px Georgia';
    ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='top';
    const lineH=size*1.24,total=lines.length*lineH;
    let yy=y+(maxHeight-total)/2;
    lines.forEach(line=>{if(line)ctx.fillText(line,x,yy,maxWidth);yy+=lineH});
   };
+  // Composição inferior: nome, efeito e flavor.
   drawFit(String(c.name||'NOVA MAGIA').toUpperCase(),w*.5,h*.718,w*.70,h*.038,w*.047,w*.027,'#f1d18a');
   drawFit(c.effect||'',w*.5,h*.765,w*.70,h*.087,w*.030,w*.017,'#f2e6d0');
   drawFit(c.flavor||'',w*.5,h*.866,w*.68,h*.078,w*.024,w*.014,'#d8c7a8',true);
 
-  // Custo e alinhamento continuam nos medalhões originais do modelo.
+  // Custo e alinhamento nos espaços previstos no molde.
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff1c9';
   ctx.font='bold '+(w*.064)+'px Georgia';ctx.shadowColor='#000';ctx.shadowBlur=3;
   ctx.fillText(String(c.cost??0),w*.947,h*.035);ctx.shadowBlur=0;
