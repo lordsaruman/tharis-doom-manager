@@ -130,13 +130,13 @@ function drawCreatureCard(canvas,c){
  const ix=w*.061,iy=h*.066,iw=w*.878,ih=h*.622;
  // Quebra linhas respeitando linhas e parágrafos digitados no campo.
  const drawRichText=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color)=>{
-  const paragraphs=String(text||'').replace(/\r/g,'').split('\n');
+  const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
   if(!paragraphs.some(p=>p.trim()))return;
   let size=baseSize,lines=[];
   const build=()=>{
    lines=[];
    paragraphs.forEach((paragraph,index)=>{
-    const words=paragraph.trim().split(/\s+/).filter(Boolean);
+    const words=paragraph.split(/\s+/).filter(Boolean);
     if(!words.length){lines.push('');return}
     let line='';
     words.forEach(word=>{
@@ -183,15 +183,15 @@ function drawCreatureCard(canvas,c){
   ctx.shadowBlur=0;
   ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
-  if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.66,h*.025,w*.024,w*.019,w*.023,'#4c4030');
+  if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
   // Habilidades: painel central claro, com margens internas e parágrafos preservados.
   const abilityTop=h*.765,abilityBottom=h*.872;
-  if(c.effect)drawRichText(c.effect,w*.5,(abilityTop+abilityBottom)/2,w*.66,abilityBottom-abilityTop,w*.029,w*.018,w*.030,'#35291d');
+  if(c.effect)drawRichText(c.effect,w*.5,(abilityTop+abilityBottom)/2,w*.72,abilityBottom-abilityTop,w*.037,w*.030,h*.027,'#35291d');
   // Linha divisória dentro da área branca e afastada da moldura.
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
   ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();
   // Flavor limitado à faixa inferior interna; mantém quebras de parágrafo.
-  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.62,h*.068,w*.023,w*.017,w*.024,'#35291d');
+  if(c.flavor)drawRichText(c.flavor,w*.5,h*.928,w*.54,h*.068,w*.031,w*.026,h*.026,'#35291d');
  };
  ctx.clearRect(0,0,w,h);
  if(c.image){
