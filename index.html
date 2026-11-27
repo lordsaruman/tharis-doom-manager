@@ -468,12 +468,7 @@ const alignmentInsignias={
 alignmentInsignias.Luz.src='INSIGNIA%20LUZ.png';
 alignmentInsignias.Neutro.src='INSIGNIA%20NEUTRO.png';
 alignmentInsignias.Sombra.src='INSIGNIA%20SOMBRAS.png';
-const factionInsignias={Moiras:new Image()};
-factionInsignias.Moiras.src='INSIGNIAS%20MOIRAS.png';
-const factionInsigniaSheet=new Image();
-factionInsigniaSheet.src='INSIGNIAS%20FACCOES.svg';
-const factionInsigniaIndex={Kalassiria:0,'Monte Celéstia':1,Baator:2,'Caras Galadhon':3,Yalugoth:4,Thay:5,"Baldur's Gate":6};
-Object.values({...alignmentInsignias,...factionInsignias,factionSheet:factionInsigniaSheet}).forEach(img=>img.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())});
+Object.values(alignmentInsignias).forEach(img=>img.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())});
 
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
@@ -503,6 +498,7 @@ const INSIGNIA_FILES={
  "Baldur's Gate":'INSIGNIA-BALDURS.jpg'
 };
 const INSIGNIA_DATA={};
+const INSIGNIA_DRAW_IMAGES={};
 function prepareInsignia(key,file){
  const img=new Image();
  img.onload=()=>{
@@ -517,7 +513,9 @@ function prepareInsignia(key,file){
     else if(min>218&&max-min<24)px[i+3]=Math.round(px[i+3]*(242-min)/24);
    }
    cx.putImageData(frame,0,0);INSIGNIA_DATA[key]=cv.toDataURL('image/png');
-   if(typeof render==='function'){render();if(typeof updateCardInspector==='function')updateCardInspector();}
+   const drawImage=new Image();
+   drawImage.onload=()=>{INSIGNIA_DRAW_IMAGES[key]=drawImage;if(typeof render==='function'){render();if(typeof updateCardInspector==='function')updateCardInspector();if($('modal').classList.contains('open'))drawCard($('preview'),collect())}};
+   drawImage.src=INSIGNIA_DATA[key];
   }catch(e){INSIGNIA_DATA[key]=null;}
  };
  img.src='assets/insignias/'+file;
@@ -629,10 +627,8 @@ function drawCreatureCard(canvas,c){
   const insigniaItems=[];
   const alignmentEmblem=alignmentInsignias[c.alignment];
   if(alignmentEmblem&&alignmentEmblem.complete&&alignmentEmblem.naturalWidth)insigniaItems.push({img:alignmentEmblem});
-  const factionEmblem=factionInsignias[c.faction];
+  const factionEmblem=INSIGNIA_DRAW_IMAGES[c.faction];
   if(factionEmblem&&factionEmblem.complete&&factionEmblem.naturalWidth)insigniaItems.push({img:factionEmblem});
-  const factionIndex=factionInsigniaIndex[c.faction];
-  if(factionIndex!==undefined&&factionInsigniaSheet.complete&&factionInsigniaSheet.naturalWidth)insigniaItems.push({img:factionInsigniaSheet,index:factionIndex});
   let flagX=0,flagY=0,emblemSize=0,pad=0,gap=0;
   if(insigniaItems.length){
    emblemSize=w*.088;gap=w*.012;pad=w*.012;
