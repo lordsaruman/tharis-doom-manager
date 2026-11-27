@@ -178,8 +178,8 @@ function drawCreatureCard(canvas,c){
   // Números maiores; custo ligeiramente elevado para o centro vertical da esfera.
   stat(c.life,.50,.041,.105);
   stat(c.cost??0,.95,.024,.090);
-  stat(c.power,.125,.945,.105);
-  stat(c.defense,.875,.945,.105);
+  stat(c.power,.105,.945,.105);
+  stat(c.defense,.895,.945,.105);
   ctx.shadowBlur=0;
   ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
