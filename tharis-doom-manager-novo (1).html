@@ -250,6 +250,29 @@ footer:before{
  .inspector-card-frame{width:min(72%,300px)}
 }
 
+
+/* BIBLIOTECA · MINIATURAS COM MAIS CARTAS POR LINHA */
+.library-workspace>.grid{
+ grid-template-columns:repeat(auto-fill,minmax(132px,1fr));
+ gap:10px;
+}
+.library-workspace>.grid .cardtile{padding:6px;border-radius:7px}
+.library-workspace>.grid .thumb{border-radius:4px}
+.library-workspace>.grid .tile-title{font-size:12px;line-height:1.25;margin:6px 0 2px}
+.library-workspace>.grid .tile-meta{font-size:10px}
+.library-workspace>.grid .tile-stats{gap:3px;margin-top:6px}
+.library-workspace>.grid .tile-stats span{padding:4px 1px}
+.library-workspace>.grid .tile-stats b{font-size:12px}
+.library-workspace>.grid .tile-stats small{font-size:8px}
+.inspector-card-frame{width:min(100%,320px)}
+@media(max-width:980px){
+ .library-workspace>.grid{grid-template-columns:repeat(auto-fill,minmax(125px,1fr))}
+}
+@media(max-width:700px){
+ .library-workspace>.grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
+ .inspector-card-frame{width:min(78%,320px)}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
