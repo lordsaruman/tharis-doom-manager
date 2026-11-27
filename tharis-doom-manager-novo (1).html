@@ -25,7 +25,7 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}.asset-grid{d
 <header>
  <div class="brand"><div class="brand-mark">✦</div><div><h1>THARIS DOOM</h1><small>CARD MANAGER · NOVA EDIÇÃO</small></div></div>
  <div class="actions">
-  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
+  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="teamBtn" style="display:none">Gerenciar colaboradores</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
   <input type="file" id="importFile" accept=".json,application/json" hidden>
  </div>
 </header>
@@ -60,9 +60,22 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}.asset-grid{d
   <div class="field"><label>E-mail</label><input id="authEmail" type="email" autocomplete="username" placeholder="seu@email.com"></div>
   <div class="field"><label>Senha</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Sua senha"></div>
   <div class="actions"><button class="primary" id="loginBtn">Entrar e sincronizar</button><button id="logoutBtn" style="display:none">Sair</button></div>
+  <div id="setPasswordPanel" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+   <strong>Defina sua senha de acesso</strong><p class="hint">Seu convite foi validado. Escolha uma senha para concluir a entrada no Tharis Doom.</p>
+   <div class="field"><label>Nova senha</label><input id="newAccountPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo de 8 caracteres"></div>
+   <div class="field"><label>Confirmar nova senha</label><input id="confirmAccountPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Repita a senha"></div>
+   <button class="primary" id="setPasswordBtn">Salvar senha e acessar</button>
+  </div>
   <p class="hint" id="authMessage">A biblioteca local permanece preservada. O login ativa o acesso online.</p>
  </div>
 </div>
+<div class="modal" id="teamModal"><div class="dialog" style="width:min(480px,100%)">
+ <div class="dialog-head"><h2>Gerenciar colaboradores</h2><button id="teamCloseBtn">✕ Fechar</button></div>
+ <p class="hint">Convide somente pessoas autorizadas. Elas receberão um link por e-mail para definir a própria senha. Todas entram como colaboradoras, sem acesso administrativo.</p>
+ <div class="field"><label>E-mail do colaborador</label><input id="inviteEmail" type="email" autocomplete="email" placeholder="colaborador@email.com"></div>
+ <button class="primary" id="inviteBtn">Enviar convite</button>
+ <p class="hint" id="inviteMessage" aria-live="polite"></p>
+</div></div>
 <div class="modal" id="modal">
  <div class="dialog">
   <div class="dialog-head"><h2 id="modalTitle">Nova carta</h2><button id="closeBtn">✕ Fechar</button></div>
@@ -419,6 +432,7 @@ async function handleSession(session){
  cloudUser=session?.user||null;isAdmin=false;
  if(cloudUser){try{const {data:profile}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();isAdmin=profile?.role==='admin'}catch(error){console.warn('Não foi possível validar o perfil administrativo:',error)}}
  $('assetsBtn').style.display=isAdmin?'inline-block':'none';
+ $('teamBtn').style.display=isAdmin?'inline-block':'none';
  $('authBtn').textContent=cloudUser?'Conta · '+(cloudUser.email||'conectada'):'Entrar';
  $('logoutBtn').style.display=cloudUser?'inline-block':'none';
  if(cloudUser){try{await loadCloudCards();$('authModal').classList.remove('open')}catch(error){$('cloudStatus').textContent='Erro na sincronização';$('authMessage').textContent='Falha ao carregar biblioteca: '+error.message;console.error(error)}}
@@ -427,6 +441,24 @@ async function handleSession(session){
 $('authBtn').onclick=()=>{$('authMessage').textContent=cloudUser?'Você está conectado ao Tharis Doom online.':'Entre com seu usuário do Supabase.';$('authModal').classList.add('open')};
 
 $('assetsBtn').onclick=()=>{if(!isAdmin){alert('Apenas o administrador pode enviar imagens.');return}$('assetStatus').textContent='';$('assetsModal').classList.add('open')};
+$('teamBtn').onclick=()=>{if(!isAdmin){alert('Apenas o administrador pode gerenciar colaboradores.');return}$('inviteMessage').textContent='';$('inviteEmail').value='';$('teamModal').classList.add('open')};
+$('teamCloseBtn').onclick=()=>$('teamModal').classList.remove('open');
+$('inviteBtn').onclick=async()=>{
+ if(!cloudUser||!isAdmin){$('inviteMessage').textContent='Apenas o administrador pode enviar convites.';return}
+ const email=$('inviteEmail').value.trim();
+ if(!email){$('inviteMessage').textContent='Informe o e-mail do colaborador.';return}
+ $('inviteBtn').disabled=true;$('inviteMessage').textContent='Enviando convite…';
+ try{
+  const {data:sessionData,error:sessionError}=await sb.auth.getSession();if(sessionError)throw sessionError;
+  const token=sessionData.session?.access_token;if(!token)throw new Error('Sua sessão expirou. Entre novamente.');
+  const response=await fetch(SUPABASE_URL+'/functions/v1/invite-collaborator',{method:'POST',headers:{'Authorization':'Bearer '+token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({email})});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||'Não foi possível enviar o convite.');
+  $('inviteMessage').textContent='Convite enviado para '+result.email+'. Peça à pessoa para verificar a caixa de entrada e o spam.';
+  $('inviteEmail').value='';
+ }catch(error){$('inviteMessage').textContent='Erro: '+error.message}
+ finally{$('inviteBtn').disabled=false}
+};
 $('assetsCloseBtn').onclick=()=>$('assetsModal').classList.remove('open');
 $('assetFile').onchange=e=>{
  const file=e.target.files?.[0];assetFileObject=file||null;
@@ -463,10 +495,26 @@ async function sendAsset(replace=false){
 }
 $('assetUploadBtn').onclick=()=>sendAsset(false);
 
+const inviteInUrl=()=>/type=(invite|recovery)/i.test(location.hash+' '+location.search);
+function showPasswordSetup(){if(inviteInUrl()){$('setPasswordPanel').style.display='block';$('loginBtn').style.display='none';$('authMessage').textContent='Convite reconhecido. Defina sua senha para concluir o cadastro.';$('authModal').classList.add('open')}}
+$('setPasswordBtn').onclick=async()=>{
+ const password=$('newAccountPassword').value,confirmPassword=$('confirmAccountPassword').value;
+ if(password.length<8){$('authMessage').textContent='A senha deve ter pelo menos 8 caracteres.';return}
+ if(password!==confirmPassword){$('authMessage').textContent='As senhas não coincidem.';return}
+ $('setPasswordBtn').disabled=true;$('authMessage').textContent='Salvando senha…';
+ try{
+  const {error}=await sb.auth.updateUser({password});if(error)throw error;
+  $('setPasswordPanel').style.display='none';$('loginBtn').style.display='inline-block';
+  history.replaceState(null,document.title,location.pathname+location.search);
+  $('authMessage').textContent='Senha definida com sucesso. Sua conta está pronta.';
+  const {data}=await sb.auth.getSession();await handleSession(data.session);
+ }catch(error){$('authMessage').textContent='Não foi possível definir a senha: '+error.message}
+ finally{$('setPasswordBtn').disabled=false}
+};
 $('authCloseBtn').onclick=()=>$('authModal').classList.remove('open');
 $('loginBtn').onclick=async()=>{if(!sb){alert('Não foi possível iniciar o cliente Supabase.');return}const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}$('loginBtn').disabled=true;$('authMessage').textContent='Conectando…';try{const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await handleSession(data.session)}catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}finally{$('loginBtn').disabled=false}};
 $('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}cloudUser=null;load();render();handleSession(null);$('authModal').classList.remove('open')};
-if(sb){sb.auth.getSession().then(({data})=>handleSession(data.session));sb.auth.onAuthStateChange((_event,session)=>{if(session?.user?.id!==cloudUser?.id)handleSession(session)})}
+if(sb){sb.auth.getSession().then(({data})=>{handleSession(data.session);showPasswordSetup()});sb.auth.onAuthStateChange((event,session)=>{if(session?.user?.id!==cloudUser?.id)handleSession(session);if(event==='PASSWORD_RECOVERY'||inviteInUrl())showPasswordSetup()})}
 
 load();render();
 })();
