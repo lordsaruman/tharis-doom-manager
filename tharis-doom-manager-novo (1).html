@@ -15,7 +15,7 @@ main{max-width:1500px;margin:auto;padding:24px clamp(14px,3vw,40px) 60px}.stats{
 input,select,textarea{width:100%;background:#111319;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:10px;font:inherit;min-width:0}textarea{min-height:88px;resize:vertical}label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px}.field{margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}.cardtile{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:10px;cursor:pointer;transition:.15s}.cardtile:hover{transform:translateY(-2px);border-color:var(--gold)}.thumb{aspect-ratio:408/771;width:100%;height:auto;border-radius:7px;overflow:hidden;background:#0c0d11;display:block;position:relative;border:1px solid #45404b}.thumb canvas{display:block;width:100%;height:auto;object-fit:contain}.tile-title{font-weight:700;margin:9px 0 3px}.tile-meta{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:5px}.tile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:9px}.tile-stats span{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:5px 2px;border:1px solid #45404b;border-radius:6px;background:#111319}.tile-stats small{font-size:9px;letter-spacing:.04em;color:var(--muted)}.tile-stats b{font-size:15px;color:#f0d28d;font-variant-numeric:tabular-nums}.faction-line{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;color:#d8d2df}.sigil{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;flex:none;background:#19191d;border:1px solid #777;color:#ddd}.sigil svg{width:13px;height:13px}
 .empty{padding:50px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
 .modal{position:fixed;inset:0;background:#000b;z-index:10;display:none;align-items:center;justify-content:center;padding:16px}.modal.open{display:flex}.dialog{width:min(1100px,100%);max-height:94vh;overflow:auto;background:#191b22;border:1px solid #55505f;border-radius:14px;padding:18px}.dialog-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}.dialog-head h2{margin:0;font-size:18px}.editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,390px);gap:20px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.span2{grid-column:span 2}.preview-wrap{background:#0e0f13;border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;place-items:center;align-content:start}.preview-wrap canvas{width:min(100%,300px);height:auto;max-height:70vh;object-fit:contain}.crop-controls{width:min(100%,330px);margin-top:12px;display:grid;grid-template-columns:1fr;gap:2px;text-align:left}.crop-controls .field{margin-bottom:6px}.crop-controls label{font-size:12px}.preview-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;justify-content:center}.hint{font-size:11px;color:var(--muted);margin-top:4px}.faction-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}.faction-chip{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--line);border-radius:20px;color:var(--muted);font-size:11px}
-footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
+footer{text-align:center;color:#77717f;padding:24px;font-size:11px}.asset-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,320px);gap:18px}.asset-preview{background:#101116;border:1px solid var(--line);border-radius:9px;min-height:210px;display:grid;place-items:center;padding:12px}.asset-preview img{max-width:100%;max-height:260px;object-fit:contain}.asset-status{font-size:12px;color:var(--muted);min-height:20px;margin-top:8px}.asset-note{padding:10px;border:1px solid #5b4c32;background:#2a2419;border-radius:8px;color:#e4d2a8;font-size:12px;margin-bottom:14px}@media(max-width:700px){.asset-grid{grid-template-columns:1fr}}
 @media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.editor{grid-template-columns:1fr}.preview-wrap{order:-1}.preview-wrap canvas{width:min(70vw,270px)}}
 @media(max-width:520px){.formgrid{grid-template-columns:1fr}.span2{grid-column:auto}.stats{gap:8px}.stat{padding:10px}.stat strong{font-size:20px}}
 </style>
@@ -25,7 +25,7 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
 <header>
  <div class="brand"><div class="brand-mark">✦</div><div><h1>THARIS DOOM</h1><small>CARD MANAGER · NOVA EDIÇÃO</small></div></div>
  <div class="actions">
-  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
+  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
   <input type="file" id="importFile" accept=".json,application/json" hidden>
  </div>
 </header>
@@ -53,7 +53,7 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
 <footer>Tharis Doom · Biblioteca online compartilhada com backup local e exportação JSON.</footer>
 
 
-<div class="modal" id="authModal">
+<div class="modal" id="assetsModal"><div class="dialog" style="width:min(760px,100%)"><div class="dialog-head"><h2>Gerenciar imagens do projeto</h2><button id="assetsCloseBtn">✕ Fechar</button></div><div class="asset-note">Envio exclusivo do administrador. Os arquivos serão publicados na branch de testes do GitHub, dentro de <b>assets/</b>. Formatos aceitos: PNG, JPG e WEBP (até 8 MB).</div><div class="asset-grid"><div><div class="field"><label>Categoria / pasta de destino</label><select id="assetFolder"><option value="insignias">Insígnias</option><option value="referencias">Imagens de referência</option></select></div><div class="field"><label>Nome do arquivo (sem extensão)</label><input id="assetName" maxlength="80" placeholder="Ex.: insignia-nova-faccao"></div><div class="field"><label>Selecionar imagem</label><input id="assetFile" type="file" accept="image/png,image/jpeg,image/webp"></div><div class="hint">Se já existir um arquivo com o mesmo nome, o gerenciador pedirá confirmação antes de substituí-lo.</div><div class="actions" style="margin-top:14px"><button class="primary" id="assetUploadBtn">Enviar para o GitHub</button></div><div class="asset-status" id="assetStatus" aria-live="polite"></div></div><div><label>Pré-visualização</label><div class="asset-preview" id="assetPreview"><span class="hint">Selecione uma imagem para visualizar.</span></div></div></div></div></div><div class="modal" id="authModal">
  <div class="dialog" style="width:min(430px,100%)">
   <div class="dialog-head"><h2>Acesso ao Tharis Doom</h2><button id="authCloseBtn">✕ Fechar</button></div>
   <p class="hint">Entre com seu e-mail e senha cadastrados no Supabase para acessar a biblioteca compartilhada.</p>
@@ -105,6 +105,7 @@ const $=id=>document.getElementById(id);
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
 const KEY='tharisDoomManagerV2';
 let cards=[],editingId=null,imageData='',imagePath='',cloudUser=null;
+let isAdmin=false,assetFileObject=null;
 const SUPABASE_URL='https://zzwabaaeexidmzyzuvdd.supabase.co';
 const SUPABASE_KEY='sb_publishable_hOAgiQUZtzOg0kolL606mQ_RGoootVu';
 const sb=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -415,13 +416,53 @@ async function setCardsFromCloud(rows){
  cards=converted;render();$('cloudStatus').textContent='Online · '+cards.length+' carta(s) sincronizada(s)';
 }
 async function handleSession(session){
- cloudUser=session?.user||null;
+ cloudUser=session?.user||null;isAdmin=false;
+ if(cloudUser){try{const {data:profile}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();isAdmin=profile?.role==='admin'}catch(error){console.warn('Não foi possível validar o perfil administrativo:',error)}}
+ $('assetsBtn').style.display=isAdmin?'inline-block':'none';
  $('authBtn').textContent=cloudUser?'Conta · '+(cloudUser.email||'conectada'):'Entrar';
  $('logoutBtn').style.display=cloudUser?'inline-block':'none';
  if(cloudUser){try{await loadCloudCards();$('authModal').classList.remove('open')}catch(error){$('cloudStatus').textContent='Erro na sincronização';$('authMessage').textContent='Falha ao carregar biblioteca: '+error.message;console.error(error)}}
  else{$('cloudStatus').textContent='Modo local · não conectado';}
 }
 $('authBtn').onclick=()=>{$('authMessage').textContent=cloudUser?'Você está conectado ao Tharis Doom online.':'Entre com seu usuário do Supabase.';$('authModal').classList.add('open')};
+
+$('assetsBtn').onclick=()=>{if(!isAdmin){alert('Apenas o administrador pode enviar imagens.');return}$('assetStatus').textContent='';$('assetsModal').classList.add('open')};
+$('assetsCloseBtn').onclick=()=>$('assetsModal').classList.remove('open');
+$('assetFile').onchange=e=>{
+ const file=e.target.files?.[0];assetFileObject=file||null;
+ $('assetPreview').innerHTML='';
+ if(!file){$('assetPreview').innerHTML='<span class="hint">Selecione uma imagem para visualizar.</span>';return}
+ if(!['image/png','image/jpeg','image/webp'].includes(file.type)){e.target.value='';assetFileObject=null;$('assetStatus').textContent='Formato inválido. Use PNG, JPG ou WEBP.';return}
+ if(file.size>8*1024*1024){e.target.value='';assetFileObject=null;$('assetStatus').textContent='A imagem ultrapassa o limite de 8 MB.';return}
+ const img=document.createElement('img');img.alt='Pré-visualização da imagem selecionada';img.src=URL.createObjectURL(file);$('assetPreview').appendChild(img);
+ if(!$('assetName').value.trim())$('assetName').value=file.name.replace(/\.(png|jpe?g|webp)$/i,'').replace(/[^\p{L}\p{N}._ -]/gu,'-');
+};
+async function sendAsset(replace=false){
+ if(!cloudUser||!isAdmin){alert('Entre com a conta administradora para enviar imagens.');return}
+ const name=$('assetName').value.trim(),folder=$('assetFolder').value,file=assetFileObject;
+ if(!file){$('assetStatus').textContent='Selecione uma imagem antes de enviar.';return}
+ if(!name){$('assetStatus').textContent='Informe um nome para o arquivo.';return}
+ $('assetUploadBtn').disabled=true;$('assetStatus').textContent='Preparando envio…';
+ try{
+  const {data:sessionData,error:sessionError}=await sb.auth.getSession();if(sessionError)throw sessionError;
+  const token=sessionData.session?.access_token;if(!token)throw new Error('Sua sessão expirou. Entre novamente.');
+  const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Não foi possível ler a imagem.'));reader.readAsDataURL(file)});
+  const response=await fetch(SUPABASE_URL+'/functions/v1/github-image-upload',{method:'POST',headers:{'Authorization':'Bearer '+token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({fileName:name,folder,mimeType:file.type,base64:dataUrl,replace})});
+  const result=await response.json().catch(()=>({}));
+  if(response.status===409&&result.exists&&!replace){
+   const yes=confirm('Já existe um arquivo com esse nome nesta pasta. Deseja substituí-lo?');
+   if(yes){$('assetUploadBtn').disabled=false;return await sendAsset(true)}
+   $('assetStatus').textContent='Envio cancelado. O arquivo existente foi mantido.';return;
+  }
+  if(!response.ok)throw new Error(result.error||'Falha ao enviar a imagem.');
+  $('assetStatus').textContent=(result.replaced?'Imagem substituída':'Imagem enviada')+' com sucesso: '+result.path;
+  $('assetFile').value='';assetFileObject=null;
+  if(result.commit)console.info('Commit do GitHub:',result.commit);
+ }catch(error){$('assetStatus').textContent='Erro: '+error.message}
+ finally{$('assetUploadBtn').disabled=false}
+}
+$('assetUploadBtn').onclick=()=>sendAsset(false);
+
 $('authCloseBtn').onclick=()=>$('authModal').classList.remove('open');
 $('loginBtn').onclick=async()=>{if(!sb){alert('Não foi possível iniciar o cliente Supabase.');return}const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}$('loginBtn').disabled=true;$('authMessage').textContent='Conectando…';try{const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await handleSession(data.session)}catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}finally{$('loginBtn').disabled=false}};
 $('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}cloudUser=null;load();render();handleSession(null);$('authModal').classList.remove('open')};
