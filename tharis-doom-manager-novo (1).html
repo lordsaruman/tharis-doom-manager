@@ -238,6 +238,8 @@ footer:before{
 .inspector-stats span{display:flex;flex-direction:column;align-items:center;padding:7px 2px;border:1px solid #57452f;background:#120f0c;border-radius:3px}
 .inspector-stats small{font:9px 'Cinzel',Georgia,serif;color:#a99470}
 .inspector-stats b{font:600 17px 'Cinzel',Georgia,serif;color:#d7b878}
+.tile-stats.magic-stats,.inspector-stats.magic-stats{grid-template-columns:minmax(0,1fr)}
+.tile-stats.magic-stats span,.inspector-stats.magic-stats span{grid-column:1}
 .inspector-edit{width:100%;margin-top:5px}
 .cardtile.is-selected{border-color:#c5a36b;box-shadow:0 0 0 1px #b8955966,0 8px 24px #0008}
 @media(max-width:980px){
@@ -425,9 +427,11 @@ footer:before{
      <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
      <div class="field"><label>Alinhamento</label><select id="alignment"><option value="">Selecione um alinhamento</option><option>Luz</option><option>Neutro</option><option>Sombra</option></select></div>
      <div class="field"><label>Características</label><input id="trait" placeholder="Ex.: Bastião, Celestial, Morto-vivo"></div>
-     <div class="field"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
-     <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
-     <div class="field"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
+     <div id="combatFields" style="display:contents">
+      <div class="field"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
+      <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
+      <div class="field"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
+     </div>
      <div class="field span2"><label id="effectLabel">Habilidades</label><textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea></div>
      <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
@@ -557,7 +561,7 @@ function render(){
  list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t));
  const sort=$('sort').value;if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
  $('resultCount').textContent=`${list.length} de ${cards.length} cartas`;
- $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div><div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div><div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div><div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
+ $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div><div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div>${c.type==='Magias'?`<div class="tile-stats magic-stats"><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span></div>`:`<div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div>`}<div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
  document.querySelectorAll('canvas[data-card]').forEach(cv=>{const c=cards.find(x=>x.id===cv.dataset.card);if(c)drawCard(cv,c)});
  if(!list.some(x=>x.id===selectedCardId))selectedCardId=list[0]?.id||null;
  document.querySelectorAll('.cardtile[data-id]').forEach(tile=>tile.classList.toggle('is-selected',tile.dataset.id===selectedCardId));
@@ -571,7 +575,7 @@ function updateCardInspector(){
  $('selectedCardName').textContent=c.name||'Sem nome';
  $('selectedCardMeta').textContent=[c.type||'Carta',c.rarity||'Sem raridade'].join(' · ');
  $('selectedCardFaction').innerHTML=sigil(c.faction,20,c.type)+'<span>'+escapeHtml(c.faction||c.type||'Sem facção')+'</span>';
- $('selectedCardStats').innerHTML=[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']].map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');
+ $('selectedCardStats').innerHTML=(c.type==='Magias'?[['CUSTO',c.cost??0]]:[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']]).map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');$('selectedCardStats').classList.toggle('magic-stats',c.type==='Magias');
  drawCard($('selectedCardCanvas'),c);
 }
 function drawCreatureCard(canvas,c){
@@ -954,7 +958,7 @@ async function runCardOCR(file){
  }
 }
 $('ocrBtn').addEventListener('click',()=>{const file=$('image').files?.[0];if(file)runCardOCR(file);else $('ocrStatus').textContent='Selecione primeiro a imagem PNG ou JPG da carta.'});
-function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLabel').textContent=magic?'Efeito':'Habilidades';$('effect').placeholder=magic?'Descreva o efeito da magia':'Habilidades e efeitos da carta'}
+function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLabel').textContent=magic?'Efeito':'Habilidades';$('effect').placeholder=magic?'Descreva o efeito da magia':'Habilidades e efeitos da carta';$('modal').classList.toggle('magic-type',magic)}
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
