@@ -95,6 +95,15 @@ const KEY='tharisDoomManagerV2';
 let cards=[],editingId=null,imageData='';
 const creatureFrame=new Image();creatureFrame.crossOrigin='anonymous';creatureFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};creatureFrame.src='Modelo%20Carta%20Ouro.png';
 const magicFrame=new Image();magicFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};magicFrame.src='Molde%20Magias.png';
+const alignmentInsignias={
+ Luz:new Image(),
+ Neutro:new Image(),
+ Sombra:new Image()
+};
+alignmentInsignias.Luz.src='INSIGNIA%20LUZ.png';
+alignmentInsignias.Neutro.src='INSIGNIA%20NEUTRO.png';
+alignmentInsignias.Sombra.src='INSIGNIA%20SOMBRAS.png';
+Object.values(alignmentInsignias).forEach(img=>img.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())});
 
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
@@ -187,7 +196,11 @@ function drawCreatureCard(canvas,c){
   ctx.shadowBlur=0;
   // Espaços das bandeiras para receber as insígnias oficiais enviadas pelo usuário.
   const drawFlagSlot=(x,y)=>{const fw=w*.105,fh=h*.022,left=w*x-fw/2,top=h*y;ctx.save();ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left+fw,top);ctx.lineTo(left+fw*.88,top+fh);ctx.lineTo(left+fw*.12,top+fh);ctx.closePath();ctx.fillStyle='rgba(25,20,17,.92)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.0025);ctx.stroke();ctx.restore()};
-  if(c.alignment)drawFlagSlot(.95,.052);
+  if(c.alignment){
+   drawFlagSlot(.95,.052);
+   const emblem=alignmentInsignias[c.alignment];
+   if(emblem&&emblem.complete&&emblem.naturalWidth){const size=w*.038;ctx.drawImage(emblem,w*.95-size/2,h*.052-size*.52,size,size)}
+  }
   if(c.faction)drawFlagSlot(.95,.080);
   ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
