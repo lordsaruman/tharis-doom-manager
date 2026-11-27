@@ -77,7 +77,7 @@ footer{text-align:center;color:#77717f;padding:24px;font-size:11px}
     </div>
    </div>
    <div class="preview-wrap">
-    <canvas id="preview" width="600" height="1000"></canvas>
+    <canvas id="preview" width="408" height="771"></canvas>
     <div class="preview-actions"><button id="saveBtn" class="primary">Salvar carta</button><button id="pngBtn">Exportar PNG</button><button id="deleteBtn" class="danger" style="display:none">Excluir</button></div>
     <div class="hint">Prévia aproximada da carta. A exportação usa a resolução integral.</div>
    </div>
@@ -90,6 +90,8 @@ const $=id=>document.getElementById(id);
 const FACTIONS=['Elfos','Moiras','Kalassíria','Elturel',"Baldur's Gate",'Casas Galadhom','Monte Celéstia','Baator'];
 const KEY='tharisDoomManagerV2';
 let cards=[],editingId=null,imageData='';
+const creatureFrame=new Image();creatureFrame.crossOrigin='anonymous';creatureFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};creatureFrame.src='https://raw.githubusercontent.com/lordsaruman/tharis-doom-manager/preview/ajustes-gerenciador/Modelo%20Carta%20Ouro.png';
+
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
 function persist(){localStorage.setItem(KEY,JSON.stringify(cards));render()}
@@ -117,34 +119,79 @@ function render(){
  list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t));
  const sort=$('sort').value;if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
  $('resultCount').textContent=`${list.length} de ${cards.length} cartas`;
- $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="300" height="500" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div><div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div><div class="faction-line">${sigil(c.faction)}<span>${escapeHtml(c.faction||'Sem facção')}</span><span style="margin-left:auto">Custo ${escapeHtml(c.cost??0)}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
+ $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div><div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div><div class="faction-line">${sigil(c.faction)}<span>${escapeHtml(c.faction||'Sem facção')}</span><span style="margin-left:auto">Custo ${escapeHtml(c.cost??0)}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
  document.querySelectorAll('canvas[data-card]').forEach(cv=>{const c=cards.find(x=>x.id===cv.dataset.card);if(c)drawCard(cv,c)});
 }
+function drawCreatureCard(canvas,c){
+ const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
+ const ix=w*.105,iy=h*.075,iw=w*.79,ih=h*.615;
+ const paint=()=>{
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#17171a';ctx.fillRect(0,0,w,h);
+  if(c.image){
+   const img=new Image();
+   const drawArt=()=>{
+    ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();
+    const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z;
+    const dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;
+    ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();drawFrameAndText();
+   };
+   img.onload=drawArt;img.onerror=drawFrameAndText;img.src=c.image;
+   if(img.complete&&img.naturalWidth)drawArt();
+  }else drawFrameAndText();
+ };
+ function drawFrameAndText(){
+  if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
+  else {ctx.strokeStyle='#d5ad58';ctx.lineWidth=5;ctx.strokeRect(5,5,w-10,h-10)}
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#302315';ctx.shadowColor='#f8e7bd';ctx.shadowBlur=2;
+  ctx.font='bold '+(w*.065)+'px Georgia';
+  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase().slice(0,25),w*.5,h*.708,w*.72);
+  ctx.shadowBlur=0;
+  const stat=(value,x,y,size)=>{if(value!==''&&value!==null&&value!==undefined){ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+(w*size)+'px Georgia';ctx.lineWidth=2;ctx.strokeStyle='#f4e4bd';ctx.strokeText(String(value),w*x,h*y);ctx.fillStyle='#332315';ctx.fillText(String(value),w*x,h*y)}};
+  stat(c.life,.50,.046,.065);
+  stat(c.cost??0,.91,.045,.055);
+  stat(c.power,.115,.953,.06);
+  stat(c.defense,.89,.953,.06);
+  const left=w*.17,max=w*.66;
+  ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#30291f';
+  ctx.font='bold '+(w*.032)+'px Georgia';
+  if(c.trait)ctx.fillText(String(c.trait).slice(0,65),left,h*.755,max);
+  ctx.font=(w*.029)+'px Georgia';
+  const wrap=(text,x,y,width,lineHeight,maxLines)=>{
+   const words=String(text||'').split(/\s+/);let line='',n=0;
+   for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>width&&line){ctx.fillText(line,x,y+n*lineHeight);line=word;n++;if(n>=maxLines-1)break}else line=test}
+   if(line&&n<maxLines)ctx.fillText(line,x,y+n*lineHeight);
+  };
+  wrap(c.effect||c.description||'',left,h*.785,max,h*.038,4);
+  if(c.flavor){
+   ctx.strokeStyle='#b68b3d';ctx.lineWidth=Math.max(1,w*.004);ctx.beginPath();ctx.moveTo(w*.16,h*.895);ctx.lineTo(w*.84,h*.895);ctx.stroke();
+   ctx.font='italic '+(w*.024)+'px Georgia';ctx.fillStyle='#574832';
+   wrap(c.flavor,w*.17,h*.905,w*.66,h*.026,2);
+  }
+ }
+ paint();
+}
 function drawCard(canvas,c){
+ if(c.type==='Criatura'){drawCreatureCard(canvas,c);return}
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
  const palettes={Bronze:['#6d482d','#c18b55'],Prata:['#555d68','#c8d0d8'],Ouro:['#72551e','#e8c66d'],Dark:['#191923','#8e6ba8'],Esmeralda:['#164b3d','#70c49c'],Rubi:['#5b2029','#d66a73'],Topázio:['#674c1c','#e5b84e']};
  const [base,edge]=palettes[c.rarity]||palettes.Bronze;
  const grad=ctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,base);grad.addColorStop(1,'#111219');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
  ctx.strokeStyle=edge;ctx.lineWidth=Math.max(5,w*.014);ctx.strokeRect(9,9,w-18,h-18);ctx.strokeStyle='#ffffff33';ctx.lineWidth=2;ctx.strokeRect(20,20,w-40,h-40);
- ctx.fillStyle='#100f14';ctx.fillRect(w*.07,h*.09,w*.86,h*.07);ctx.fillStyle='#f4e9d5';ctx.font=`bold ${w*.055}px Georgia`;ctx.textAlign='center';ctx.fillText((c.name||'NOVA CARTA').toUpperCase().slice(0,30),w/2,h*.137);
- const ix=w*.105,iy=h*.19,iw=w*.79,ih=h*.39;
- ctx.fillStyle='#0a0b0e';ctx.fillRect(ix,iy,iw,ih);
- if(c.image){const img=new Image();img.onload=()=>{ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z,dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();drawOverlay()};img.src=c.image}else{ctx.fillStyle='#27232d';ctx.fillRect(ix,iy,iw,ih);ctx.fillStyle='#b9a9c7';ctx.font=`${w*.11}px Georgia`;ctx.fillText('✦',w/2,iy+ih*.55);ctx.font=`${w*.035}px sans-serif`;ctx.fillText('ILUSTRAÇÃO',w/2,iy+ih*.72)}
- function drawOverlay(){
-  ctx.strokeStyle=edge;ctx.lineWidth=3;ctx.strokeRect(ix,iy,iw,ih);
- }
- ctx.fillStyle='#100f14';ctx.fillRect(w*.08,h*.61,w*.84,h*.29);
- ctx.fillStyle=edge;ctx.fillRect(w*.08,h*.61,w*.84,h*.006);
- ctx.textAlign='left';ctx.fillStyle='#e9d9bc';ctx.font=`bold ${w*.036}px sans-serif`;
- const faction=(c.faction||'SEM FACÇÃO').toUpperCase();ctx.fillText(faction.slice(0,30),w*.11,h*.65);
- ctx.fillStyle='#d9d3dc';ctx.font=`${w*.027}px sans-serif`;
+ ctx.fillStyle='#100f14';ctx.fillRect(w*.07,h*.09,w*.86,h*.07);ctx.fillStyle='#f4e9d5';ctx.font='bold '+(w*.055)+'px Georgia';ctx.textAlign='center';ctx.fillText((c.name||'NOVA CARTA').toUpperCase().slice(0,30),w/2,h*.137);
+ const ix=w*.105,iy=h*.19,iw=w*.79,ih=h*.39;ctx.fillStyle='#0a0b0e';ctx.fillRect(ix,iy,iw,ih);
+ const drawOverlay=()=>{ctx.strokeStyle=edge;ctx.lineWidth=3;ctx.strokeRect(ix,iy,iw,ih)};
+ if(c.image){const img=new Image();img.onload=()=>{ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z,dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();drawOverlay()};img.src=c.image}else{ctx.fillStyle='#27232d';ctx.fillRect(ix,iy,iw,ih);ctx.fillStyle='#b9a9c7';ctx.font=(w*.11)+'px Georgia';ctx.fillText('✦',w/2,iy+ih*.55);ctx.font=(w*.035)+'px sans-serif';ctx.fillText('ILUSTRAÇÃO',w/2,iy+ih*.72)}
+ ctx.fillStyle='#100f14';ctx.fillRect(w*.08,h*.61,w*.84,h*.29);ctx.fillStyle=edge;ctx.fillRect(w*.08,h*.61,w*.84,h*.006);
+ ctx.textAlign='left';ctx.fillStyle='#e9d9bc';ctx.font='bold '+(w*.036)+'px sans-serif';ctx.fillText((c.faction||'SEM FACÇÃO').toUpperCase().slice(0,30),w*.11,h*.65);
+ ctx.fillStyle='#d9d3dc';ctx.font=(w*.027)+'px sans-serif';
  const wrap=(text,x,y,max,lh,limit=4)=>{let words=String(text||'').split(/\s+/),line='',n=0;for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){ctx.fillText(line,x,y+n*lh);line=word;n++;if(n>=limit-1)break}else line=test}if(line&&n<limit)ctx.fillText(line,x,y+n*lh)};
- wrap(c.trait||' ',w*.11,h*.685,w*.76,h*.03,1);
- ctx.font=`${w*.025}px sans-serif`;wrap(c.effect||c.description||' ',w*.11,h*.73,w*.76,h*.034,4);
- if(c.flavor){ctx.font=`italic ${w*.023}px Georgia`;ctx.fillStyle='#b9aebd';wrap(c.flavor,w*.11,h*.87,w*.76,h*.025,2)}
- ctx.fillStyle='#f1d58c';ctx.textAlign='right';ctx.font=`bold ${w*.04}px sans-serif`;ctx.fillText(String(c.cost??0),w*.87,h*.955);
- ctx.textAlign='left';ctx.font=`${w*.025}px sans-serif`;ctx.fillStyle='#ddd';ctx.fillText([c.life?'V '+c.life:'',c.power?'A '+c.power:'',c.defense?'D '+c.defense:''].filter(Boolean).join('  '),w*.11,h*.955);
- if(c.faction==='Monte Celéstia'||c.faction==='Baator'){ctx.beginPath();ctx.arc(w*.88,h*.075,w*.035,0,Math.PI*2);ctx.fillStyle='#15151b';ctx.fill();ctx.strokeStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.stroke();ctx.fillStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.font=`bold ${w*.045}px Georgia`;ctx.textAlign='center';ctx.fillText(c.faction==='Baator'?'⌁':'✧',w*.88,h*.091)}
+ wrap(c.trait||' ',w*.11,h*.685,w*.76,h*.03,1);ctx.font=(w*.025)+'px sans-serif';wrap(c.effect||c.description||' ',w*.11,h*.73,w*.76,h*.034,4);
+ if(c.flavor){ctx.font='italic '+(w*.023)+'px Georgia';ctx.fillStyle='#b9aebd';wrap(c.flavor,w*.11,h*.87,w*.76,h*.025,2)}
+ ctx.fillStyle='#f1d58c';ctx.textAlign='right';ctx.font='bold '+(w*.04)+'px sans-serif';ctx.fillText(String(c.cost??0),w*.87,h*.955);
+ ctx.textAlign='left';ctx.font=(w*.025)+'px sans-serif';ctx.fillStyle='#ddd';ctx.fillText([c.life?'V '+c.life:'',c.power?'A '+c.power:'',c.defense?'D '+c.defense:''].filter(Boolean).join('  '),w*.11,h*.955);
+ if(c.faction==='Monte Celéstia'||c.faction==='Baator'){ctx.beginPath();ctx.arc(w*.88,h*.075,w*.035,0,Math.PI*2);ctx.fillStyle='#15151b';ctx.fill();ctx.strokeStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.stroke();ctx.fillStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.font='bold '+(w*.045)+'px Georgia';ctx.textAlign='center';ctx.fillText(c.faction==='Baator'?'⌁':'✧',w*.88,h*.091)}
 }
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';
@@ -154,7 +201,7 @@ function openEditor(c=null){
 }
 function collect(){return {id:editingId||crypto.randomUUID(),name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 function save(){const c=collect();if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}const i=cards.findIndex(x=>x.id===c.id);if(i>=0)cards[i]=c;else cards.push(c);persist();$('modal').classList.remove('open')}
-function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}const cv=document.createElement('canvas');cv.width=900;cv.height=1500;drawCard(cv,c);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
+function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;drawCard(cv,c);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtn').onclick=save;$('pngBtn').onclick=exportPNG;
 $('deleteBtn').onclick=()=>{if(editingId&&confirm('Excluir esta carta?')){cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}};
 $('image').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect())};r.readAsDataURL(f)};
