@@ -904,16 +904,17 @@ async function runCardOCR(file){
   };
   // A esfera central superior existe no molde de criaturas e contém o valor de Vida.
   // No molde de magia, essa mesma região é apenas ilustração.
-  const centerLife=await recognize(OCR_REGIONS.creature.life);
-  const lifeValue=numericOCR(centerLife.text);
+  // A região ampla serve apenas para identificar o molde; a leitura final da Vida usa um recorte mais estreito.
+  const creatureProbe=await recognize({x:.415,y:.004,w:.17,h:.078,mode:'number'});
+  const probeValue=numericOCR(creatureProbe.text);
   const ratio=img.naturalWidth/Math.max(1,img.naturalHeight);
-  const cardKind=lifeValue&&centerLife.confidence>=24?'creature':(ratio<.455?'creature':'magic');
+  const cardKind=probeValue&&creatureProbe.confidence>=24?'creature':(ratio<.455?'creature':'magic');
   const layout=OCR_REGIONS[cardKind],results={};
   const fields=Object.keys(layout);
   for(let i=0;i<fields.length;i++){
    const field=fields[i];
    if(field==='life'&&cardKind==='creature'){
-    results.life={text:lifeValue,confidence:centerLife.confidence};
+    results.life=await recognize(layout.life);
     continue;
    }
    $('ocrStatus').textContent='Lendo '+({name:'nome',trait:'características',effect:'habilidades/efeito',flavor:'ambientação',life:'vida',cost:'custo',power:'ataque',defense:'defesa'}[field]||field)+'…';
@@ -928,7 +929,7 @@ async function runCardOCR(file){
   if(accepted('cost',20)){const n=numericOCR(results.cost.text);if(n!=='')put('cost',n)}
   if(cardKind==='creature'){
    if(accepted('trait',28))put('trait',results.trait.text);
-   if(lifeValue&&centerLife.confidence>=24)put('life',lifeValue);
+   if(accepted('life',20)){const n=numericOCR(results.life.text);if(n!=='')put('life',n)}
    if(accepted('power',20)){const n=numericOCR(results.power.text);if(n!=='')put('power',n)}
    if(accepted('defense',20)){const n=numericOCR(results.defense.text);if(n!=='')put('defense',n)}
    $('type').value='Criatura';
