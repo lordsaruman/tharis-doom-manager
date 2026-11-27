@@ -105,7 +105,10 @@ alignmentInsignias.Neutro.src='INSIGNIA%20NEUTRO.png';
 alignmentInsignias.Sombra.src='INSIGNIA%20SOMBRAS.png';
 const factionInsignias={Moiras:new Image()};
 factionInsignias.Moiras.src='INSIGNIAS%20MOIRAS.png';
-Object.values({...alignmentInsignias,...factionInsignias}).forEach(img=>img.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())});
+const factionInsigniaSheet=new Image();
+factionInsigniaSheet.src='INSIGNIAS%20FACCOES.svg';
+const factionInsigniaIndex={Kalassiria:0,'Monte Celéstia':1,Baator:2,'Caras Galadhon':3,Yalugoth:4,Thay:5,"Baldur's Gate":6};
+Object.values({...alignmentInsignias,...factionInsignias,factionSheet:factionInsigniaSheet}).forEach(img=>img.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())});
 
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
@@ -186,6 +189,24 @@ function drawCreatureCard(canvas,c){
   ctx.restore();
  };
  const paint=()=>{
+  // Calcula a bandeira antes da moldura: a esfera de custo é desenhada por cima dela.
+  const insigniaItems=[];
+  const alignmentEmblem=alignmentInsignias[c.alignment];
+  if(alignmentEmblem&&alignmentEmblem.complete&&alignmentEmblem.naturalWidth)insigniaItems.push({img:alignmentEmblem});
+  const factionEmblem=factionInsignias[c.faction];
+  if(factionEmblem&&factionEmblem.complete&&factionEmblem.naturalWidth)insigniaItems.push({img:factionEmblem});
+  const factionIndex=factionInsigniaIndex[c.faction];
+  if(factionIndex!==undefined&&factionInsigniaSheet.complete&&factionInsigniaSheet.naturalWidth)insigniaItems.push({img:factionInsigniaSheet,index:factionIndex});
+  let flagX=0,flagY=0,emblemSize=0,pad=0,gap=0;
+  if(insigniaItems.length){
+   emblemSize=w*.088;gap=w*.012;pad=w*.012;
+   const flagWidth=w*.112,flagHeight=pad*2+insigniaItems.length*emblemSize+(insigniaItems.length-1)*gap;
+   flagX=w*.95-flagWidth/2;flagY=h*.052;
+   ctx.save();ctx.beginPath();
+   ctx.moveTo(flagX,flagY);ctx.lineTo(flagX+flagWidth,flagY);ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.82);
+   ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);ctx.lineTo(flagX,flagY+flagHeight*.82);ctx.closePath();
+   ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();ctx.restore();
+  }
   if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';
   ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
@@ -196,34 +217,12 @@ function drawCreatureCard(canvas,c){
   stat(c.power,.105,.945,.105);
   stat(c.defense,.895,.945,.105);
   ctx.shadowBlur=0;
-  // Uma única bandeira vertical reúne todas as insígnias ativas.
-  // A altura aumenta automaticamente conforme novas insígnias forem adicionadas.
-  const insigniaItems=[];
-  const alignmentEmblem=alignmentInsignias[c.alignment];
-  if(alignmentEmblem&&alignmentEmblem.complete&&alignmentEmblem.naturalWidth)insigniaItems.push(alignmentEmblem);
-  const factionEmblem=factionInsignias[c.faction];
-  if(factionEmblem&&factionEmblem.complete&&factionEmblem.naturalWidth)insigniaItems.push(factionEmblem);
-  if(insigniaItems.length){
-   const emblemSize=w*.088, gap=w*.012, pad=w*.012;
-   const flagWidth=w*.112, flagHeight=pad*2+insigniaItems.length*emblemSize+(insigniaItems.length-1)*gap;
-   const flagX=w*.95-flagWidth/2, flagY=h*.052;
-   ctx.save();
-   ctx.beginPath();
-   ctx.moveTo(flagX,flagY);
-   ctx.lineTo(flagX+flagWidth,flagY);
-   ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.82);
-   ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);
-   ctx.lineTo(flagX,flagY+flagHeight*.82);
-   ctx.closePath();
-   ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();
-   ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();
-   insigniaItems.forEach((emblem,index)=>{
-    const x=w*.95-emblemSize/2;
-    const y=flagY+pad+index*(emblemSize+gap);
-    ctx.drawImage(emblem,x,y,emblemSize,emblemSize);
-   });
-   ctx.restore();
-  }
+  // Insígnias são aplicadas sobre a bandeira, mas a esfera de custo permanece à frente.
+  insigniaItems.forEach((item,index)=>{
+   const x=w*.95-emblemSize/2,y=flagY+pad+index*(emblemSize+gap);
+   if(item.index===undefined)ctx.drawImage(item.img,x,y,emblemSize,emblemSize);
+   else ctx.drawImage(item.img,item.index*100,0,100,100,x,y,emblemSize,emblemSize);
+  });
   ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
