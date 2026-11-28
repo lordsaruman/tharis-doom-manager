@@ -579,7 +579,10 @@ function refreshSelects(){
  $('factionLegend').innerHTML=all.map(f=>`<span class="faction-chip">${sigil(f,22)}${escapeHtml(f)}</span>`).join('');
  updateFactionPicker();
 }
+let cloudLibraryReady=false;
 function render(){
+ // Enquanto o Supabase verifica a sessão e carrega as cartas, callbacks de imagens não podem exibir o cache local.
+ if(sb&&!cloudLibraryReady)return;
  refreshSelects();
  $('statCards').textContent=cards.length;
  $('statFactions').textContent=new Set(cards.map(c=>c.faction).filter(Boolean)).size;
@@ -1252,14 +1255,27 @@ async function setCardsFromCloud(rows){
  cards=converted;render();$('cloudStatus').textContent='Online · '+cards.length+' carta(s) sincronizada(s)';
 }
 async function handleSession(session){
+ cloudLibraryReady=false;
  cloudUser=session?.user||null;isAdmin=false;
  if(cloudUser){try{const {data:profile}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();isAdmin=profile?.role==='admin'}catch(error){console.warn('Não foi possível validar o perfil administrativo:',error)}}
  $('assetsBtn').style.display=isAdmin?'inline-block':'none';
  $('teamBtn').style.display=isAdmin?'inline-block':'none';
  $('authBtn').textContent=cloudUser?'Conta · '+(cloudUser.email||'conectada'):'Entrar';
  $('logoutBtn').style.display=cloudUser?'inline-block':'none';
- if(cloudUser){try{await loadCloudCards();$('authModal').classList.remove('open')}catch(error){$('cloudStatus').textContent='Erro na sincronização';$('authMessage').textContent='Falha ao carregar biblioteca: '+error.message;console.error(error)}}
- else{$('cloudStatus').textContent='Modo local · não conectado';}
+ if(cloudUser){
+  try{
+   await loadCloudCards();
+   $('authModal').classList.remove('open');
+  }catch(error){
+   cards=[];$('cloudStatus').textContent='Erro na sincronização';
+   $('authMessage').textContent='Falha ao carregar biblioteca: '+error.message;
+   console.error(error);
+  }
+ }else{
+  // Sem sessão online, a biblioteca permanece vazia; nunca substitui a nuvem pelo cache deste navegador.
+  cards=[];$('cloudStatus').textContent='Modo local · não conectado';
+ }
+ cloudLibraryReady=true;render();
 }
 $('authBtn').onclick=()=>{$('authMessage').textContent=cloudUser?'Você está conectado ao Tharis Doom online.':'Entre com seu usuário do Supabase.';$('authModal').classList.add('open')};
 
@@ -1336,14 +1352,18 @@ $('setPasswordBtn').onclick=async()=>{
 };
 $('authCloseBtn').onclick=()=>$('authModal').classList.remove('open');
 $('loginBtn').onclick=async()=>{if(!sb){alert('Não foi possível iniciar o cliente Supabase.');return}const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}$('loginBtn').disabled=true;$('authMessage').textContent='Conectando…';try{const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await handleSession(data.session)}catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}finally{$('loginBtn').disabled=false}};
-$('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}cloudUser=null;load();render();handleSession(null);$('authModal').classList.remove('open')};
-load();
+$('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}cloudUser=null;await handleSession(null);$('authModal').classList.remove('open')};
 if(sb){
- // Em sessão online, não mostra o cache local antigo antes da sincronização.
+ // Não lê nem renderiza localStorage: a biblioteca online é a única fonte exibida neste modo.
+ cards=[];cloudLibraryReady=false;
  $('library').innerHTML='<div class="empty" style="grid-column:1/-1">Carregando biblioteca online…</div>';
- sb.auth.getSession().then(({data,error})=>{if(error)throw error;handleSession(data.session);showPasswordSetup()}).catch(error=>{$('cloudStatus').textContent='Falha ao verificar sessão';console.error(error);render()});
+ sb.auth.getSession().then(({data,error})=>{if(error)throw error;return handleSession(data.session)}).then(()=>showPasswordSetup()).catch(error=>{
+  cards=[];cloudLibraryReady=true;$('cloudStatus').textContent='Falha ao verificar sessão';
+  $('library').innerHTML='<div class="empty" style="grid-column:1/-1">Não foi possível verificar sua sessão online. Atualize a página ou entre novamente.</div>';
+  console.error(error);
+ });
  sb.auth.onAuthStateChange((event,session)=>{if(session?.user?.id!==cloudUser?.id)handleSession(session);if(event==='PASSWORD_RECOVERY'||inviteInUrl())showPasswordSetup()});
-}else render();
+}else{load();cloudLibraryReady=true;render()}
 })();
 </script>
 </body></html>
