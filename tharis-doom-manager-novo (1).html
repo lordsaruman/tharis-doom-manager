@@ -584,6 +584,23 @@ footer:before{
 .notes-save-state{min-height:18px;color:#a99573;font:12px 'Crimson Pro',Georgia,serif}
 .notes-close{padding:5px 9px!important}
 @media(max-width:600px){.notes-drawer{padding:16px 13px 13px}.notes-edge-toggle{top:42%}}
+
+.notes-drawer .notes-compose{display:flex;flex-direction:column;gap:8px}
+.notes-drawer .notes-compose textarea{flex:none;min-height:92px;max-height:180px;resize:vertical}
+.notes-drawer .notes-compose button{align-self:flex-end}
+.notes-list-heading{display:flex;justify-content:space-between;align-items:center;color:#c5a36b;font:600 10px 'Cinzel',Georgia,serif;letter-spacing:.12em;padding-top:5px}
+.notes-list-heading span{font:12px 'Crimson Pro',Georgia,serif;color:#a99573;letter-spacing:0}
+.shared-notes-list{flex:1;min-height:100px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:2px 3px 10px}
+.shared-note{border:1px solid #665137;border-radius:5px;background:linear-gradient(145deg,#211910,#120e0a);padding:11px 12px;box-shadow:inset 0 0 0 1px #0005}
+.shared-note-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:7px;border-bottom:1px solid #59452d;color:#bda477;font:12px 'Crimson Pro',Georgia,serif}
+.shared-note-author{display:flex;align-items:center;gap:6px;color:#d4b77e;font-weight:600}
+.shared-note-mark{color:#d4b77e}
+.shared-note-meta time{color:#99876b;font-size:11px;white-space:nowrap}
+.shared-note-content{padding:9px 0;color:#e3d4b8;font:15px/1.45 'Crimson Pro',Georgia,serif;overflow-wrap:anywhere}
+.shared-note-actions{display:flex;justify-content:flex-end;gap:7px}
+.shared-note-actions button{padding:4px 8px;border:1px solid #655039;border-radius:4px;background:#21180f;color:#cdb58c;font:12px 'Crimson Pro',Georgia,serif;cursor:pointer}
+.shared-note-actions button:last-child{color:#d18a78;border-color:#75483e}
+.shared-note-actions button:hover{background:#392819}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -635,11 +652,13 @@ footer:before{
  </div>
 </main>
 <button class="notes-edge-toggle" id="notesToggle" type="button" aria-label="Abrir minhas anotações" aria-expanded="false" title="Minhas anotações">‹</button>
-<aside class="notes-drawer" id="notesDrawer" aria-label="Minhas anotações" aria-hidden="true">
- <div class="notes-drawer-head"><div><h2>ANOTAÇÕES</h2><div class="notes-owner" id="notesOwner">Anotações pessoais</div></div><button class="notes-close" id="notesClose" type="button" aria-label="Fechar anotações">✕</button></div>
- <div class="hint">Suas ideias rápidas, lembretes e planos. Só você pode visualizar e editar este conteúdo.</div>
- <textarea id="personalNotes" spellcheck="false" placeholder="Anote uma ideia para Tharis Doom…&#10;&#10;Suas anotações são salvas automaticamente."></textarea>
- <div class="notes-save-state" id="notesSaveState" role="status">Salvo na sua conta</div>
+<aside class="notes-drawer" id="notesDrawer" aria-label="Anotações compartilhadas" aria-hidden="true">
+ <div class="notes-drawer-head"><div><h2>QUADRO DE ANOTAÇÕES</h2><div class="notes-owner" id="notesOwner">Compartilhado com a equipe</div></div><button class="notes-close" id="notesClose" type="button" aria-label="Fechar anotações">✕</button></div>
+ <div class="hint">Todas as anotações ficam visíveis para a equipe. Cada registro mostra quem o criou; todos podem complementar, editar ou excluir.</div>
+ <div class="notes-compose"><textarea id="sharedNoteInput" spellcheck="false" placeholder="Registre uma ideia, lembrete ou sugestão para Tharis Doom…"></textarea><button class="primary" id="addSharedNoteBtn" type="button">＋ Adicionar anotação</button></div>
+ <div class="notes-list-heading"><strong>ANOTAÇÕES DA EQUIPE</strong><span id="sharedNotesCount">0 registros</span></div>
+ <div class="shared-notes-list" id="sharedNotesList"><div class="empty">Carregando anotações…</div></div>
+ <div class="notes-save-state" id="notesSaveState" role="status">Sincronizado com a equipe</div>
 </aside>
 
 <footer>Tharis Doom · Biblioteca compartilhada no Supabase · alterações sincronizadas entre colaboradores.</footer>
@@ -2159,28 +2178,50 @@ function creatorLabel(id){
  return collaboratorDirectory[id]?.display_name||('Colaborador · '+id.slice(0,6).toUpperCase());
 }
 
-let personalNotesTimer=null,personalNotesLoadedFor=null;
+let sharedNotes=[];
 function setNotesDrawer(open){
  const drawer=$('notesDrawer'),toggle=$('notesToggle');if(!drawer||!toggle)return;
- drawer.classList.toggle('open',open);drawer.setAttribute('aria-hidden',String(!open));toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'›':'‹';toggle.setAttribute('aria-label',open?'Fechar minhas anotações':'Abrir minhas anotações');
- if(open&&cloudUser)$('personalNotes').focus();
+ drawer.classList.toggle('open',open);drawer.setAttribute('aria-hidden',String(!open));toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'›':'‹';toggle.setAttribute('aria-label',open?'Fechar anotações compartilhadas':'Abrir anotações compartilhadas');
+ if(open&&cloudUser)$('sharedNoteInput').focus();
 }
-async function loadPersonalNotes(){
- const field=$('personalNotes'),state=$('notesSaveState'),owner=$('notesOwner');if(!field||!state||!owner)return;
- if(!cloudUser){field.value='';field.disabled=true;owner.textContent='Entre para usar suas anotações';state.textContent='Faça login para salvar suas anotações';personalNotesLoadedFor=null;return}
- field.disabled=true;state.textContent='Carregando suas anotações…';owner.textContent=creatorLabel(cloudUser.id);personalNotesLoadedFor=cloudUser.id;
- const {data,error}=await sb.from('collaborator_notes').select('content').eq('user_id',cloudUser.id).maybeSingle();
- if(error){state.textContent='Não foi possível carregar: '+error.message;return}
- if(personalNotesLoadedFor!==cloudUser.id)return;
- field.value=data?.content||'';field.disabled=false;state.textContent='Salvo na sua conta';
+function renderSharedNotes(){
+ const list=$('sharedNotesList'),count=$('sharedNotesCount');if(!list||!count)return;
+ count.textContent=sharedNotes.length+' '+(sharedNotes.length===1?'registro':'registros');
+ if(!sharedNotes.length){list.innerHTML='<div class="empty">Ainda não há anotações. Registre a primeira ideia da equipe!</div>';return}
+ list.innerHTML=sharedNotes.map(note=>{const author=creatorLabel(note.created_by),date=new Date(note.updated_at||note.created_at);return `<article class="shared-note" data-note-id="${escapeHtml(note.id)}"><div class="shared-note-meta"><span class="shared-note-author"><span class="shared-note-mark">${escapeHtml(creatorMark(note.created_by))}</span>${escapeHtml(author)}</span><time>${date.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</time></div><div class="shared-note-content">${escapeHtml(note.content).replace(/\n/g,'<br>')}</div><div class="shared-note-actions"><button type="button" data-note-edit="${escapeHtml(note.id)}">✎ Editar</button><button type="button" data-note-delete="${escapeHtml(note.id)}">× Excluir</button></div></article>`}).join('');
 }
-async function savePersonalNotes(){
- if(!cloudUser||personalNotesLoadedFor!==cloudUser.id)return;
- const field=$('personalNotes'),state=$('notesSaveState'),userId=cloudUser.id;
- state.textContent='Salvando…';
- const {error}=await sb.from('collaborator_notes').upsert({user_id:userId,content:field.value,updated_at:new Date().toISOString()},{onConflict:'user_id'});
- if(error){state.textContent='Erro ao salvar: '+error.message;console.error('Falha ao salvar anotações pessoais:',error);return}
- if(cloudUser?.id===userId)state.textContent='Salvo automaticamente · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+async function loadSharedNotes(){
+ const state=$('notesSaveState');if(!cloudUser){sharedNotes=[];renderSharedNotes();state.textContent='Entre para acessar o quadro compartilhado';return}
+ state.textContent='Sincronizando anotações…';
+ const {data,error}=await sb.from('shared_library_notes').select('id,content,created_by,created_at,updated_at').order('created_at',{ascending:false});
+ if(error){state.textContent='Falha ao carregar: '+error.message;console.error(error);return}
+ sharedNotes=data||[];renderSharedNotes();state.textContent='Atualizado · compartilhado com todos';
+}
+async function addSharedNote(){
+ if(!cloudUser)return;
+ const field=$('sharedNoteInput'),content=field.value.trim();if(!content){$('notesSaveState').textContent='Escreva uma anotação antes de adicionar.';field.focus();return}
+ const button=$('addSharedNoteBtn');button.disabled=true;$('notesSaveState').textContent='Publicando anotação…';
+ const {error}=await sb.from('shared_library_notes').insert({content,created_by:cloudUser.id});
+ button.disabled=false;
+ if(error){$('notesSaveState').textContent='Não foi possível adicionar: '+error.message;console.error(error);return}
+ field.value='';await loadSharedNotes();
+}
+async function editSharedNote(id){
+ const note=sharedNotes.find(item=>item.id===id);if(!note)return;
+ const content=prompt('Edite a anotação compartilhada:',note.content);if(content===null)return;
+ if(!content.trim()){$('notesSaveState').textContent='A anotação não pode ficar vazia.';return}
+ $('notesSaveState').textContent='Salvando edição…';
+ const {error}=await sb.from('shared_library_notes').update({content:content.trim(),updated_at:new Date().toISOString()}).eq('id',id);
+ if(error){$('notesSaveState').textContent='Não foi possível editar: '+error.message;console.error(error);return}
+ await loadSharedNotes();
+}
+async function deleteSharedNote(id){
+ const note=sharedNotes.find(item=>item.id===id);if(!note)return;
+ if(!confirm('Excluir esta anotação compartilhada? Todos os colaboradores deixarão de vê-la.'))return;
+ $('notesSaveState').textContent='Excluindo anotação…';
+ const {error}=await sb.from('shared_library_notes').delete().eq('id',id);
+ if(error){$('notesSaveState').textContent='Não foi possível excluir: '+error.message;console.error(error);return}
+ await loadSharedNotes();
 }
 
 function startCardsRealtime(){
@@ -2204,6 +2245,9 @@ function startCardsRealtime(){
   .on('postgres_changes',{event:'*',schema:'public',table:'game_glossary'},()=>{
    if(cloudUser&&$('glossaryModal').classList.contains('open'))loadGlossary().catch(error=>console.warn('Falha ao sincronizar glossário:',error));
   })
+  .on('postgres_changes',{event:'*',schema:'public',table:'shared_library_notes'},()=>{
+   if(cloudUser)loadSharedNotes().catch(error=>console.warn('Falha ao sincronizar anotações compartilhadas:',error));
+  })
   .subscribe(status=>{if(status==='SUBSCRIBED')$('cloudStatus').textContent='Online · sincronização ativa'});
 }
 function stopCardsRealtime(){if(cardsRealtimeChannel&&sb)sb.removeChannel(cardsRealtimeChannel);cardsRealtimeChannel=null;}
@@ -2219,7 +2263,7 @@ async function handleSession(session){
  if(cloudUser){
   try{
    await loadCollaboratorDirectory();
-   await loadPersonalNotes();
+   await loadSharedNotes();
    await loadCreatureTraits();
    await loadVisualSettings();
    await loadCloudCards();
@@ -2241,10 +2285,12 @@ async function handleSession(session){
 
 $('notesToggle').addEventListener('click',()=>setNotesDrawer(!$('notesDrawer').classList.contains('open')));
 $('notesClose').addEventListener('click',()=>setNotesDrawer(false));
-$('personalNotes').addEventListener('input',()=>{
- if(personalNotesTimer)clearTimeout(personalNotesTimer);
- $('notesSaveState').textContent='Alterações pendentes…';
- personalNotesTimer=setTimeout(()=>savePersonalNotes().catch(error=>{$('notesSaveState').textContent='Erro ao salvar: '+error.message}),700);
+$('addSharedNoteBtn').addEventListener('click',addSharedNote);
+$('sharedNoteInput').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')addSharedNote()});
+$('sharedNotesList').addEventListener('click',e=>{
+ const edit=e.target.closest('[data-note-edit]'),remove=e.target.closest('[data-note-delete]');
+ if(edit)editSharedNote(edit.dataset.noteEdit);
+ if(remove)deleteSharedNote(remove.dataset.noteDelete);
 });
 $('codexBtn').onclick=openCodex;$('codexCloseBtn').onclick=()=>$('codexModal').classList.remove('open');
 $('glossaryBtn').onclick=openGlossary;$('glossaryCloseBtn').onclick=()=>$('glossaryModal').classList.remove('open');
