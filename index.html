@@ -448,7 +448,8 @@ footer:before{
 /* BIBLIOTECA · ACABAMENTO BORDA-SOL */
 .library-frame{
  position:relative;
- padding:0;
+ /* Reserva exatamente a altura da arte para mantê-la fora da área útil */
+ padding:calc(100% * 105 / 1362) 0;
  margin-top:2px;
 }
 .library-frame:before,.library-frame:after{
@@ -467,7 +468,7 @@ footer:before{
  pointer-events:none;
 }
 .library-frame:before{top:0;transform:scaleY(-1)}
-.library-frame:after{bottom:0;transform:none}
+.library-frame:after{bottom:0;transform:scaleY(-1)}
 .library-frame>.library-panel{
  position:relative;
  z-index:1;
