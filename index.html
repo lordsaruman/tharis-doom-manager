@@ -589,10 +589,10 @@ footer:before{
      <div class="field span2 attributes-panel" id="attributesPanel">
       <div class="attributes-heading">ATRIBUTOS</div>
       <div class="attributes-grid">
+       <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
        <div class="field combat-stat"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
        <div class="field combat-stat"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
        <div class="field combat-stat"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
-       <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
       </div>
      </div>
     <div class="field span2" id="magicGradientField"><label for="magicTextGradient">Intensidade do degradê atrás dos textos <span id="magicTextGradientValue">180%</span></label><input id="magicTextGradient" type="range" min="0" max="200" step="5" value="180"><div class="hint">Ajusta a força do escurecimento na área de texto das cartas de magia. 0% remove o degradê; 180% é a intensidade padrão.</div></div>
@@ -953,7 +953,7 @@ function updateCardInspector(){
  $('selectedCardName').textContent=c.name||'Sem nome';
  $('selectedCardMeta').textContent=[c.type||'Carta',c.rarity||'Sem raridade',c.isNew?'CARTA NOVA':null].filter(Boolean).join(' · ');
  $('selectedCardFaction').innerHTML=sigil(c.faction,20,c.type)+'<span>'+escapeHtml(c.faction||c.type||'Sem facção')+'</span>';
- $('selectedCardStats').innerHTML=(c.type==='Magias'?[['CUSTO',c.cost??0]]:[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']]).map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');$('selectedCardStats').classList.toggle('magic-stats',c.type==='Magias');
+ $('selectedCardStats').innerHTML=(c.type==='Magias'?[['CUSTO',c.cost??0]]:[['CUSTO',c.cost??0],['VIDA',c.life??'—'],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']]).map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');$('selectedCardStats').classList.toggle('magic-stats',c.type==='Magias');
  drawCard($('selectedCardCanvas'),c);
  $('inspectorFlip').classList.remove('is-flipped');
  if(cardBackArt)$('selectedCardBack').src=cardBackArt;else $('selectedCardBack').removeAttribute('src');
