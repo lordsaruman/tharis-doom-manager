@@ -533,6 +533,11 @@ footer:before{
 .codex-stat-card{background:#17151a;border:1px solid #403a40;border-radius:8px;padding:10px}
 .codex-stat-card b{display:block;color:#f0d39a;font:600 19px 'Cinzel',Georgia,serif}
 .codex-stat-card span{font-size:10px;color:#b6a88e}
+.codex-attribute-grid{grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px}
+.codex-attribute-grid .codex-stat-card{min-width:0;text-align:center;padding:12px 8px;background:linear-gradient(145deg,#211a12,#15110d);border-color:#655239}
+.codex-attribute-grid .codex-stat-card b{font-size:clamp(19px,2.4vw,25px);overflow-wrap:anywhere}
+.codex-attribute-grid .codex-stat-card span{display:block;font:600 10px 'Cinzel',Georgia,serif;letter-spacing:.04em;color:#c8b48d;margin-bottom:5px}
+@media(max-width:520px){.codex-attribute-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.codex-attribute-grid .codex-stat-card{padding:10px 6px}}
 .codex-faction-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .codex-faction-heading h3{margin:0;color:#f0d39a;font:600 18px 'Cinzel',Georgia,serif}
 .codex-empty{padding:14px;color:#aa9b83;font-size:12px}
@@ -1854,9 +1859,18 @@ function codexTabs(){
 }
 function codexCategoryTable(items,type,factions){
  const metrics=[['Quantidade',null],['Ataque','power'],['Defesa','defense'],['Custo','cost'],['Vida','life']];
+ if(factions.length===1){
+  const faction=factions[0];
+  const subset=items.filter(c=>(c.faction||'Sem facção')===faction&&c.type===type);
+  if(!subset.length)return '<div class="codex-empty">Nenhuma carta desta categoria nesta facção.</div>';
+  return '<div class="codex-stat-grid codex-attribute-grid">'+metrics.map(([label,key])=>{
+   const value=key===null?subset.length:codexFmt(codexSum(subset,key));
+   return '<div class="codex-stat-card"><span>'+label+'</span><b>'+value+'</b></div>';
+  }).join('')+'</div>';
+ }
  const rows=factions.map(faction=>{
   const subset=items.filter(c=>(c.faction||'Sem facção')===faction&&c.type===type);
-  return '<tr><td>'+escapeHtml(faction)+'</td>'+metrics.map(([,key])=>'<td>'+ (key===null?subset.length:codexFmt(codexSum(subset,key)))+'</td>').join('')+'</tr>';
+  return '<tr><td>'+escapeHtml(faction)+'</td>'+metrics.map(([,key])=>'<td>'+(key===null?subset.length:codexFmt(codexSum(subset,key)))+'</td>').join('')+'</tr>';
  }).join('');
  const totals=metrics.map(([,key])=>'<td>'+(key===null?items.filter(c=>c.type===type).length:codexFmt(codexSum(items.filter(c=>c.type===type),key)))+'</td>').join('');
  return '<div class="codex-table-wrap"><table class="codex-table"><thead><tr><th>Facção</th>'+metrics.map(m=>'<th>'+m[0]+'</th>').join('')+'</tr></thead><tbody>'+rows+'<tr class="codex-total-row"><td>TOTAL DA COLEÇÃO</td>'+totals+'</tr></tbody></table></div>';
