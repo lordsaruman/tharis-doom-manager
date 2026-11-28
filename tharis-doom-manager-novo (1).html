@@ -375,6 +375,12 @@ footer:before{
 @media(prefers-reduced-motion:reduce){.inspector-tilt,.inspector-flip{transition:none}}
 
 
+.position-label{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+.text-position-controls{display:inline-flex;gap:5px;flex:0 0 auto}
+.text-position-controls button{width:27px;height:25px;padding:0;border:1px solid rgba(201,164,92,.55);border-radius:5px;background:linear-gradient(180deg,#29231c,#15120f);color:#e0c184;font-size:10px;line-height:1;cursor:pointer}
+.text-position-controls button:hover{border-color:#e2bd76;background:#3a2c1b;color:#ffe3a8}
+.text-position-controls button:active{transform:translateY(1px)}
+
 /* ORBE CENTRAL · CONTADOR TOTAL DE CARTAS */
 .stats{align-items:center}
 .total-orb-wrap{min-height:112px;display:grid;place-items:center;position:relative}
@@ -478,7 +484,7 @@ footer:before{
    <div>
     <div class="formgrid">
      <div class="field span2"><label>Modelo de criação</label><select id="creationMode"><option value="normal">Criar Carta</option><option value="ready">CARTA PRONTA</option></select><div class="hint">Selecione CARTA PRONTA para identificar cartas cujo visual já está definido.</div></div>
-     <div class="field span2"><label>Nome da carta *</label><input id="name" maxlength="60" placeholder="Nome da carta"></div>
+     <div class="field span2"><label class="position-label" for="name"><span>Nome da carta *</span><span class="text-position-controls"><button type="button" data-position-adjust="nameOffsetY" data-direction="-1" aria-label="Mover nome para cima" title="Mover para cima">▲</button><button type="button" data-position-adjust="nameOffsetY" data-direction="1" aria-label="Mover nome para baixo" title="Mover para baixo">▼</button></span></label><input id="name" maxlength="60" placeholder="Nome da carta"><input id="nameOffsetY" type="hidden" value="0"></div>
      <div class="field span2 new-card-option">
       <label class="new-card-check"><input id="isNew" type="checkbox"><span>Marcar como carta nova</span></label>
       <div class="hint">Use esta marcação para distinguir as cartas inéditas do acervo que já existia.</div>
@@ -494,7 +500,7 @@ footer:before{
       <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
       <div class="field"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
      </div>
-     <div class="field span2"><label id="effectLabel">Habilidades</label>
+     <div class="field span2"><label class="position-label" id="effectLabel"><span>Habilidades</span><span class="text-position-controls"><button type="button" data-position-adjust="effectOffsetY" data-direction="-1" aria-label="Mover habilidades/efeito para cima" title="Mover para cima">▲</button><button type="button" data-position-adjust="effectOffsetY" data-direction="1" aria-label="Mover habilidades/efeito para baixo" title="Mover para baixo">▼</button></span></label><input id="effectOffsetY" type="hidden" value="0">
       <div class="effect-toolbar" role="toolbar" aria-label="Formatação das habilidades">
        <button type="button" data-effect-format="bold" title="Negrito"><b>B</b></button>
        <button type="button" data-effect-format="underline" title="Sublinhado"><u>U</u></button>
@@ -902,10 +908,10 @@ function drawCreatureCard(canvas,c){
   stat(c.defense,.895,.945,.105);
   ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
   ctx.fillStyle=creatureTextColor;ctx.font='normal '+(w*.050)+'px Georgia';
-  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
+  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*(.708+(+c.nameOffsetY||0)),w*.79);
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
   // Habilidades: painel central claro, com margens internas e parágrafos preservados.
-  const abilityTop=h*.765,abilityBottom=h*.872;
+  const abilityTop=h*(.765+(+c.effectOffsetY||0)),abilityBottom=h*(.872+(+c.effectOffsetY||0));
   if(c.effect)drawEffectRichText(
    ctx,c.effect,w*.5,(abilityTop+abilityBottom)/2,
    w*.72,abilityBottom-abilityTop,
@@ -1066,7 +1072,7 @@ function drawMagicCard(canvas,c){
  };
  // Efeito e ambientação usam a mesma lógica de quebra, fonte e ajuste
  // empregada nas habilidades e no flavor das cartas de criatura.
- if(c.effect)drawEffectRichText(ctx,c.effect,w*.5,h*.809,w*.70,h*.087,w*.037,w*.018,h*.027,'#f1d18a');
+ if(c.effect)drawEffectRichText(ctx,c.effect,w*.5,h*(.809+(+c.effectOffsetY||0)),w*.70,h*.087,w*.037,w*.018,h*.027,'#f1d18a');
  // Divisória dourada entre o efeito e o texto de ambientação.
  ctx.save();ctx.strokeStyle='rgba(201,164,92,.95)';ctx.lineWidth=Math.max(1.5,w*.0025);
  ctx.shadowColor='rgba(201,164,92,.45)';ctx.shadowBlur=3;
@@ -1076,7 +1082,7 @@ function drawMagicCard(canvas,c){
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=metallicGoldText(ctx,h*.744,w*.050);
   ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.shadowColor='rgba(0,0,0,.72)';ctx.shadowBlur=2;
-  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.744,w*.79);
+  ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*(.744+(+c.nameOffsetY||0)),w*.79);
   ctx.shadowBlur=0;
   // Custo centralizado na esfera, com a mesma cor, sombra e escala da criatura.
   ctx.fillStyle='#29231b';ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
@@ -1099,7 +1105,7 @@ function drawCard(canvas,c){
  const [base,edge]=palettes[c.rarity]||palettes.Bronze;
  const grad=ctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,base);grad.addColorStop(1,'#111219');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
  ctx.strokeStyle=edge;ctx.lineWidth=Math.max(5,w*.014);ctx.strokeRect(9,9,w-18,h-18);ctx.strokeStyle='#ffffff33';ctx.lineWidth=2;ctx.strokeRect(20,20,w-40,h-40);
- ctx.fillStyle='#100f14';ctx.fillRect(w*.07,h*.09,w*.86,h*.07);ctx.fillStyle='#f4e9d5';ctx.font='bold '+(w*.055)+'px Georgia';ctx.textAlign='center';ctx.fillText((c.name||'NOVA CARTA').toUpperCase().slice(0,30),w/2,h*.137);
+ ctx.fillStyle='#100f14';ctx.fillRect(w*.07,h*.09,w*.86,h*.07);ctx.fillStyle='#f4e9d5';ctx.font='bold '+(w*.055)+'px Georgia';ctx.textAlign='center';ctx.fillText((c.name||'NOVA CARTA').toUpperCase().slice(0,30),w/2,h*(.137+(+c.nameOffsetY||0)));
  const ix=w*.105,iy=h*.19,iw=w*.79,ih=h*.39;ctx.fillStyle='#0a0b0e';ctx.fillRect(ix,iy,iw,ih);
  const drawOverlay=()=>{ctx.strokeStyle=edge;ctx.lineWidth=3;ctx.strokeRect(ix,iy,iw,ih)};
  if(c.image){const img=new Image();img.onload=()=>{ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();const z=Math.max(1,(+c.imageZoom||100)/100),dw=iw*z,dh=ih*z,dx=ix+(iw-dw)/2+(+c.imageX||0)*iw/200,dy=iy+(ih-dh)/2+(+c.imageY||0)*ih/200;ctx.drawImage(img,dx,dy,dw,dh);ctx.restore();drawOverlay()};img.src=c.image}else{ctx.fillStyle='#27232d';ctx.fillRect(ix,iy,iw,ih);ctx.fillStyle='#b9a9c7';ctx.font=(w*.11)+'px Georgia';ctx.fillText('✦',w/2,iy+ih*.55);ctx.font=(w*.035)+'px sans-serif';ctx.fillText('ILUSTRAÇÃO',w/2,iy+ih*.72)}
@@ -1107,7 +1113,7 @@ function drawCard(canvas,c){
  ctx.textAlign='left';ctx.fillStyle='#e9d9bc';ctx.font='bold '+(w*.036)+'px sans-serif';ctx.fillText((c.faction||'SEM FACÇÃO').toUpperCase().slice(0,30),w*.11,h*.65);
  ctx.fillStyle='#d9d3dc';ctx.font=(w*.027)+'px sans-serif';
  const wrap=(text,x,y,max,lh,limit=4)=>{let words=String(text||'').split(/\s+/),line='',n=0;for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){ctx.fillText(line,x,y+n*lh);line=word;n++;if(n>=limit-1)break}else line=test}if(line&&n<limit)ctx.fillText(line,x,y+n*lh)};
- wrap(c.trait||' ',w*.11,h*.685,w*.76,h*.03,1);ctx.font=(w*.025)+'px sans-serif';wrap(c.effect||c.description||' ',w*.11,h*.73,w*.76,h*.034,4);
+ wrap(c.trait||' ',w*.11,h*.685,w*.76,h*.03,1);ctx.font=(w*.025)+'px sans-serif';wrap(c.effect||c.description||' ',w*.11,h*(.73+(+c.effectOffsetY||0)),w*.76,h*.034,4);
  if(c.flavor){ctx.font='italic '+(w*.023)+'px Georgia';ctx.fillStyle='#b9aebd';wrap(c.flavor,w*.11,h*.87,w*.76,h*.025,2)}
  ctx.fillStyle='#f1d58c';ctx.textAlign='right';ctx.font='bold '+(w*.04)+'px sans-serif';ctx.fillText(String(c.cost??0),w*.87,h*.955);
  ctx.textAlign='left';ctx.font=(w*.025)+'px sans-serif';ctx.fillStyle='#ddd';ctx.fillText([c.life?'V '+c.life:'',c.power?'A '+c.power:'',c.defense?'D '+c.defense:''].filter(Boolean).join('  '),w*.11,h*.955);
@@ -1252,11 +1258,11 @@ function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLab
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
- const vals={creationMode:'normal',name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
+ const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
  $('isNew').checked=!!c?.isNew;
  Object.keys(vals).forEach(k=>{const el=$(k),value=c?.[k]??vals[k];if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
-function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
+function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),nameOffsetY:+$('nameOffsetY').value||0,effectOffsetY:+$('effectOffsetY').value||0,faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 async function save(){
  const c=collect();
  const previousCard=cards.find(x=>x.id===c.id);
@@ -1293,6 +1299,7 @@ $('image').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!/^image\/(png
 $('clearCardImageBtn').onclick=()=>{imageData='';imagePath='';$('image').value='';drawCard($('preview'),collect())};
 function updateCropLabels(){$('zoomValue').textContent=$('imageZoom').value+'%';$('imageXValue').textContent=$('imageX').value;$('imageYValue').textContent=$('imageY').value}
 ['name','faction','type','rarity','cost','alignment','trait','life','power','defense','description','effect','flavor','imageZoom','imageX','imageY'].forEach(id=>$(id).addEventListener('input',()=>{updateCropLabels();drawCard($('preview'),collect())}));
+document.querySelectorAll('[data-position-adjust]').forEach(btn=>btn.addEventListener('click',()=>{const field=$(btn.dataset.positionAdjust);if(!field)return;const next=Math.max(-.08,Math.min(.08,(+field.value||0)+(+btn.dataset.direction||0)*.005));field.value=next.toFixed(3);drawCard($('preview'),collect())}));
 document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListener('click',()=>{
  const field=$('effect'),format=btn.dataset.effectFormat,marker=format==='bold'?'**':'__';
  const start=field.selectionStart,end=field.selectionEnd;
