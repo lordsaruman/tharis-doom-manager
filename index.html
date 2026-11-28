@@ -605,7 +605,9 @@ function buildGoldFrameMask(source){
   const image=rctx.getImageData(0,0,source.width,source.height),data=image.data,w=source.width,h=source.height;
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
    const i=(y*w+x)*4,R=data[i],G=data[i+1],B=data[i+2];
-   const gold=R>75&&G>42&&R>G*1.10&&G>B*1.12&&R-B>28;
+   // A máscara ocupa somente os corredores externos da moldura; ilustração e textos ficam excluídos.
+   const frameEdge=x<w*.055||x>w*.945||y<h*.055||y>h*.945;
+   const gold=frameEdge&&R>75&&G>42&&R>G*1.10&&G>B*1.12&&R-B>28;
    data[i+3]=gold?Math.min(255,Math.max(0,(R-B-20)*5)):0;
   }
   mctx.putImageData(image,0,0);
@@ -620,7 +622,8 @@ function paintMetallicGlint(ctx,w,h,phase,sourceCanvas){
   inspectorGoldMask=buildGoldFrameMask(sourceCanvas);inspectorGoldMaskSource=sourceCanvas;inspectorGoldMaskAt=performance.now();
  }
  if(!inspectorGoldMask)return;
- const x=(-w*.75)+(w*2.5*phase),band=w*.28;
+ // A oscilação senoidal percorre a moldura e retorna sem salto no ponto de reinício.
+ const x=(-w*.22)+(w*1.44*phase),band=w*.19;
  ctx.save();ctx.globalCompositeOperation='screen';
  const shine=ctx.createLinearGradient(x-band,0,x+band,h);
  shine.addColorStop(0,'rgba(255,177,65,0)');
@@ -638,7 +641,12 @@ function startInspectorGlint(){
  const overlay=$('inspectorGlint');if(!overlay)return;
  if(inspectorGlintRaf)cancelAnimationFrame(inspectorGlintRaf);
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,started=performance.now();
- const tick=now=>{const phase=((now-started)%2400)/2400;paintMetallicGlint(overlay.getContext('2d'),overlay.width,overlay.height,phase,$('selectedCardCanvas'));if(!reduced)inspectorGlintRaf=requestAnimationFrame(tick)};
+ const tick=now=>{
+  const cycle=(now-started)/5200;
+  const phase=(1-Math.cos(cycle*Math.PI*2))/2;
+  paintMetallicGlint(overlay.getContext('2d'),overlay.width,overlay.height,phase,$('selectedCardCanvas'));
+  if(!reduced)inspectorGlintRaf=requestAnimationFrame(tick);
+ };
  tick(started);
 }
 async function exportInspectorGIF(){
@@ -649,10 +657,14 @@ async function exportInspectorGIF(){
   await new Promise(resolve=>setTimeout(resolve,450));
   const gif=new GIF({workers:2,quality:10,width:base.width,height:base.height,workerScript:'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js'});
   const frame=document.createElement('canvas');frame.width=base.width;frame.height=base.height;
-  const ctx=frame.getContext('2d'),frames=30;
+  const ctx=frame.getContext('2d'),frames=60;
   // Detecta imagens sem CORS antes de iniciar a codificação do GIF.
   base.getContext('2d').getImageData(0,0,1,1);
-  for(let i=0;i<frames;i++){ctx.clearRect(0,0,frame.width,frame.height);ctx.drawImage(base,0,0);paintMetallicGlint(ctx,frame.width,frame.height,i/frames,base);gif.addFrame(frame,{copy:true,delay:80})}
+  for(let i=0;i<frames;i++){
+   const phase=(1-Math.cos((i/frames)*Math.PI*2))/2;
+   ctx.clearRect(0,0,frame.width,frame.height);ctx.drawImage(base,0,0);
+   paintMetallicGlint(ctx,frame.width,frame.height,phase,base);gif.addFrame(frame,{copy:true,delay:80});
+  }
   gif.on('progress',p=>{button.textContent='Gerando GIF · '+Math.round(p*100)+'%'});
   const blob=await new Promise((resolve,reject)=>{gif.on('finished',resolve);gif.on('abort',()=>reject(Error('Exportação cancelada')));gif.render()});
   const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;
@@ -673,7 +685,7 @@ function updateCardInspector(){
  drawCard($('selectedCardCanvas'),c);
  startInspectorGlint();
 }
-function metallicGoldText(ctx,y,size){const g=ctx.createLinearGradient(0,y-size*.62,0,y+size*.62);g.addColorStop(0,'#704719');g.addColorStop(.20,'#c18a35');g.addColorStop(.42,'#fff0b0');g.addColorStop(.56,'#d7aa51');g.addColorStop(.76,'#98601f');g.addColorStop(1,'#e5c477');return g}
+function metallicGoldText(ctx,y,size){const g=ctx.createLinearGradient(0,y-size*.62,0,y+size*.62);g.addColorStop(0,'#a98245');g.addColorStop(.22,'#b99559');g.addColorStop(.48,'#d0b477');g.addColorStop(.70,'#b18b50');g.addColorStop(1,'#c5a66b');return g}
 function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color){
  const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
  if(!paragraphs.some(p=>p.trim()))return;
