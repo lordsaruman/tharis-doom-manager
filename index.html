@@ -637,6 +637,7 @@ footer:before{
    <input id="search" placeholder="Buscar por nome, efeito ou descrição…">
    <select id="filterFaction"><option value="">Todas as facções</option></select>
    <select id="filterRarity"><option value="">Todas as raridades</option></select>
+   <select id="filterType"><option value="">Todos os tipos</option><option value="Criatura">Criaturas</option><option value="Magias">Magias</option><option value="Itens">Itens</option><option value="Construção">Construções</option></select>
    <select id="filterNew"><option value="">Todas as cartas</option><option value="new">Apenas cartas novas</option></select>
    <select id="sort"><option value="new-first">Padrão · cartas novas primeiro</option><option value="name">Nome (A–Z)</option><option value="newest">Mais recentes</option><option value="cost">Custo</option></select>
   </div>
@@ -984,7 +985,7 @@ function refreshSelects(){
  const all=[...new Set([...FACTIONS,...cards.map(c=>c.faction).filter(Boolean)])];
  const factionOptions=$('factionOptions');if(factionOptions)factionOptions.innerHTML=all.map(x=>`<option value="${escapeHtml(x)}">`).join('');
  const fill=(id,values,label)=>{const el=$(id);if(!el)return;const old=el.value;el.innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option>${escapeHtml(v)}</option>`).join('');el.value=old};
- fill('filterFaction',all,'Todas as facções');fill('filterRarity',['Cobre','Bronze','Prata','Ouro','Platina'],'Todas as raridades');if($('filterType'))fill('filterType',[...new Set(cards.map(c=>c.type).filter(Boolean))].sort(),'Todos os tipos');
+ fill('filterFaction',all,'Todas as facções');fill('filterRarity',['Cobre','Bronze','Prata','Ouro','Platina'],'Todas as raridades');
  $('factionLegend').innerHTML=all.map(f=>`<span class="faction-chip">${sigil(f,22)}${escapeHtml(f)}</span>`).join('');
  updateFactionPicker();
 }
