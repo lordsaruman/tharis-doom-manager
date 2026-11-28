@@ -515,9 +515,9 @@ $('loginBtn').addEventListener('click',async()=>{
  if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}
  button.disabled=true;$('authMessage').textContent='Conectando…';
  try{
-  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  const {error}=await sb.auth.signInWithPassword({email,password});
   if(error)throw error;
-  await handleSession(data.session);
+  $('authMessage').textContent='Login validado. Carregando sua biblioteca…';
  }catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}
  finally{button.disabled=false}
 });
@@ -528,7 +528,7 @@ let defaultCardArt='',cardBackArt='';
 let isAdmin=false,assetFileObject=null;
 const SUPABASE_URL='https://zzwabaaeexidmzyzuvdd.supabase.co';
 const SUPABASE_KEY='sb_publishable_hOAgiQUZtzOg0kolL606mQ_RGoootVu';
-const sb=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
+const sb=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 const creatureFrame=new Image();creatureFrame.crossOrigin='anonymous';creatureFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};creatureFrame.src='Modelo%20Carta%20Ouro.png';
 const magicFrame=new Image();magicFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};magicFrame.src='Molde%20Magias.png';
@@ -1330,15 +1330,21 @@ async function loadCloudCards(){
    return setCardsFromCloud(again||[]);
   }
  }
- setCardsFromCloud(data||[]);
+ await setCardsFromCloud(data||[]);
 }
 async function setCardsFromCloud(rows){
- const converted=[];
- for(const row of rows){
+ let completed=0;
+ const converted=await Promise.all(rows.map(async row=>{
   const base=row.card_data||{};const path=row.image_path||base.imagePath||null;
-  let image='';if(path)image=await signedImage(path);
-  converted.push({...base,id:row.id,name:row.name,faction:row.faction||base.faction||'',type:row.card_type||base.type||'Criatura',rarity:row.rarity||base.rarity||'Bronze',image,imagePath:path,updated:row.updated_at?new Date(row.updated_at).getTime():Date.now()});
- }
+  let image='';
+  if(path){
+   try{image=await signedImage(path)}
+   catch(error){console.warn('Não foi possível recuperar a imagem da carta '+(row.name||row.id)+':',error)}
+  }
+  completed++;
+  $('cloudStatus').textContent='Online · preparando cartas '+completed+'/'+rows.length+'…';
+  return {...base,id:row.id,name:row.name,faction:row.faction||base.faction||'',type:row.card_type||base.type||'Criatura',rarity:row.rarity||base.rarity||'Bronze',image,imagePath:path,updated:row.updated_at?new Date(row.updated_at).getTime():Date.now()};
+ }));
  cards=converted;render();$('cloudStatus').textContent='Online · '+cards.length+' carta(s) sincronizada(s)';
 }
 async function handleSession(session){
@@ -1439,17 +1445,26 @@ $('setPasswordBtn').onclick=async()=>{
 };
 
 
-$('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}cloudUser=null;await handleSession(null);$('authModal').classList.remove('open')};
+$('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}$('authModal').classList.remove('open')};
 if(sb){
  // Não lê nem renderiza localStorage: a biblioteca online é a única fonte exibida neste modo.
  cards=[];cloudLibraryReady=false;
  $('library').innerHTML='<div class="empty" style="grid-column:1/-1">Carregando biblioteca online…</div>';
- sb.auth.getSession().then(({data,error})=>{if(error)throw error;return handleSession(data.session)}).then(()=>showPasswordSetup()).catch(error=>{
-  cards=[];cloudLibraryReady=true;$('cloudStatus').textContent='Falha ao verificar sessão';
-  $('library').innerHTML='<div class="empty" style="grid-column:1/-1">Não foi possível verificar sua sessão online. Atualize a página ou entre novamente.</div>';
-  console.error(error);
+ // INITIAL_SESSION é a fonte única da sessão inicial. O setTimeout evita executar consultas
+ // Supabase dentro do callback de autenticação, o que pode bloquear o lock interno do Auth.
+ sb.auth.onAuthStateChange((event,session)=>{
+  if(event==='INITIAL_SESSION'||event==='SIGNED_IN'||event==='SIGNED_OUT'||event==='PASSWORD_RECOVERY'){
+   setTimeout(()=>{
+    const mustLoad=event==='INITIAL_SESSION'||event==='SIGNED_OUT'||session?.user?.id!==cloudUser?.id||!cloudLibraryReady;
+    if(mustLoad)handleSession(session).catch(error=>{
+     cloudLibraryReady=true;$('cloudStatus').textContent='Falha ao verificar sessão';
+     $('library').innerHTML='<div class="empty" style="grid-column:1/-1">Não foi possível carregar a biblioteca: '+escapeHtml(error.message)+'</div>';
+     console.error(error);
+    });
+    if(event==='PASSWORD_RECOVERY'||inviteInUrl())showPasswordSetup();
+   },0);
+  }else if(event==='TOKEN_REFRESHED'&&session?.user){cloudUser=session.user}
  });
- sb.auth.onAuthStateChange((event,session)=>{if(session?.user?.id!==cloudUser?.id)handleSession(session);if(event==='PASSWORD_RECOVERY'||inviteInUrl())showPasswordSetup()});
 }else{load();cloudLibraryReady=true;render()}
 })();
 </script>
