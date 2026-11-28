@@ -356,6 +356,24 @@ footer:before{
 .new-card-check input{width:17px;height:17px;accent-color:#c9a45c;margin:0;flex:none}
 .new-card-badge{display:inline-flex;align-items:center;gap:4px;width:max-content;padding:3px 7px;border:1px solid #c9a45c;border-radius:5px;background:rgba(111,78,31,.22);color:#f0d28d;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .tile-new-flag{margin-top:6px}
+
+/* PRÉ-VISUALIZAÇÃO INTERATIVA · INCLINAÇÃO E VERSO */
+.inspector-card-stage{perspective:1100px;cursor:pointer;touch-action:pan-y;outline:none}
+.inspector-card-stage:focus-visible{outline:1px solid #c5a36b;outline-offset:5px}
+.inspector-tilt{transform:rotateX(0deg) rotateY(0deg);transition:transform .18s ease-out;transform-style:preserve-3d}
+.inspector-flip{position:relative;width:100%;transform-style:preserve-3d;transition:transform .68s cubic-bezier(.2,.72,.2,1)}
+.inspector-flip.is-flipped{transform:rotateY(180deg)}
+.inspector-face{position:relative;width:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform-style:preserve-3d}
+.inspector-front{z-index:2}
+.inspector-back{position:absolute;inset:0;transform:rotateY(180deg);overflow:hidden;border:1px solid #9a7847;background:radial-gradient(ellipse at 50% 35%,#473522,#17100b 72%);display:grid;place-items:center}
+.inspector-back:before{content:"✦";position:absolute;inset:5%;border:2px solid #a9864e;outline:1px solid #a9864e55;outline-offset:-10px;display:grid;place-items:center;color:#d5b77c;font:72px Georgia,serif;text-shadow:0 0 18px #c59a4c55}
+.inspector-back:after{content:"THARIS DOOM";position:absolute;left:10%;right:10%;top:50%;transform:translateY(58px);text-align:center;color:#d5b77c;font:600 16px 'Cinzel',Georgia,serif;letter-spacing:.2em;text-shadow:0 2px 5px #000}
+.inspector-back.has-image:before,.inspector-back.has-image:after{display:none}
+.inspector-back img{display:none;width:100%;height:auto;aspect-ratio:408/771;object-fit:cover}
+.inspector-back.has-image img{display:block}
+.inspector-card-stage canvas{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+@media(prefers-reduced-motion:reduce){.inspector-tilt,.inspector-flip{transition:none}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -364,7 +382,7 @@ footer:before{
 <header>
  <div class="brand"><div class="brand-mark">✦</div><div><h1>THARIS DOOM</h1><small>CARD MANAGER · NOVA EDIÇÃO</small></div></div>
  <div class="actions">
-  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="teamBtn" style="display:none">Gerenciar colaboradores</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
+  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="cardVisualsBtn">Aparência das cartas</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="teamBtn" style="display:none">Gerenciar colaboradores</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
   <input type="file" id="importFile" accept=".json,application/json" hidden>
  </div>
 </header>
@@ -391,7 +409,7 @@ footer:before{
     <div class="inspector-heading"><span>VISUALIZAÇÃO</span><span class="inspector-ornament">✦</span></div>
     <div class="inspector-empty" id="inspectorEmpty">Selecione uma carta na biblioteca para examiná-la em detalhes.</div>
     <div class="inspector-content" id="inspectorContent" style="display:none">
-     <div class="inspector-card-frame"><div class="inspector-card-stage"><canvas id="selectedCardCanvas" width="408" height="771"></canvas><canvas id="inspectorGlint" class="inspector-glint" width="408" height="771" aria-hidden="true"></canvas></div></div>
+     <div class="inspector-card-frame"><div class="inspector-card-stage" id="inspectorCardStage" role="button" tabindex="0" aria-label="Clique para virar a carta e ver o verso"><div class="inspector-tilt" id="inspectorTilt"><div class="inspector-flip" id="inspectorFlip"><div class="inspector-face inspector-front"><canvas id="selectedCardCanvas" width="408" height="771"></canvas><canvas id="inspectorGlint" class="inspector-glint" width="408" height="771" aria-hidden="true"></canvas></div><div class="inspector-face inspector-back" id="inspectorBackFace"><img id="selectedCardBack" alt="Verso da carta"></div></div></div></div><div class="hint" style="text-align:center">Clique na carta para virar e ver o verso</div></div>
      <h3 id="selectedCardName"></h3>
      <div class="inspector-meta" id="selectedCardMeta"></div>
      <div class="inspector-faction" id="selectedCardFaction"></div>
@@ -463,7 +481,7 @@ footer:before{
      </div>
      <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
-     <div class="field span2"><label id="imageLabel">Ilustração (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">A imagem é incorporada ao registro local da carta.</div></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
+     <div class="field span2"><label id="imageLabel">Ilustração específica desta carta (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">Esta imagem substitui a ilustração padrão somente nesta carta. Se não enviar uma imagem, será usada a imagem padrão definida em Aparência das cartas.</div><button type="button" id="clearCardImageBtn">Usar imagem padrão nesta carta</button></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
     </div>
    </div>
    <div class="preview-wrap">
@@ -479,12 +497,14 @@ footer:before{
   </div>
  </div>
 </div>
+<div class="modal" id="cardVisualsModal"><div class="dialog" style="width:min(760px,100%)"><div class="dialog-head"><h2>Aparência das cartas</h2><button id="cardVisualsCloseBtn">✕ Fechar</button></div><p class="hint">Escolha imagens padrão para o verso e para a ilustração das cartas. A ilustração específica enviada no editor sempre tem prioridade sobre a padrão.</p><div class="asset-grid"><div><div class="field"><label>Imagem padrão do verso</label><input id="cardBackFile" type="file" accept="image/png,image/jpeg,image/webp"><div class="hint">Usada no verso de todas as cartas exibidas na pré-visualização lateral.</div><button type="button" id="clearCardBackBtn">Remover imagem do verso</button></div><div class="field"><label>Ilustração padrão de todas as cartas</label><input id="defaultCardArtFile" type="file" accept="image/png,image/jpeg,image/webp"><div class="hint">Usada quando uma carta não possui uma ilustração própria. Você ainda pode enviar uma imagem diferente no editor de cada carta.</div><button type="button" id="clearDefaultCardArtBtn">Remover ilustração padrão</button></div><div class="hint">Estas preferências ficam salvas neste navegador e não são sincronizadas automaticamente entre colaboradores.</div><div class="asset-status" id="cardVisualsStatus" aria-live="polite"></div></div><div><label>Prévia do verso</label><div class="asset-preview"><img id="cardBackPreview" alt="Prévia do verso"></div><label style="margin-top:12px">Prévia da ilustração padrão</label><div class="asset-preview"><img id="defaultCardArtPreview" alt="Prévia da ilustração padrão"></div></div></div></div></div>
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
-const KEY='tharisDoomManagerV2';
+const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
 let cards=[],editingId=null,imageData='',imagePath='',cloudUser=null,selectedCardId=null;
+let defaultCardArt='',cardBackArt='';
 let isAdmin=false,assetFileObject=null;
 const SUPABASE_URL='https://zzwabaaeexidmzyzuvdd.supabase.co';
 const SUPABASE_KEY='sb_publishable_hOAgiQUZtzOg0kolL606mQ_RGoootVu';
@@ -504,6 +524,9 @@ Object.values(alignmentInsignias).forEach(img=>img.onload=()=>{render();if($('mo
 
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
+function loadVisualSettings(){try{const v=JSON.parse(localStorage.getItem(VISUAL_KEY)||'{}');defaultCardArt=v.defaultCardArt||'';cardBackArt=v.cardBackArt||''}catch{defaultCardArt='';cardBackArt=''}}
+function saveVisualSettings(){try{localStorage.setItem(VISUAL_KEY,JSON.stringify({defaultCardArt,cardBackArt}));return true}catch(error){console.error('Não foi possível salvar as imagens padrão:',error);$('cardVisualsStatus').textContent='Não foi possível salvar. A imagem pode ser grande demais para o armazenamento deste navegador.';return false}}
+loadVisualSettings();
 function persist(){
  try{localStorage.setItem(KEY,JSON.stringify(cards));render();return true}
  catch(error){
@@ -686,9 +709,13 @@ function updateCardInspector(){
  $('selectedCardFaction').innerHTML=sigil(c.faction,20,c.type)+'<span>'+escapeHtml(c.faction||c.type||'Sem facção')+'</span>';
  $('selectedCardStats').innerHTML=(c.type==='Magias'?[['CUSTO',c.cost??0]]:[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']]).map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');$('selectedCardStats').classList.toggle('magic-stats',c.type==='Magias');
  drawCard($('selectedCardCanvas'),c);
+ $('inspectorFlip').classList.remove('is-flipped');
+ $('selectedCardBack').src=cardBackArt||'';
+ $('inspectorBackFace').classList.toggle('has-image',!!cardBackArt);
+ const tilt=$('inspectorTilt');if(tilt)tilt.style.transform='rotateX(0deg) rotateY(0deg)';
  startInspectorGlint();
 }
-function metallicGoldText(ctx,y,size){const g=ctx.createLinearGradient(0,y-size*.62,0,y+size*.62);g.addColorStop(0,'#a98245');g.addColorStop(.22,'#b99559');g.addColorStop(.48,'#d0b477');g.addColorStop(.70,'#b18b50');g.addColorStop(1,'#c5a66b');return g}
+function metallicGoldText(ctx,y,size){return '#c5a36b'}
 function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color){
  const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
  if(!paragraphs.some(p=>p.trim()))return;
@@ -997,6 +1024,7 @@ function drawMagicCard(canvas,c){
 function drawReadyCard(canvas,c){const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#09090c';ctx.fillRect(0,0,w,h);if(!c.image)return;const img=new Image();img.onload=()=>{ctx.clearRect(0,0,w,h);const scale=Math.min(w/img.width,h/img.height),dw=img.width*scale,dh=img.height*scale;ctx.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh)};img.src=c.image}
 function drawCard(canvas,c){
  if(c.creationMode==='ready'){drawReadyCard(canvas,c);return}
+ if(!c.image&&defaultCardArt)c={...c,image:defaultCardArt};
  if(c.type==='Criatura'){drawCreatureCard(canvas,c);return}
  if(c.type==='Magias'){drawMagicCard(canvas,c);return}
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
@@ -1193,6 +1221,7 @@ $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))
  else{cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}
 };
 $('image').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!/^image\/(png|jpeg)$/.test(f.type)){alert('Envie somente uma imagem PNG ou JPG.');e.target.value='';return}imagePath='';const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect());if($('creationMode').value==='ready')runCardOCR(f)};r.readAsDataURL(f)};
+$('clearCardImageBtn').onclick=()=>{imageData='';imagePath='';$('image').value='';drawCard($('preview'),collect())};
 function updateCropLabels(){$('zoomValue').textContent=$('imageZoom').value+'%';$('imageXValue').textContent=$('imageX').value;$('imageYValue').textContent=$('imageY').value}
 ['name','faction','type','rarity','cost','alignment','trait','life','power','defense','description','effect','flavor','imageZoom','imageX','imageY'].forEach(id=>$(id).addEventListener('input',()=>{updateCropLabels();drawCard($('preview'),collect())}));
 document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -1208,6 +1237,21 @@ document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListe
 ['search','filterFaction','filterRarity','filterType','sort'].forEach(id=>$(id).addEventListener('input',render));
 $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]');if(tile){selectedCardId=tile.dataset.id;document.querySelectorAll('.cardtile[data-id]').forEach(el=>el.classList.toggle('is-selected',el.dataset.id===selectedCardId));updateCardInspector()}});
 $('editSelectedBtn').onclick=()=>{const c=cards.find(x=>x.id===selectedCardId);if(c)openEditor(c)};
+
+$('cardVisualsBtn').onclick=()=>{$('cardVisualsStatus').textContent='';$('cardBackPreview').src=cardBackArt||'';$('defaultCardArtPreview').src=defaultCardArt||'';$('cardVisualsModal').classList.add('open')};
+$('cardVisualsCloseBtn').onclick=()=>$('cardVisualsModal').classList.remove('open');
+function optimizeVisualFile(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{const scale=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(img.naturalWidth*scale));cv.height=Math.max(1,Math.round(img.naturalHeight*scale));cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);resolve(cv.toDataURL('image/jpeg',.86))};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Não foi possível abrir a imagem selecionada.'))};img.src=url})}
+$('cardBackFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{cardBackArt=await optimizeVisualFile(f);if(saveVisualSettings()){$('cardBackPreview').src=cardBackArt;$('cardVisualsStatus').textContent='Imagem do verso salva.';if(selectedCardId)updateCardInspector()}}catch(err){$('cardVisualsStatus').textContent=err.message}};
+$('defaultCardArtFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{defaultCardArt=await optimizeVisualFile(f);if(saveVisualSettings()){$('defaultCardArtPreview').src=defaultCardArt;$('cardVisualsStatus').textContent='Ilustração padrão salva.';render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())}}catch(err){$('cardVisualsStatus').textContent=err.message}};
+$('clearCardBackBtn').onclick=()=>{cardBackArt='';$('cardBackFile').value='';saveVisualSettings();$('cardBackPreview').removeAttribute('src');$('cardVisualsStatus').textContent='Imagem do verso removida.';if(selectedCardId)updateCardInspector()};
+$('clearDefaultCardArtBtn').onclick=()=>{defaultCardArt='';$('defaultCardArtFile').value='';saveVisualSettings();$('defaultCardArtPreview').removeAttribute('src');$('cardVisualsStatus').textContent='Ilustração padrão removida.';render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};
+const inspectorStage=$('inspectorCardStage');
+inspectorStage.addEventListener('mousemove',e=>{const r=inspectorStage.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height,rx=(.5-y)*10,ry=(x-.5)*12;$('inspectorTilt').style.transform='rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'});
+inspectorStage.addEventListener('mouseleave',()=>{$('inspectorTilt').style.transform='rotateX(0deg) rotateY(0deg)'});
+const flipInspectorCard=()=> $('inspectorFlip').classList.toggle('is-flipped');
+inspectorStage.addEventListener('click',flipInspectorCard);
+inspectorStage.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flipInspectorCard()}});
+
 $('exportGifBtn').onclick=exportInspectorGIF;
 $('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Tharis Doom Manager',version:2,exportedAt:new Date().toISOString(),cards},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tharis-doom-backup.json';a.click();URL.revokeObjectURL(a.href)};
 $('importBtn').onclick=()=>$('importFile').click();
