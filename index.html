@@ -424,7 +424,7 @@ footer:before{
 .thumb,.inspector-front{position:relative}
 .platinum-sparkle-overlay{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
 .preview-wrap>.platinum-sparkle-overlay{inset:64px auto auto 50%;width:min(calc(100% - 24px),300px);aspect-ratio:408/771;transform:translateX(-50%)}
-.platinum-sparkle-overlay i{position:absolute;width:9px;height:9px;opacity:0;background:radial-gradient(circle,#fff 0 12%,#eef7ff 18% 34%,rgba(206,229,255,.75) 42%,transparent 72%);filter:drop-shadow(0 0 4px #e7f2ff);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:platinumTwinkle 2.8s ease-in-out infinite}
+.platinum-sparkle-overlay i{position:absolute;width:11px;height:11px;opacity:0;background:radial-gradient(circle,#fff 0 18%,#eef7ff 22% 42%,rgba(206,229,255,.9) 50%,transparent 76%);filter:drop-shadow(0 0 7px #e7f2ff) drop-shadow(0 0 12px rgba(180,215,255,.9));clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:platinumTwinkle 2.8s ease-in-out infinite}
 .platinum-sparkle-overlay i:nth-child(1){left:7%;top:3%;animation-delay:-.2s}
 .platinum-sparkle-overlay i:nth-child(2){right:7%;top:8%;width:12px;height:12px;animation-delay:-1.4s}
 .platinum-sparkle-overlay i:nth-child(3){left:5%;top:42%;width:7px;height:7px;animation-delay:-2.1s}
@@ -894,15 +894,16 @@ function paintMetallicGlint(ctx,w,h,phase,sourceCanvas){
  }
  if(!inspectorGoldMask)return;
  // A oscilação senoidal percorre a moldura e retorna sem salto no ponto de reinício.
- const x=(-w*.22)+(w*1.44*phase),band=w*.19;
+ const x=(-w*.22)+(w*1.44*phase),band=w*.145;
  ctx.save();ctx.globalCompositeOperation='screen';
  const shine=ctx.createLinearGradient(x-band,0,x+band,h);
  shine.addColorStop(0,'rgba(255,177,65,0)');
- shine.addColorStop(.34,'rgba(255,195,92,.10)');
- shine.addColorStop(.46,'rgba(255,221,151,.78)');
- shine.addColorStop(.50,'rgba(255,250,222,1)');
- shine.addColorStop(.54,'rgba(255,214,137,.76)');
- shine.addColorStop(.68,'rgba(255,172,55,.12)');
+ shine.addColorStop(.30,'rgba(255,165,45,.28)');
+ shine.addColorStop(.42,'rgba(255,205,105,.95)');
+ shine.addColorStop(.48,'rgba(255,238,190,1)');
+ shine.addColorStop(.50,'rgba(255,255,255,1)');
+ shine.addColorStop(.52,'rgba(255,231,170,1)');
+ shine.addColorStop(.60,'rgba(255,180,65,.42)');
  shine.addColorStop(1,'rgba(255,177,65,0)');
  ctx.fillStyle=shine;ctx.fillRect(0,0,w,h);
  ctx.globalCompositeOperation='destination-in';ctx.drawImage(inspectorGoldMask,0,0,w,h);
@@ -913,7 +914,7 @@ function startInspectorGlint(){
  if(inspectorGlintRaf)cancelAnimationFrame(inspectorGlintRaf);
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,started=performance.now();
  const tick=now=>{
-  const cycle=(now-started)/5200;
+  const cycle=(now-started)/4000;
   const phase=(1-Math.cos(cycle*Math.PI*2))/2;
   paintMetallicGlint(overlay.getContext('2d'),overlay.width,overlay.height,phase,$('selectedCardCanvas'));
   if(!reduced)inspectorGlintRaf=requestAnimationFrame(tick);
