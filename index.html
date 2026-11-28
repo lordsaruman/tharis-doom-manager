@@ -710,7 +710,7 @@ function updateCardInspector(){
  $('selectedCardStats').innerHTML=(c.type==='Magias'?[['CUSTO',c.cost??0]]:[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']]).map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');$('selectedCardStats').classList.toggle('magic-stats',c.type==='Magias');
  drawCard($('selectedCardCanvas'),c);
  $('inspectorFlip').classList.remove('is-flipped');
- $('selectedCardBack').src=cardBackArt||'';
+ if(cardBackArt)$('selectedCardBack').src=cardBackArt;else $('selectedCardBack').removeAttribute('src');
  $('inspectorBackFace').classList.toggle('has-image',!!cardBackArt);
  const tilt=$('inspectorTilt');if(tilt)tilt.style.transform='rotateX(0deg) rotateY(0deg)';
  startInspectorGlint();
@@ -1238,7 +1238,7 @@ document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListe
 $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]');if(tile){selectedCardId=tile.dataset.id;document.querySelectorAll('.cardtile[data-id]').forEach(el=>el.classList.toggle('is-selected',el.dataset.id===selectedCardId));updateCardInspector()}});
 $('editSelectedBtn').onclick=()=>{const c=cards.find(x=>x.id===selectedCardId);if(c)openEditor(c)};
 
-$('cardVisualsBtn').onclick=()=>{$('cardVisualsStatus').textContent='';$('cardBackPreview').src=cardBackArt||'';$('defaultCardArtPreview').src=defaultCardArt||'';$('cardVisualsModal').classList.add('open')};
+$('cardVisualsBtn').onclick=()=>{$('cardVisualsStatus').textContent='';if(cardBackArt)$('cardBackPreview').src=cardBackArt;else $('cardBackPreview').removeAttribute('src');if(defaultCardArt)$('defaultCardArtPreview').src=defaultCardArt;else $('defaultCardArtPreview').removeAttribute('src');$('cardVisualsModal').classList.add('open')};
 $('cardVisualsCloseBtn').onclick=()=>$('cardVisualsModal').classList.remove('open');
 function optimizeVisualFile(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{const scale=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(img.naturalWidth*scale));cv.height=Math.max(1,Math.round(img.naturalHeight*scale));cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);resolve(cv.toDataURL('image/jpeg',.86))};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Não foi possível abrir a imagem selecionada.'))};img.src=url})}
 $('cardBackFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{cardBackArt=await optimizeVisualFile(f);if(saveVisualSettings()){$('cardBackPreview').src=cardBackArt;$('cardVisualsStatus').textContent='Imagem do verso salva.';if(selectedCardId)updateCardInspector()}}catch(err){$('cardVisualsStatus').textContent=err.message}};
