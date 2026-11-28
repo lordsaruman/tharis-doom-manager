@@ -375,6 +375,16 @@ footer:before{
 .tile-stats.magic-stats{width:fit-content;min-width:52px;margin:9px auto 0}
 
 /* PRÉ-VISUALIZAÇÃO INTERATIVA · INCLINAÇÃO E VERSO */
+/* VISUALIZAÇÃO EM TELA CHEIA DA CARTA */
+.card-fullscreen-overlay{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:5vh 4vw;background:rgba(4,3,2,.94);backdrop-filter:blur(12px)}
+.card-fullscreen-overlay.open{display:flex}
+.card-fullscreen-close{position:absolute;top:18px;right:20px;z-index:2;padding:10px 15px}
+.card-fullscreen-hint{position:absolute;bottom:14px;left:12px;right:12px;text-align:center;color:#c7b28d;font:14px 'Crimson Pro',Georgia,serif;pointer-events:none}
+.card-fullscreen-overlay .inspector-card-frame{width:min(540px,78vw,45vh);max-width:100%;max-height:88vh;margin:0;padding:6px}
+.card-fullscreen-overlay .inspector-card-stage{width:100%;max-height:86vh}
+.card-fullscreen-overlay .inspector-card-stage canvas{width:100%;height:auto}
+.card-fullscreen-overlay .inspector-card-frame .hint{display:none}
+@media(max-width:700px){.card-fullscreen-overlay{padding:6vh 3vw}.card-fullscreen-overlay .inspector-card-frame{width:min(82vw,45vh)}.card-fullscreen-close{top:10px;right:10px}}
 .inspector-card-stage{perspective:1100px;cursor:pointer;touch-action:pan-y;outline:none}
 .inspector-card-stage:focus-visible{outline:1px solid #c5a36b;outline-offset:5px}
 .inspector-tilt{transform:rotateX(0deg) rotateY(0deg);transition:transform .18s ease-out;transform-style:preserve-3d}
@@ -1759,10 +1769,36 @@ $('defaultCardArtFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)ret
 $('clearCardBackBtn').onclick=async()=>{cardBackArt='';cardBackArtPath=null;$('cardBackFile').value='';if(await saveVisualSettings()){$('cardBackPreview').removeAttribute('src');$('cardVisualsStatus').textContent='Imagem do verso removida para todos os colaboradores.';if(selectedCardId)updateCardInspector()}};
 $('clearDefaultCardArtBtn').onclick=async()=>{defaultCardArt='';defaultCardArtPath=null;$('defaultCardArtFile').value='';if(await saveVisualSettings()){$('defaultCardArtPreview').removeAttribute('src');$('cardVisualsStatus').textContent='Ilustração padrão removida para todos os colaboradores.';render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())}};
 const inspectorStage=$('inspectorCardStage');
+const inspectorFrame=inspectorStage.closest('.inspector-card-frame');
+const fullscreenOverlay=document.createElement('div');
+fullscreenOverlay.className='card-fullscreen-overlay';
+fullscreenOverlay.id='cardFullscreenOverlay';
+fullscreenOverlay.innerHTML='<button type="button" class="card-fullscreen-close" aria-label="Fechar tela cheia">✕ Fechar</button><div class="card-fullscreen-hint">Duplo clique para ampliar · clique para virar a carta · mova o mouse para inclinar</div>';
+document.body.appendChild(fullscreenOverlay);
+let inspectorFramePlaceholder=null;
+function openInspectorFullscreen(){
+ if(!inspectorFrame||fullscreenOverlay.classList.contains('open'))return;
+ inspectorFramePlaceholder=document.createComment('posição original da pré-visualização');
+ inspectorFrame.parentNode.insertBefore(inspectorFramePlaceholder,inspectorFrame);
+ fullscreenOverlay.appendChild(inspectorFrame);
+ fullscreenOverlay.classList.add('open');
+ document.body.style.overflow='hidden';
+}
+function closeInspectorFullscreen(){
+ if(!fullscreenOverlay.classList.contains('open'))return;
+ if(inspectorFramePlaceholder?.parentNode)inspectorFramePlaceholder.parentNode.insertBefore(inspectorFrame,inspectorFramePlaceholder);
+ inspectorFramePlaceholder?.remove();inspectorFramePlaceholder=null;
+ fullscreenOverlay.classList.remove('open');
+ document.body.style.overflow='';
+}
+fullscreenOverlay.querySelector('.card-fullscreen-close').addEventListener('click',closeInspectorFullscreen);
+fullscreenOverlay.addEventListener('click',e=>{if(e.target===fullscreenOverlay)closeInspectorFullscreen()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeInspectorFullscreen()});
 inspectorStage.addEventListener('mousemove',e=>{const r=inspectorStage.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height,rx=(.5-y)*10,ry=(x-.5)*12;$('inspectorTilt').style.transform='rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'});
 inspectorStage.addEventListener('mouseleave',()=>{$('inspectorTilt').style.transform='rotateX(0deg) rotateY(0deg)'});
 const flipInspectorCard=()=> $('inspectorFlip').classList.toggle('is-flipped');
 inspectorStage.addEventListener('click',flipInspectorCard);
+inspectorStage.addEventListener('dblclick',e=>{e.preventDefault();e.stopPropagation();openInspectorFullscreen()});
 inspectorStage.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flipInspectorCard()}});
 
 $('exportGifBtn').onclick=exportInspectorGIF;
