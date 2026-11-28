@@ -418,7 +418,7 @@ footer:before{
 .preview-wrap>#preview{position:relative;z-index:1}
 .thumb,.inspector-front{position:relative}
 .platinum-sparkle-overlay{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
-.preview-wrap>.platinum-sparkle-overlay{inset:12px auto auto 50%;width:min(calc(100% - 24px),300px);aspect-ratio:408/771;transform:translateX(-50%)}
+.preview-wrap>.platinum-sparkle-overlay{inset:64px auto auto 50%;width:min(calc(100% - 24px),300px);aspect-ratio:408/771;transform:translateX(-50%)}
 .platinum-sparkle-overlay i{position:absolute;width:9px;height:9px;opacity:0;background:radial-gradient(circle,#fff 0 12%,#eef7ff 18% 34%,rgba(206,229,255,.75) 42%,transparent 72%);filter:drop-shadow(0 0 4px #e7f2ff);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:platinumTwinkle 2.8s ease-in-out infinite}
 .platinum-sparkle-overlay i:nth-child(1){left:7%;top:3%;animation-delay:-.2s}
 .platinum-sparkle-overlay i:nth-child(2){right:7%;top:8%;width:12px;height:12px;animation-delay:-1.4s}
@@ -429,7 +429,7 @@ footer:before{
 .platinum-sparkle-overlay i:nth-child(7){left:50%;top:1%;width:7px;height:7px;animation-delay:-2.5s}
 @keyframes platinumTwinkle{0%,100%{opacity:.12;transform:scale(.45) rotate(0deg)}38%{opacity:.95;transform:scale(1.25) rotate(45deg)}62%{opacity:.48;transform:scale(.8) rotate(90deg)}}
 @media(prefers-reduced-motion:reduce){.platinum-sparkle-overlay i{animation:none;opacity:.55}}
-@media(max-width:800px){.preview-wrap>.platinum-sparkle-overlay{width:min(calc(70vw - 24px),246px)}}
+@media(max-width:800px){.preview-wrap>.platinum-sparkle-overlay{width:min(70vw,270px)}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
