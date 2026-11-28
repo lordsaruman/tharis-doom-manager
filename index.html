@@ -693,6 +693,17 @@ function drawCreatureCard(canvas,c){
   if(img.complete&&img.naturalWidth)drawArt();
  }else paint();
 }
+function drawTypeInsignia(ctx,type,cx,cy,size){
+ const img=INSIGNIA_DRAW_IMAGES[type];
+ if(!img||!img.complete||!img.naturalWidth)return;
+ ctx.save();
+ ctx.beginPath();ctx.arc(cx,cy,size/2,0,Math.PI*2);
+ ctx.fillStyle='rgba(20,16,12,.94)';ctx.fill();
+ ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,size*.045);ctx.stroke();
+ ctx.beginPath();ctx.arc(cx,cy,size*.455,0,Math.PI*2);ctx.clip();
+ ctx.drawImage(img,cx-size*.43,cy-size*.43,size*.86,size*.86);
+ ctx.restore();
+}
 function drawMagicCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
  const drawLayout=img=>{
@@ -730,6 +741,8 @@ function drawMagicCard(canvas,c){
   if(magicFrame.complete&&magicFrame.naturalWidth){
    ctx.drawImage(magicFrame,0,0,w,h);
   }
+  // Insígnia de tipo fixa para todas as cartas de Magias.
+  drawTypeInsignia(ctx,'Magias',w*.053,h*.115,w*.072);
 
   const drawRichText=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color,fitToBox=false)=>{
   const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
@@ -811,6 +824,7 @@ function drawCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
  const palettes={Bronze:['#6d482d','#c18b55'],Prata:['#555d68','#c8d0d8'],Ouro:['#72551e','#e8c66d'],Dark:['#191923','#8e6ba8'],Esmeralda:['#164b3d','#70c49c'],Rubi:['#5b2029','#d66a73'],Topázio:['#674c1c','#e5b84e']};
  const [base,edge]=palettes[c.rarity]||palettes.Bronze;
+ if(c.type==='Construção')drawTypeInsignia(ctx,'Construção',w*.12,h*.19,w*.075);
  const grad=ctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,base);grad.addColorStop(1,'#111219');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
  ctx.strokeStyle=edge;ctx.lineWidth=Math.max(5,w*.014);ctx.strokeRect(9,9,w-18,h-18);ctx.strokeStyle='#ffffff33';ctx.lineWidth=2;ctx.strokeRect(20,20,w-40,h-40);
  ctx.fillStyle='#100f14';ctx.fillRect(w*.07,h*.09,w*.86,h*.07);ctx.fillStyle='#f4e9d5';ctx.font='bold '+(w*.055)+'px Georgia';ctx.textAlign='center';ctx.fillText((c.name||'NOVA CARTA').toUpperCase().slice(0,30),w/2,h*.137);
