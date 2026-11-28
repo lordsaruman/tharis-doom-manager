@@ -508,6 +508,36 @@ footer:before{
 #traitStatus{min-height:18px;margin-top:6px}
 @media(max-width:700px){.trait-picker{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+
+/* CÓDICE · PAINÉIS DE BALANCEAMENTO E PRODUÇÃO */
+.codex-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid #494139}
+.codex-tab,.codex-faction-btn{border:1px solid #655239;background:#211b15;color:#c9b895;border-radius:7px;padding:9px 13px;font:600 11px 'Cinzel',Georgia,serif;letter-spacing:.03em;cursor:pointer}
+.codex-tab.active,.codex-faction-btn.active{background:linear-gradient(180deg,#604a2b,#302317);border-color:#d0ad70;color:#ffe5b0;box-shadow:inset 0 0 0 1px #c5a36b44}
+.codex-faction-list{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px}
+.codex-faction-btn{padding:7px 11px}
+.codex-subtitle{color:#d7bc88;font:600 12px 'Cinzel',Georgia,serif;letter-spacing:.05em;margin:14px 0 9px}
+.codex-table-wrap{overflow:auto;max-width:100%}
+.codex-table{width:100%;border-collapse:collapse;font-size:11px;min-width:650px}
+.codex-table th,.codex-table td{padding:8px 9px;border-bottom:1px solid #39343a;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.codex-table th{color:#d9c18f;background:#201a14;font:600 10px 'Cinzel',Georgia,serif}
+.codex-table th:first-child,.codex-table td:first-child{text-align:left;position:sticky;left:0;background:#17151a}
+.codex-table td:first-child{color:#e9d7b3;font-weight:600}
+.codex-table tr:last-child td{border-bottom:0}
+.codex-table .codex-total-row td{border-top:1px solid #8b7048;color:#f3d69a;font-weight:700}
+.codex-chart{display:flex;align-items:flex-end;gap:6px;min-height:150px;padding:12px 4px 0;border-bottom:1px solid #5a4b38;overflow-x:auto}
+.codex-chart-col{flex:1 0 28px;min-width:28px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:142px;gap:5px}
+.codex-chart-value{font-size:10px;color:#e8d4a5;font-variant-numeric:tabular-nums}
+.codex-chart-bar{width:min(100%,34px);min-height:2px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#e1c58d,#77552e);box-shadow:0 0 10px #b8955922}
+.codex-chart-label{font-size:9px;color:#aa9b83;white-space:nowrap;writing-mode:vertical-rl;transform:rotate(180deg);height:35px}
+.codex-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.codex-stat-card{background:#17151a;border:1px solid #403a40;border-radius:8px;padding:10px}
+.codex-stat-card b{display:block;color:#f0d39a;font:600 19px 'Cinzel',Georgia,serif}
+.codex-stat-card span{font-size:10px;color:#b6a88e}
+.codex-faction-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.codex-faction-heading h3{margin:0;color:#f0d39a;font:600 18px 'Cinzel',Georgia,serif}
+.codex-empty{padding:14px;color:#aa9b83;font-size:12px}
+@media(max-width:700px){.codex-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.codex-tab{padding:8px 4px;font-size:9px}.codex-table{min-width:590px}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -1795,34 +1825,124 @@ function codexAverage(items,key){
  const values=items.map(c=>Number(c[key])).filter(Number.isFinite);
  return values.length?(values.reduce((a,b)=>a+b,0)/values.length).toFixed(1):'—';
 }
+
+let codexActiveTab='overview',codexActiveFaction='';
+function codexNumber(value){
+ if(value===null||value===undefined||String(value).trim()==='')return 0;
+ const n=Number(String(value).replace(',','.'));return Number.isFinite(n)?n:0;
+}
+function codexSum(items,key){return items.reduce((sum,item)=>sum+codexNumber(item[key]),0)}
+function codexFmt(value){return Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:1})}
+function codexMetric(label,value){return '<div class="codex-metric"><strong>'+escapeHtml(String(value))+'</strong><span>'+escapeHtml(label)+'</span></div>'}
+function codexChart(rows,labelMode='day'){
+ if(!rows.length)return '<div class="codex-empty">Ainda não há registros para este gráfico.</div>';
+ const max=Math.max(1,...rows.map(r=>r.value));
+ return '<div class="codex-chart">'+rows.map(row=>{
+  const h=row.value?Math.max(3,Math.round(row.value/max*100)):2;
+  return '<div class="codex-chart-col" title="'+escapeHtml(row.label+' · '+row.value)+'"><span class="codex-chart-value">'+row.value+'</span><div class="codex-chart-bar" style="height:'+h+'%"></div><span class="codex-chart-label">'+escapeHtml(row.short||row.label)+'</span></div>';
+ }).join('')+'</div>';
+}
+function codexTabs(){
+ return '<div class="codex-tabs">'+
+  '<button class="codex-tab '+(codexActiveTab==='overview'?'active':'')+'" data-codex-tab="overview">VISÃO GERAL</button>'+
+  '<button class="codex-tab '+(codexActiveTab==='factions'?'active':'')+'" data-codex-tab="factions">FACÇÕES E BALANCEAMENTO</button>'+
+  '<button class="codex-tab '+(codexActiveTab==='production'?'active':'')+'" data-codex-tab="production">PRODUÇÃO</button>'+
+ '</div>';
+}
+function codexCategoryTable(items,type,factions){
+ const metrics=[['Quantidade',null],['Ataque','power'],['Defesa','defense'],['Custo','cost'],['Vida','life']];
+ const rows=factions.map(faction=>{
+  const subset=items.filter(c=>(c.faction||'Sem facção')===faction&&c.type===type);
+  return '<tr><td>'+escapeHtml(faction)+'</td>'+metrics.map(([,key])=>'<td>'+ (key===null?subset.length:codexFmt(codexSum(subset,key)))+'</td>').join('')+'</tr>';
+ }).join('');
+ const totals=metrics.map(([,key])=>'<td>'+(key===null?items.filter(c=>c.type===type).length:codexFmt(codexSum(items.filter(c=>c.type===type),key)))+'</td>').join('');
+ return '<div class="codex-table-wrap"><table class="codex-table"><thead><tr><th>Facção</th>'+metrics.map(m=>'<th>'+m[0]+'</th>').join('')+'</tr></thead><tbody>'+rows+'<tr class="codex-total-row"><td>TOTAL DA COLEÇÃO</td>'+totals+'</tr></tbody></table></div>';
+}
+function codexFactionDetail(items,faction){
+ const subset=items.filter(c=>(c.faction||'Sem facção')===faction);
+ const creatures=subset.filter(c=>c.type==='Criatura'),magics=subset.filter(c=>c.type==='Magias');
+ const costRows=codexCount(subset,c=>String(codexNumber(c.cost))).sort((a,b)=>Number(a[0])-Number(b[0]));
+ const rarityRows=codexCount(subset,c=>c.rarity||'Sem raridade');
+ const typeRows=codexCount(subset,c=>c.type||'Sem tipo');
+ const traitMap=new Map();
+ creatures.forEach(c=>parseTraitNames(c.trait).map(canonicalTraitName).forEach(t=>traitMap.set(t,(traitMap.get(t)||0)+1)));
+ const traitRows=[...traitMap.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pt-BR'));
+ const metricCards='<div class="codex-metrics">'+
+  codexMetric('Cartas da facção',subset.length)+
+  codexMetric('Criaturas',creatures.length)+
+  codexMetric('Magias',magics.length)+
+  codexMetric('Custo total',codexFmt(codexSum(subset,'cost')))+
+  codexMetric('Custo médio',codexAverage(subset,'cost'))+
+  codexMetric('Ataque médio · criaturas',codexAverage(creatures,'power'))+
+  codexMetric('Defesa média · criaturas',codexAverage(creatures,'defense'))+
+  codexMetric('Vida média · criaturas',codexAverage(creatures,'life'))+
+ '</div>';
+ const categoryTables=['Criatura','Magias','Construção','Itens'].map(type=>'<section class="codex-panel"><h4 class="codex-subtitle">'+escapeHtml(type.toUpperCase())+' · SOMA DOS ATRIBUTOS</h4>'+codexCategoryTable(subset,type,[faction])+'</section>').join('');
+ return '<div class="codex-faction-heading"><h3>'+escapeHtml(faction)+'</h3><span class="codex-note">'+subset.length+' carta(s) cadastradas</span></div>'+
+  metricCards+
+  '<div class="codex-grid">'+
+   '<section class="codex-panel"><h3>DISTRIBUIÇÃO DE CUSTO</h3>'+codexBars(costRows)+'</section>'+
+   '<section class="codex-panel"><h3>CARTAS POR TIPO</h3>'+codexBars(typeRows)+'</section>'+
+   '<section class="codex-panel"><h3>RARIDADES</h3>'+codexBars(rarityRows)+'</section>'+
+   '<section class="codex-panel"><h3>CARACTERÍSTICAS DAS CRIATURAS</h3>'+codexBars(traitRows)+'</section>'+
+  '</div><h4 class="codex-subtitle">ATRIBUTOS SOMADOS · '+escapeHtml(faction.toUpperCase())+'</h4><div class="codex-grid">'+categoryTables+'</div>';
+}
 async function renderCodex(){
- const total=cards.length,creatures=cards.filter(c=>c.type==='Criatura'),magics=cards.filter(c=>c.type==='Magias');
- const byCost=items=>codexCount(items,c=>String(Number.isFinite(Number(c.cost))?Number(c.cost):'—')).sort((a,b)=>{const an=Number(a[0]),bn=Number(b[0]);if(!Number.isFinite(an))return 1;if(!Number.isFinite(bn))return -1;return an-bn});
- const costRows=byCost(cards);
- const creatureCost=byCost(creatures);
- const magicCost=byCost(magics);
- const factionRows=codexCount(cards,c=>c.faction||'Sem facção');
- const rarityRows=codexCount(cards,c=>c.rarity||'Sem raridade');
- const traits=new Map();
- creatures.forEach(c=>parseTraitNames(c.trait).map(canonicalTraitName).forEach(v=>traits.set(v,(traits.get(v)||0)+1)));
- const traitRows=[...traits.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pt-BR')).slice(0,15);
- const content='<div class="codex-metrics">'+
-  '<div class="codex-metric"><strong>'+total+'</strong><span>Total de cartas</span></div>'+
-  '<div class="codex-metric"><strong>'+creatures.length+'</strong><span>Criaturas</span></div>'+
-  '<div class="codex-metric"><strong>'+magics.length+'</strong><span>Magias</span></div>'+
-  '<div class="codex-metric"><strong>'+cards.filter(c=>c.isNew).length+'</strong><span>Cartas novas</span></div>'+
-  '<div class="codex-metric"><strong>'+codexAverage(cards,'cost')+'</strong><span>Custo médio geral</span></div>'+
-  '<div class="codex-metric"><strong>'+codexAverage(creatures,'power')+'</strong><span>Ataque médio · criaturas</span></div>'+
-  '<div class="codex-metric"><strong>'+codexAverage(creatures,'life')+'</strong><span>Vida média · criaturas</span></div>'+
-  '<div class="codex-metric"><strong>'+codexAverage(creatures,'defense')+'</strong><span>Defesa média · criaturas</span></div>'+
- '</div><div class="codex-grid">'+
-  '<section class="codex-panel"><h3>DISTRIBUIÇÃO POR CUSTO · TODAS</h3>'+codexBars(costRows)+'</section>'+
-  '<section class="codex-panel"><h3>CUSTO · CRIATURAS</h3>'+codexBars(creatureCost)+'</section>'+
-  '<section class="codex-panel"><h3>CUSTO · MAGIAS</h3>'+codexBars(magicCost)+'</section>'+
-  '<section class="codex-panel"><h3>CARTAS POR FACÇÃO</h3>'+codexBars(factionRows,'faction')+'<div class="codex-note">Selecione uma facção para filtrar a biblioteca.</div></section>'+
-  '<section class="codex-panel"><h3>CARACTERÍSTICAS MAIS FREQUENTES</h3>'+codexBars(traitRows,'trait')+'<div class="codex-note">Contagem baseada no campo Características de cada carta.</div></section>'+
-  '<section class="codex-panel"><h3>RARIDADES</h3>'+codexBars(rarityRows)+'</section>'+
- '</div><section class="codex-panel" style="margin-top:12px"><h3>ALTERAÇÕES RECENTES</h3><div id="codexHistory" class="codex-history"><div class="hint">Carregando histórico…</div></div></section>';
+ const all=cards.slice(),total=all.length,creatures=all.filter(c=>c.type==='Criatura'),magics=all.filter(c=>c.type==='Magias');
+ const factions=Array.from(new Set(all.map(c=>c.faction||'Sem facção'))).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+ if(!codexActiveFaction||!factions.includes(codexActiveFaction))codexActiveFaction=factions[0]||'';
+ const factionRows=codexCount(all,c=>c.faction||'Sem facção');
+ const costRows=codexCount(all,c=>String(codexNumber(c.cost))).sort((a,b)=>Number(a[0])-Number(b[0]));
+ const rarityRows=codexCount(all,c=>c.rarity||'Sem raridade');
+ const typeRows=codexCount(all,c=>c.type||'Sem tipo');
+ const traitMap=new Map();
+ creatures.forEach(c=>parseTraitNames(c.trait).map(canonicalTraitName).forEach(v=>traitMap.set(v,(traitMap.get(v)||0)+1)));
+ const traitRows=[...traitMap.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pt-BR')).slice(0,15);
+ let dateRows=[],dateError=null;
+ const dateResult=await sb.from('cards').select('id,created_at').order('created_at',{ascending:true});
+ dateRows=dateResult.data||[];dateError=dateResult.error;
+ const dailyMap=new Map();
+ dateRows.forEach(row=>{if(!row.created_at)return;const d=new Date(row.created_at);const key=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');dailyMap.set(key,(dailyMap.get(key)||0)+1)});
+ const today=new Date();const dailyRows=[];
+ for(let i=13;i>=0;i--){const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()-i);const key=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');dailyRows.push({label:d.toLocaleDateString('pt-BR'),short:String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'),value:dailyMap.get(key)||0})}
+ const monthMap=new Map();
+ dateRows.forEach(row=>{if(!row.created_at)return;const d=new Date(row.created_at);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');monthMap.set(key,(monthMap.get(key)||0)+1)});
+ const monthlyRows=[...monthMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-12).map(([key,value])=>({label:key,short:key.slice(5)+'/'+key.slice(0,4),value}));
+ const activeDays=dailyMap.size;
+ const maxDay=Math.max(0,...dailyMap.values());
+ let body='';
+ if(codexActiveTab==='overview'){
+  body='<div class="codex-metrics">'+
+   codexMetric('Total de cartas',total)+codexMetric('Criaturas',creatures.length)+codexMetric('Magias',magics.length)+
+   codexMetric('Construções',all.filter(c=>c.type==='Construção').length)+codexMetric('Itens',all.filter(c=>c.type==='Itens').length)+
+   codexMetric('Cartas novas',all.filter(c=>c.isNew).length)+codexMetric('Custo médio geral',codexAverage(all,'cost'))+
+   codexMetric('Ataque médio · criaturas',codexAverage(creatures,'power'))+codexMetric('Defesa média · criaturas',codexAverage(creatures,'defense'))+codexMetric('Vida média · criaturas',codexAverage(creatures,'life'))+
+  '</div><div class="codex-grid">'+
+   '<section class="codex-panel"><h3>DISTRIBUIÇÃO DE CUSTO · TODAS</h3>'+codexBars(costRows)+'</section>'+
+   '<section class="codex-panel"><h3>CARTAS POR FACÇÃO</h3>'+codexBars(factionRows)+'</section>'+
+   '<section class="codex-panel"><h3>CARTAS POR TIPO</h3>'+codexBars(typeRows)+'</section>'+
+   '<section class="codex-panel"><h3>CARACTERÍSTICAS MAIS FREQUENTES</h3>'+codexBars(traitRows)+'<div class="codex-note">Contagem padronizada das características das criaturas.</div></section>'+
+   '<section class="codex-panel"><h3>RARIDADES</h3>'+codexBars(rarityRows)+'</section>'+
+  '</div>';
+ }else if(codexActiveTab==='factions'){
+  body='<div class="codex-panel"><h3>SELECIONE UMA FACÇÃO</h3><div class="codex-faction-list">'+factions.map(f=>'<button class="codex-faction-btn '+(f===codexActiveFaction?'active':'')+'" data-codex-select-faction="'+escapeHtml(f)+'">'+escapeHtml(f)+'</button>').join('')+'</div></div>'+
+   '<div class="codex-panel" style="margin-top:12px">'+codexFactionDetail(all,codexActiveFaction)+'</div>'+
+   '<section class="codex-panel" style="margin-top:12px"><h3>COMPARAÇÃO DE ATRIBUTOS ENTRE TODAS AS FACÇÕES</h3><div class="codex-note">Cada valor representa a soma dos atributos das cartas daquela categoria dentro da facção. Valores ausentes são tratados como zero.</div>'+
+   ['Criatura','Magias','Construção','Itens'].map(type=>'<h4 class="codex-subtitle">'+type.toUpperCase()+'</h4>'+codexCategoryTable(all,type,factions)).join('')+'</section>';
+ }else{
+  const totalLast14=dailyRows.reduce((sum,row)=>sum+row.value,0);
+  const avg=totalLast14/14;
+  body='<div class="codex-metrics">'+codexMetric('Cartas registradas',dateRows.length)+codexMetric('Produzidas nos últimos 14 dias',totalLast14)+codexMetric('Média diária · 14 dias',avg.toFixed(1))+codexMetric('Maior produção em um dia',maxDay)+codexMetric('Dias com produção',activeDays)+'</div>'+
+   '<div class="codex-grid">'+
+   '<section class="codex-panel"><h3>PRODUÇÃO DE CARTAS POR DIA · ÚLTIMOS 14 DIAS</h3>'+codexChart(dailyRows)+'<div class="codex-note">Cada barra representa a quantidade de registros criados naquele dia.</div></section>'+
+   '<section class="codex-panel"><h3>PRODUÇÃO POR MÊS</h3>'+codexChart(monthlyRows)+'<div class="codex-note">Últimos 12 meses com registros.</div></section>'+
+   '<section class="codex-panel"><h3>PRODUÇÃO POR FACÇÃO</h3>'+codexBars(factionRows)+'</section>'+
+   '<section class="codex-panel"><h3>PRODUÇÃO POR TIPO</h3>'+codexBars(typeRows)+'</section>'+
+   '</div>'+
+   (dateError?'<div class="codex-note">Não foi possível carregar as datas de criação: '+escapeHtml(dateError.message)+'</div>':'<div class="codex-note">As datas vêm de cards.created_at no Supabase. Para cartas importadas de uma biblioteca antiga, essa data pode representar o momento em que entraram no banco, não o dia em que foram originalmente desenhadas.</div>');
+ }
+ const content=codexTabs()+body+
+  '<section class="codex-panel" style="margin-top:12px"><h3>ALTERAÇÕES RECENTES</h3><div id="codexHistory" class="codex-history"><div class="hint">Carregando histórico…</div></div></section>';
  $('codexContent').innerHTML=content;
  const {data,error}=await sb.from('card_history').select('card_name,action,changed_by,changed_at').order('changed_at',{ascending:false}).limit(12);
  const history=$('codexHistory');
@@ -1919,7 +2039,13 @@ async function handleSession(session){
 
 
 $('codexBtn').onclick=openCodex;$('codexCloseBtn').onclick=()=>$('codexModal').classList.remove('open');
-$('codexModal').addEventListener('click',e=>{const faction=e.target.closest('[data-codex-faction]'),trait=e.target.closest('[data-codex-trait]');if(faction){$('filterFaction').value=faction.dataset.codexFaction==='Sem facção'?'':faction.dataset.codexFaction;$('codexModal').classList.remove('open');render()}else if(trait){$('search').value=trait.dataset.codexTrait;$('codexModal').classList.remove('open');render()}});
+$('codexModal').addEventListener('click',e=>{
+ const tab=e.target.closest('[data-codex-tab]'),selectFaction=e.target.closest('[data-codex-select-faction]'),faction=e.target.closest('[data-codex-faction]'),trait=e.target.closest('[data-codex-trait]');
+ if(tab){codexActiveTab=tab.dataset.codexTab;renderCodex().catch(error=>{$('codexContent').innerHTML='<div class="empty">'+escapeHtml(error.message)+'</div>'})}
+ else if(selectFaction){codexActiveFaction=selectFaction.dataset.codexSelectFaction;renderCodex().catch(error=>{$('codexContent').innerHTML='<div class="empty">'+escapeHtml(error.message)+'</div>'})}
+ else if(faction){$('filterFaction').value=faction.dataset.codexFaction==='Sem facção'?'':faction.dataset.codexFaction;$('codexModal').classList.remove('open');render()}
+ else if(trait){$('search').value=trait.dataset.codexTrait;$('codexModal').classList.remove('open');render()}
+});
 $('assetsBtn').onclick=()=>{if(!isAdmin){alert('Apenas o administrador pode enviar imagens.');return}$('assetStatus').textContent='';$('assetsModal').classList.add('open')};
 $('teamBtn').onclick=()=>{if(!isAdmin){alert('Apenas o administrador pode gerenciar colaboradores.');return}$('inviteMessage').textContent='';$('inviteEmail').value='';$('teamModal').classList.add('open')};
 $('teamCloseBtn').onclick=()=>$('teamModal').classList.remove('open');
