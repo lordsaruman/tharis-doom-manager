@@ -1167,7 +1167,7 @@ function drawInsigniaFlag(ctx,c,w,h,layer='all'){
  const flagTopWidth=flagWidth,flagTopX=flagX;
  // As insígnias permanecem na posição atual; somente a bandeira se estende para cima.
  const emblemTop=Math.max(flagY+pad,h*.075);
- const flagHeight=(emblemTop-flagY)+pad+items.length*size+(items.length-1)*gap+w*.025;
+ const flagHeight=(emblemTop-flagY)+pad+items.length*size+(items.length-1)*gap+items.length*w*.025;
  ctx.save();
  if(layer==='all'||layer==='background'){
   ctx.beginPath();
