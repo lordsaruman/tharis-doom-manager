@@ -413,6 +413,23 @@ footer:before{
 @media(max-width:800px){.total-orb-wrap{min-height:104px}.total-orb{width:92px;height:92px}.total-orb strong{font-size:27px}}
 @media(prefers-reduced-motion:reduce){.total-orb{animation:none}}
 
+.preview-wrap{position:relative}
+.preview-wrap>.card-primary-actions{position:relative;z-index:6;width:100%;margin:0 0 10px;justify-content:center}
+.preview-wrap>#preview{position:relative;z-index:1}
+.thumb,.inspector-front{position:relative}
+.platinum-sparkle-overlay{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+.preview-wrap>.platinum-sparkle-overlay{inset:12px auto auto 50%;width:min(calc(100% - 24px),300px);aspect-ratio:408/771;transform:translateX(-50%)}
+.platinum-sparkle-overlay i{position:absolute;width:9px;height:9px;opacity:0;background:radial-gradient(circle,#fff 0 12%,#eef7ff 18% 34%,rgba(206,229,255,.75) 42%,transparent 72%);filter:drop-shadow(0 0 4px #e7f2ff);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:platinumTwinkle 2.8s ease-in-out infinite}
+.platinum-sparkle-overlay i:nth-child(1){left:7%;top:3%;animation-delay:-.2s}
+.platinum-sparkle-overlay i:nth-child(2){right:7%;top:8%;width:12px;height:12px;animation-delay:-1.4s}
+.platinum-sparkle-overlay i:nth-child(3){left:5%;top:42%;width:7px;height:7px;animation-delay:-2.1s}
+.platinum-sparkle-overlay i:nth-child(4){right:5%;top:58%;width:10px;height:10px;animation-delay:-.9s}
+.platinum-sparkle-overlay i:nth-child(5){left:15%;bottom:3%;width:8px;height:8px;animation-delay:-1.8s}
+.platinum-sparkle-overlay i:nth-child(6){right:14%;bottom:3%;width:12px;height:12px;animation-delay:-.5s}
+.platinum-sparkle-overlay i:nth-child(7){left:50%;top:1%;width:7px;height:7px;animation-delay:-2.5s}
+@keyframes platinumTwinkle{0%,100%{opacity:.12;transform:scale(.45) rotate(0deg)}38%{opacity:.95;transform:scale(1.25) rotate(45deg)}62%{opacity:.48;transform:scale(.8) rotate(90deg)}}
+@media(prefers-reduced-motion:reduce){.platinum-sparkle-overlay i{animation:none;opacity:.55}}
+@media(max-width:800px){.preview-wrap>.platinum-sparkle-overlay{width:min(calc(70vw - 24px),246px)}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -528,6 +545,7 @@ footer:before{
     </div>
    </div>
    <div class="preview-wrap">
+    <div class="preview-actions card-primary-actions"><button id="saveBtn" class="primary">Salvar carta</button><button id="pngBtn">Exportar PNG</button><button id="deleteBtn" class="danger" style="display:none">Excluir</button></div>
     <canvas id="preview" width="408" height="771"></canvas>
     <div class="crop-controls" id="cropControls">
      <div class="field"><label>Zoom da ilustração <span id="zoomValue">100%</span></label><input id="imageZoom" type="range" min="100" max="250" value="100"></div>
@@ -546,7 +564,6 @@ footer:before{
      <button type="button" id="resetImageEditsBtn" class="span-all">Restaurar imagem e ajustes</button>
     </div>
     <div class="hint" id="imageQualityStatus">A melhoria local não envia a imagem para nenhum serviço.</div>
-    <div class="preview-actions"><button id="saveBtn" class="primary">Salvar carta</button><button id="pngBtn">Exportar PNG</button><button id="deleteBtn" class="danger" style="display:none">Excluir</button></div>
     <div class="hint">Prévia aproximada da carta. A exportação usa a resolução integral.</div>
    </div>
   </div>
@@ -625,15 +642,26 @@ function getRarityFrame(source,rarity){
   cache[key]=cv;return cv;
  }catch(error){console.warn('Não foi possível aplicar a moldura metálica:',error);return source}
 }
-function drawPlatinumSparkles(ctx,w,h){
+function drawPlatinumSparkles(ctx,w,h,phase=0){
  const stars=[[.075,.035,.010],[.925,.075,.012],[.055,.43,.008],[.945,.57,.010],[.16,.965,.009],[.84,.965,.012],[.50,.018,.008]];
  ctx.save();stars.forEach(([x,y,size],i)=>{
-  const cx=w*x,cy=h*y,r=w*size;
-  ctx.globalAlpha=[.88,.65,.78,.9,.72,.86,.62][i];
-  ctx.shadowColor='#f4f7ff';ctx.shadowBlur=r*2.8;ctx.fillStyle='#f8fbff';
+  const cx=w*x,cy=h*y,r=w*size,pulse=.56+.44*(.5+.5*Math.sin(phase*Math.PI*2+i*1.73));
+  ctx.globalAlpha=[.88,.65,.78,.9,.72,.86,.62][i]*pulse;
+  ctx.shadowColor='#f4f7ff';ctx.shadowBlur=r*(1.8+1.8*pulse);ctx.fillStyle='#f8fbff';
   ctx.beginPath();ctx.moveTo(cx,cy-r*2.2);ctx.quadraticCurveTo(cx+r*.22,cy-r*.22,cx+r*2.2,cy);ctx.quadraticCurveTo(cx+r*.22,cy+r*.22,cx,cy+r*2.2);ctx.quadraticCurveTo(cx-r*.22,cy+r*.22,cx-r*2.2,cy);ctx.quadraticCurveTo(cx-r*.22,cy-r*.22,cx,cy-r*2.2);ctx.fill();
   ctx.beginPath();ctx.arc(cx,cy,r*.34,0,Math.PI*2);ctx.fill();
  });ctx.restore();
+}
+function syncPlatinumSparkles(canvas,c){
+ if(!canvas?.parentElement)return;
+ const host=canvas.parentElement,enabled=rarityKey(c?.rarity)==='Platina';
+ let layer=host.querySelector(':scope > .platinum-sparkle-overlay');
+ if(!enabled){layer?.remove();return}
+ if(!layer){
+  layer=document.createElement('span');layer.className='platinum-sparkle-overlay';layer.setAttribute('aria-hidden','true');
+  for(let i=0;i<7;i++)layer.appendChild(document.createElement('i'));
+  host.appendChild(layer);
+ }
 }
 const alignmentInsignias={
  Luz:new Image(),
@@ -829,7 +857,9 @@ async function exportInspectorGIF(){
   for(let i=0;i<frames;i++){
    const phase=(1-Math.cos((i/frames)*Math.PI*2))/2;
    ctx.clearRect(0,0,frame.width,frame.height);ctx.drawImage(base,0,0);
-   paintMetallicGlint(ctx,frame.width,frame.height,phase,base);gif.addFrame(frame,{copy:true,delay:80});
+   paintMetallicGlint(ctx,frame.width,frame.height,phase,base);
+   if(rarityKey(card.rarity)==='Platina')drawPlatinumSparkles(ctx,frame.width,frame.height,phase);
+   gif.addFrame(frame,{copy:true,delay:80});
   }
   gif.on('progress',p=>{button.textContent='Gerando GIF · '+Math.round(p*100)+'%'});
   const blob=await new Promise((resolve,reject)=>{gif.on('finished',resolve);gif.on('abort',()=>reject(Error('Exportação cancelada')));gif.render()});
@@ -1181,6 +1211,7 @@ function drawMagicCard(canvas,c){
 }
 function drawReadyCard(canvas,c){const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#09090c';ctx.fillRect(0,0,w,h);if(!c.image)return;const img=new Image();img.onload=()=>{ctx.clearRect(0,0,w,h);const scale=Math.min(w/img.width,h/img.height),dw=img.width*scale,dh=img.height*scale;ctx.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh)};img.src=c.image}
 function drawCard(canvas,c){
+ syncPlatinumSparkles(canvas,c);
  if(c.creationMode==='ready'){drawReadyCard(canvas,c);return}
  if(!c.image&&defaultCardArt)c={...c,image:defaultCardArt};
  if(c.type==='Criatura'){drawCreatureCard(canvas,c);return}
@@ -1409,21 +1440,19 @@ async function upscaleImageLocally(){
 }
 async function upscaleImageWithAI(){
  if(!imageData){$('imageQualityStatus').textContent='Envie uma ilustração antes de usar o aprimoramento por IA.';return}
- const endpoint=prompt('Cole o endereço HTTPS de um serviço de upscaling por IA compatível com POST JSON. O serviço deve receber { image: dataURL, scale: 2 } e retornar { image: dataURL } ou { imageUrl: URL }. A chamada precisa permitir CORS.');
- if(!endpoint)return;
- if(!/^https:\/\//i.test(endpoint)){alert('Por segurança, use um endereço HTTPS.');return}
- const token=prompt('Token de acesso do serviço (opcional). Ele será usado apenas nesta sessão e não será salvo na carta.');
- $('upscaleAiBtn').disabled=true;$('imageQualityStatus').textContent='Enviando imagem ao serviço externo de IA…';
+ if(!sb||!cloudUser){$('imageQualityStatus').textContent='Entre na sua conta do gerenciador para usar o aprimoramento por IA.';return}
+ if(!imageData.startsWith('data:image/')){$('imageQualityStatus').textContent='Não foi possível preparar a imagem. Reenvie a ilustração no editor.';return}
+ $('upscaleAiBtn').disabled=true;$('imageQualityStatus').textContent='Enviando imagem ao Upscale Media… O processamento pode levar alguns segundos.';
  try{
-  const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify({image:imageData,scale:2})});
-  if(!response.ok)throw new Error('Serviço respondeu HTTP '+response.status);
-  const result=await response.json();let output=result.image||result.imageData||result.imageUrl||result.output;
-  if(Array.isArray(output))output=output[0];
-  if(typeof output!=='string')throw new Error('Resposta inválida. Esperado image, imageData, imageUrl ou output.');
-  if(/^https?:\/\//i.test(output)){const imgResponse=await fetch(output);if(!imgResponse.ok)throw new Error('Não foi possível baixar a imagem processada.');const blob=await imgResponse.blob();output=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)})}
-  if(!output.startsWith('data:image/'))throw new Error('O serviço deve retornar uma imagem em data URL ou uma URL acessível por CORS.');
-  imageData=output;imagePath='';drawCard($('preview'),collect());$('imageQualityStatus').textContent='Aprimoramento por IA concluído. Confira o resultado antes de salvar.';
- }catch(error){$('imageQualityStatus').textContent='Falha no aprimoramento por IA: '+error.message+' Verifique o endpoint, o token e a permissão CORS.'}
+  const {data,error}=await sb.functions.invoke('upscale-image',{body:{image:imageData,scale:2}});
+  if(error)throw error;
+  if(!data?.image||!data.image.startsWith('data:image/'))throw new Error(data?.error||'O serviço não retornou uma imagem válida.');
+  imageData=data.image;imagePath='';drawCard($('preview'),collect());
+  $('imageQualityStatus').textContent='Aprimoramento por IA concluído. Confira o resultado antes de salvar a carta.';
+ }catch(error){
+  const message=error?.context?.error||error?.message||'Falha inesperada.';
+  $('imageQualityStatus').textContent='Falha no aprimoramento por IA: '+message;
+ }
  finally{$('upscaleAiBtn').disabled=false}
 }
 $('upscaleLocalBtn').onclick=upscaleImageLocally;
