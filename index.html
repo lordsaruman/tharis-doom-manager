@@ -647,6 +647,13 @@ footer:before{
 @media(max-width:950px){.task-form{grid-template-columns:repeat(2,minmax(0,1fr))}.activity-toolbar{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.sector-nav{position:relative}.sector-nav button{flex:1 1 44%;min-width:0}.activity-entry{grid-template-columns:1fr}.activity-details{grid-column:1}.activity-toolbar{grid-template-columns:1fr}}
 
+
+.activity-summary{margin-top:7px!important;color:#e2cfaa!important;font-size:13px!important;line-height:1.55}
+.activity-details{grid-column:2/-1;color:#9f927c;font-size:11px;white-space:normal;overflow-wrap:anywhere}
+.activity-details summary{cursor:pointer;color:#b99b69}
+.activity-details pre{max-height:280px;overflow:auto;margin:8px 0 0;padding:10px;background:#0e0b08;border:1px solid #463722;border-radius:4px;white-space:pre-wrap;word-break:break-word;color:#b9aa90;font:11px/1.45 ui-monospace,monospace}
+@media(max-width:600px){.activity-details{grid-column:1}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -883,7 +890,8 @@ function setSector(name){
 function initSectorNavigation(){
  document.querySelectorAll('[data-sector]').forEach(btn=>btn.addEventListener('click',()=>setSector(btn.dataset.sector)));
  const move=(id,target)=>{const el=$(id),dest=$(target);if(el&&dest)dest.appendChild(el)};
- ['codexBtn','teamBtn'].forEach(id=>move(id,'developmentTools'));
+ move('codexBtn','developmentTools');
+ move('teamBtn','adminTools');
  ['glossaryBtn'].forEach(id=>move(id,'sector-rules'));
  ['cardVisualsBtn','assetsBtn','importBtn','exportBtn'].forEach(id=>move(id,'adminTools'));
  const openGlossary=$('openGlossarySector');if(openGlossary)openGlossary.addEventListener('click',()=>openGlossaryModal());
@@ -954,18 +962,61 @@ async function loadActivityLog(){
  if(error){$('activityList').innerHTML='<div class="activity-empty">Não foi possível carregar: '+escapeHtml(error.message)+'</div>';return}
  activityRows=data||[];renderActivityLog();
 }
+const activityFieldLabels={
+ name:'nome',type:'tipo de carta',cost:'custo',power:'ataque',defense:'defesa',life:'vida',trait:'características',effect:'efeito',flavor:'texto de ambientação',description:'descrição',faction:'facção',rarity:'raridade',alignment:'alinhamento',imagePath:'ilustração',image_path:'ilustração',image:'ilustração',term:'termo',definition:'explicação',category:'categoria',content:'conteúdo',completed:'status da anotação',title:'título',status:'etapa',priority:'prioridade',assigned_to:'responsável',due_date:'prazo',display_name:'nome do colaborador',signature:'símbolo',value:'valor'
+};
+function activityValue(value){
+ if(value===null||value===undefined||value==='')return 'vazio';
+ if(typeof value==='boolean')return value?'Sim':'Não';
+ if(typeof value==='object')return JSON.stringify(value);
+ const text=String(value).replace(/\s+/g,' ').trim();
+ return text.length>150?text.slice(0,147)+'…':text;
+}
+function activityComparable(row){
+ if(!row)return {};
+ const data={...row};
+ if(row.card_data&&typeof row.card_data==='object')Object.assign(data,row.card_data);
+ delete data.card_data;
+ ['id','created_at','created_by','updated_at','updated_by','updated','newSince','imageX','imageY','imageZoom','imageWidth','imageHeight','imageContrast','imageSharpness','imageBrightness','imageSaturation','nameOffsetY','effectOffsetY','magicTextGradient','isNew','creationMode','image_path'].forEach(k=>delete data[k]);
+ return data;
+}
+function activityFieldValue(key,value){
+ if(key==='status')return ({todo:'A fazer',doing:'Em andamento',review:'Em revisão',done:'Concluído'})[value]||value;
+ if(key==='priority')return ({low:'Baixa',medium:'Média',high:'Alta',urgent:'Urgente'})[value]||value;
+ if(key==='completed')return value?'Feita':'Pendente';
+ if(key==='assigned_to')return value?(collaboratorDirectory[value]?.display_name||'Colaborador'):'Sem responsável';
+ return activityValue(value);
+}
+function activityChangeSummary(r){
+ const entity=r.entity_label||({cards:'carta',creature_traits:'característica',game_glossary:'termo do glossário',shared_library_notes:'anotação',development_tasks:'tarefa',manager_settings:'configuração',collaborator_directory:'colaborador'}[r.table_name]||'registro');
+ const before=activityComparable(r.before_data),after=activityComparable(r.after_data);
+ if(r.operation==='INSERT'){
+  const data=after;
+  const details=[];
+  const keys=r.table_name==='cards'?['type','faction','rarity','cost','power','defense','life']:r.table_name==='development_tasks'?['status','priority','due_date']:r.table_name==='game_glossary'?['category']:['category'];
+  keys.forEach(k=>{if(data[k]!==undefined&&data[k]!==null&&data[k]!=='')details.push((activityFieldLabels[k]||k)+': '+activityFieldValue(k,data[k]))});
+  return 'Criou '+entity+(details.length?' · '+details.join(' · '):'');
+ }
+ if(r.operation==='DELETE')return 'Excluiu '+entity;
+ const keys=[...new Set([...Object.keys(before),...Object.keys(after)])].filter(k=>JSON.stringify(before[k])!==JSON.stringify(after[k]));
+ if(!keys.length)return 'Atualizou '+entity+' (sem diferenças de conteúdo identificáveis)';
+ const changes=keys.slice(0,7).map(k=>(activityFieldLabels[k]||k)+': '+activityFieldValue(k,before[k])+' → '+activityFieldValue(k,after[k]));
+ const remaining=keys.length-changes.length;
+ return 'Alterou '+entity+': '+changes.join(' · ')+(remaining>0?' · e mais '+remaining+' campo(s)':'');
+}
 function renderActivityLog(){
  const list=$('activityList');if(!list)return;
  const search=($('activitySearch')?.value||'').toLocaleLowerCase('pt-BR'),table=$('activityTableFilter')?.value||'',op=$('activityOperationFilter')?.value||'';
- const rows=activityRows.filter(r=>(!table||r.table_name===table)&&(!op||r.operation===op)&&(!search||[r.entity_label,r.table_name,r.operation,creatorLabel(r.actor_id),JSON.stringify(r.after_data||r.before_data||{})].join(' ').toLocaleLowerCase('pt-BR').includes(search)));
+ const rows=activityRows.filter(r=>(!table||r.table_name===table)&&(!op||r.operation===op)&&(!search||[r.entity_label,r.table_name,r.operation,creatorLabel(r.actor_id),activityChangeSummary(r)].join(' ').toLocaleLowerCase('pt-BR').includes(search)));
  $('activityCount').textContent=rows.length+' atividade(s) exibida(s) · até 300 registros mais recentes';
  if(!rows.length){list.innerHTML='<div class="activity-empty">Nenhuma atividade corresponde aos filtros.</div>';return}
  const names={cards:'Carta',creature_traits:'Característica',game_glossary:'Glossário',shared_library_notes:'Anotação',development_tasks:'Tarefa',manager_settings:'Configuração',collaborator_directory:'Colaborador'};
  const actions={INSERT:'CRIADO',UPDATE:'EDITADO',DELETE:'EXCLUÍDO'};
  list.innerHTML=rows.map(r=>{
   const date=new Date(r.occurred_at).toLocaleString('pt-BR'),actor=r.actor_id?creatorLabel(r.actor_id):'Sistema';
-  const detail= r.operation==='UPDATE'?{antes:r.before_data,depois:r.after_data}:r.operation==='DELETE'?r.before_data:r.after_data;
-  return '<article class="activity-entry"><time>'+date+'</time><div><strong>'+escapeHtml(r.entity_label||names[r.table_name]||r.table_name)+'</strong><p>'+escapeHtml(actor)+' · '+escapeHtml(names[r.table_name]||r.table_name)+'</p></div><span class="activity-op">'+(actions[r.operation]||r.operation)+'</span><div class="activity-details">Registro: '+escapeHtml(r.record_id||'—')+' · '+escapeHtml(JSON.stringify(detail||{}).slice(0,850))+'</div></article>';
+  const summary=activityChangeSummary(r);
+  const detail=r.operation==='UPDATE'?{antes:r.before_data,depois:r.after_data}:r.operation==='DELETE'?r.before_data:r.after_data;
+  return '<article class="activity-entry"><time>'+date+'</time><div><strong>'+escapeHtml(r.entity_label||names[r.table_name]||r.table_name)+'</strong><p>'+escapeHtml(actor)+' · '+escapeHtml(names[r.table_name]||r.table_name)+'</p><p class="activity-summary">'+escapeHtml(summary)+'</p></div><span class="activity-op">'+(actions[r.operation]||r.operation)+'</span><details class="activity-details"><summary>Ver dados completos da alteração</summary><pre>'+escapeHtml(JSON.stringify(detail||{},null,2).slice(0,5000))+'</pre></details></article>';
  }).join('');
 }
 
