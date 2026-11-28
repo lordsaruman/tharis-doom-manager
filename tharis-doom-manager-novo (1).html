@@ -622,7 +622,7 @@ footer:before{
       </div>
      </details>
     </div>
-    <div class="field span2" id="magicGradientField"><label for="magicTextGradient">Intensidade do degradê atrás dos textos <span id="magicTextGradientValue">150%</span></label><input id="magicTextGradient" type="range" min="0" max="200" step="5" value="150"><div class="hint">Ajusta a força do escurecimento na área de texto das cartas de magia. 0% remove o degradê; 150% é a intensidade padrão.</div></div>
+    <div class="field span2" id="magicGradientField"><label for="magicTextGradient">Intensidade do degradê atrás dos textos <span id="magicTextGradientValue">180%</span></label><input id="magicTextGradient" type="range" min="0" max="200" step="5" value="180"><div class="hint">Ajusta a força do escurecimento na área de texto das cartas de magia. 0% remove o degradê; 180% é a intensidade padrão.</div></div>
     <div class="image-tools">
      <button type="button" id="upscaleLocalBtn">Melhorar resolução (local)</button>
      <button type="button" id="upscaleAiBtn">Aprimorar com IA</button>
@@ -1191,14 +1191,14 @@ function drawMagicCard(canvas,c){
   // Degradê escuro na área textual, iniciando suavemente junto ao nome
   // e aumentando de cima para baixo até 50% de opacidade na base.
   // É pintado antes do molde para preservar os ornamentos dourados.
-  const top=h*(.744+(+c.nameOffsetY||0)),bottom=h*.985;
+  const top=h*(.70+(+c.nameOffsetY||0)),bottom=h*.985;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
-  const gradientStrength=Math.max(0,Math.min(200,c.magicTextGradient==null?150:+c.magicTextGradient))/100;
+  const gradientStrength=Math.max(0,Math.min(200,c.magicTextGradient==null?180:+c.magicTextGradient))/100;
   shade.addColorStop(0,'rgba(5,6,10,0)');
-  shade.addColorStop(.16,'rgba(5,6,10,'+(.06*gradientStrength)+')');
-  shade.addColorStop(.42,'rgba(5,6,10,'+(.20*gradientStrength)+')');
-  shade.addColorStop(.72,'rgba(5,6,10,'+(.36*gradientStrength)+')');
-  shade.addColorStop(1,'rgba(5,6,10,'+(.50*gradientStrength)+')');
+  shade.addColorStop(.16,'rgba(5,6,10,'+(.08*gradientStrength)+')');
+  shade.addColorStop(.42,'rgba(5,6,10,'+(.27*gradientStrength)+')');
+  shade.addColorStop(.72,'rgba(5,6,10,'+(.44*gradientStrength)+')');
+  shade.addColorStop(1,'rgba(5,6,10,'+(.55*gradientStrength)+')');
   ctx.fillStyle=shade;ctx.fillRect(w*.075,top,w*.85,bottom-top);
 
   // A bandeira começa atrás da esfera de custo; o molde original permanece intacto.
@@ -1442,7 +1442,7 @@ function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLab
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imageOriginalData=imageData;imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
- const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,magicTextGradient:150,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0,imageWidth:100,imageHeight:100,imageContrast:100,imageBrightness:100,imageSaturation:100,imageSharpness:0};
+ const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,magicTextGradient:180,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0,imageWidth:100,imageHeight:100,imageContrast:100,imageBrightness:100,imageSaturation:100,imageSharpness:0};
  $('isNew').checked=!!c?.isNew;
  Object.keys(vals).forEach(k=>{const el=$(k);let value=c?.[k]??vals[k];if(k==='rarity')value=rarityKey(value);if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';$('imageUrlInput').value='';$('imageUrlStatus').textContent='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
