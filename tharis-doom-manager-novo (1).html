@@ -230,7 +230,11 @@ footer:before{
 .inspector-empty{min-height:260px;display:grid;place-items:center;text-align:center;padding:24px 14px;color:#aa9b83;font:15px 'Crimson Pro',Georgia,serif}
 .inspector-content{padding:14px 5px 4px}
 .inspector-card-frame{width:min(100%,300px);margin:0 auto 14px;padding:6px;border:1px solid #9a7847;background:linear-gradient(145deg,#0c0907,#21180f);box-shadow:0 5px 18px #0008,inset 0 0 0 2px #100d0a}
+.inspector-card-stage{position:relative;width:100%;line-height:0}
 .inspector-card-frame canvas{display:block;width:100%;height:auto}
+.inspector-card-stage canvas.inspector-glint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.inspector-gif{width:100%;margin-top:7px}
+.inspector-gif:disabled{opacity:.55;cursor:wait}
 .inspector-content h3{margin:8px 0 4px;text-align:center;color:#e6d4b2;font:600 17px 'Cinzel',Georgia,serif}
 .inspector-meta{text-align:center;color:#b7a487;font:13px 'Crimson Pro',Georgia,serif}
 .inspector-faction{display:flex;justify-content:center;align-items:center;gap:7px;margin:10px 0;color:#d6c39e;font:13px 'Crimson Pro',Georgia,serif}
@@ -354,6 +358,7 @@ footer:before{
 .tile-new-flag{margin-top:6px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
 </head>
 <body>
 <header>
@@ -386,11 +391,12 @@ footer:before{
     <div class="inspector-heading"><span>VISUALIZAÇÃO</span><span class="inspector-ornament">✦</span></div>
     <div class="inspector-empty" id="inspectorEmpty">Selecione uma carta na biblioteca para examiná-la em detalhes.</div>
     <div class="inspector-content" id="inspectorContent" style="display:none">
-     <div class="inspector-card-frame"><canvas id="selectedCardCanvas" width="408" height="771"></canvas></div>
+     <div class="inspector-card-frame"><div class="inspector-card-stage"><canvas id="selectedCardCanvas" width="408" height="771"></canvas><canvas id="inspectorGlint" class="inspector-glint" width="408" height="771" aria-hidden="true"></canvas></div></div>
      <h3 id="selectedCardName"></h3>
      <div class="inspector-meta" id="selectedCardMeta"></div>
      <div class="inspector-faction" id="selectedCardFaction"></div>
      <div class="inspector-stats" id="selectedCardStats"></div>
+     <button class="inspector-gif" id="exportGifBtn">✧ Exportar brilho em GIF</button>
      <button class="primary inspector-edit" id="editSelectedBtn">Editar carta</button>
     </div>
    </aside>
@@ -589,6 +595,44 @@ function render(){
  document.querySelectorAll('.cardtile[data-id]').forEach(tile=>tile.classList.toggle('is-selected',tile.dataset.id===selectedCardId));
  updateCardInspector();
 }
+let inspectorGlintRaf=0;
+function paintMetallicGlint(ctx,w,h,phase){
+ ctx.clearRect(0,0,w,h);
+ const x=(-w*.65)+(w*2.3*phase),band=w*.22;
+ ctx.save();ctx.globalCompositeOperation='screen';
+ ctx.lineWidth=Math.max(5,w*.018);ctx.shadowColor='rgba(255,211,125,.9)';ctx.shadowBlur=w*.035;
+ const g=ctx.createLinearGradient(x-band,0,x+band,h);
+ g.addColorStop(0,'rgba(255,210,120,0)');g.addColorStop(.38,'rgba(255,218,145,.06)');
+ g.addColorStop(.5,'rgba(255,239,190,.95)');g.addColorStop(.62,'rgba(255,198,91,.12)');g.addColorStop(1,'rgba(255,210,120,0)');
+ ctx.strokeStyle=g;ctx.strokeRect(w*.025,h*.012,w*.95,h*.976);
+ ctx.lineWidth=Math.max(2,w*.006);ctx.shadowBlur=w*.018;ctx.strokeStyle='rgba(255,230,174,.58)';
+ ctx.strokeRect(w*.04,h*.022,w*.92,h*.956);ctx.restore();
+}
+function startInspectorGlint(){
+ const overlay=$('inspectorGlint');if(!overlay)return;
+ if(inspectorGlintRaf)cancelAnimationFrame(inspectorGlintRaf);
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,started=performance.now();
+ const tick=now=>{const phase=((now-started)%5200)/5200;paintMetallicGlint(overlay.getContext('2d'),overlay.width,overlay.height,phase);if(!reduced)inspectorGlintRaf=requestAnimationFrame(tick)};
+ tick(started);
+}
+async function exportInspectorGIF(){
+ const card=cards.find(x=>x.id===selectedCardId);if(!card)return;
+ if(typeof GIF==='undefined'){alert('O componente de exportação GIF não carregou. Verifique sua conexão e tente novamente.');return}
+ const button=$('exportGifBtn'),base=$('selectedCardCanvas');button.disabled=true;button.textContent='Preparando GIF…';
+ try{
+  await new Promise(resolve=>setTimeout(resolve,450));
+  const gif=new GIF({workers:2,quality:10,width:base.width,height:base.height,workerScript:'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js'});
+  const frame=document.createElement('canvas');frame.width=base.width;frame.height=base.height;
+  const ctx=frame.getContext('2d'),frames=24;
+  for(let i=0;i<frames;i++){ctx.clearRect(0,0,frame.width,frame.height);ctx.drawImage(base,0,0);paintMetallicGlint(ctx,frame.width,frame.height,i/frames);gif.addFrame(frame,{copy:true,delay:100})}
+  gif.on('progress',p=>{button.textContent='Gerando GIF · '+Math.round(p*100)+'%'});
+  const blob=await new Promise((resolve,reject)=>{gif.on('finished',resolve);gif.on('abort',()=>reject(Error('Exportação cancelada')));gif.render()});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;
+  const safeName=(card.name||'tharis-doom').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w-]+/g,'_');
+  link.download=safeName+'-brilho.gif';link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+ }catch(error){console.error('GIF:',error);alert('Não foi possível gerar o GIF: '+(error.message||error))}
+ finally{button.disabled=false;button.textContent='✧ Exportar brilho em GIF'}
+}
 function updateCardInspector(){
  const c=cards.find(x=>x.id===selectedCardId);
  $('inspectorEmpty').style.display=c?'none':'grid';
@@ -599,6 +643,7 @@ function updateCardInspector(){
  $('selectedCardFaction').innerHTML=sigil(c.faction,20,c.type)+'<span>'+escapeHtml(c.faction||c.type||'Sem facção')+'</span>';
  $('selectedCardStats').innerHTML=(c.type==='Magias'?[['CUSTO',c.cost??0]]:[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']]).map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');$('selectedCardStats').classList.toggle('magic-stats',c.type==='Magias');
  drawCard($('selectedCardCanvas'),c);
+ startInspectorGlint();
 }
 function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color){
  const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
@@ -1119,6 +1164,7 @@ document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListe
 ['search','filterFaction','filterRarity','filterType','sort'].forEach(id=>$(id).addEventListener('input',render));
 $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]');if(tile){selectedCardId=tile.dataset.id;document.querySelectorAll('.cardtile[data-id]').forEach(el=>el.classList.toggle('is-selected',el.dataset.id===selectedCardId));updateCardInspector()}});
 $('editSelectedBtn').onclick=()=>{const c=cards.find(x=>x.id===selectedCardId);if(c)openEditor(c)};
+$('exportGifBtn').onclick=exportInspectorGIF;
 $('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Tharis Doom Manager',version:2,exportedAt:new Date().toISOString(),cards},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tharis-doom-backup.json';a.click();URL.revokeObjectURL(a.href)};
 $('importBtn').onclick=()=>$('importFile').click();
 $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result),incoming=Array.isArray(data)?data:data.cards;if(!Array.isArray(incoming))throw Error('Formato inválido');if(confirm(`Importar ${incoming.length} cartas? Isso substituirá a biblioteca atual.`)){cards=incoming.map(c=>({...c,id:c.id||crypto.randomUUID()}));persist();alert('Importação concluída.')}}catch(err){alert('Não foi possível importar: '+err.message)}e.target.value=''};r.readAsText(f)};
