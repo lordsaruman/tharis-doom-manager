@@ -483,6 +483,16 @@ footer:before{
  z-index:1;
  margin:0;
 }
+/* EDITOR · CONTROLES ALINHADOS NO PAINEL DIREITO */
+.preview-wrap{justify-items:center}
+.preview-wrap>.preview-actions-top{order:0;width:min(100%,300px);margin:0 0 10px;display:flex;justify-content:center;align-items:center;gap:8px}
+.preview-wrap>.preview-actions-top button{flex:1 1 0;min-width:0}
+.preview-wrap>#preview{order:1;width:min(100%,300px)}
+.preview-wrap>.crop-controls{order:2;width:min(100%,300px);margin-top:12px}
+.preview-wrap .image-tools{width:100%}
+.preview-wrap #imageQualityStatus,.preview-wrap>.hint{width:min(100%,300px);text-align:left}
+#modal.magic-type .preview-wrap>.preview-actions-top{order:0}
+#modal.magic-type .preview-wrap>#preview{order:1}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -585,6 +595,7 @@ footer:before{
        <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
       </div>
      </div>
+    <div class="field span2" id="magicGradientField"><label for="magicTextGradient">Intensidade do degradê atrás dos textos <span id="magicTextGradientValue">180%</span></label><input id="magicTextGradient" type="range" min="0" max="200" step="5" value="180"><div class="hint">Ajusta a força do escurecimento na área de texto das cartas de magia. 0% remove o degradê; 180% é a intensidade padrão.</div></div>
      <div class="field span2"><label class="position-label"><span id="effectLabel">Habilidades</span><span class="text-position-controls"><button type="button" data-position-adjust="effectOffsetY" data-direction="-1" aria-label="Mover habilidades/efeito para cima" title="Mover para cima">▲</button><button type="button" data-position-adjust="effectOffsetY" data-direction="1" aria-label="Mover habilidades/efeito para baixo" title="Mover para baixo">▼</button></span></label><input id="effectOffsetY" type="hidden" value="0">
       <div class="effect-toolbar" role="toolbar" aria-label="Formatação das habilidades">
        <button type="button" data-effect-format="bold" title="Negrito"><b>B</b></button>
@@ -623,7 +634,6 @@ footer:before{
       </div>
      </details>
     </div>
-    <div class="field span2" id="magicGradientField"><label for="magicTextGradient">Intensidade do degradê atrás dos textos <span id="magicTextGradientValue">180%</span></label><input id="magicTextGradient" type="range" min="0" max="200" step="5" value="180"><div class="hint">Ajusta a força do escurecimento na área de texto das cartas de magia. 0% remove o degradê; 180% é a intensidade padrão.</div></div>
     <div class="image-tools">
      <button type="button" id="upscaleLocalBtn">Melhorar resolução (local)</button>
      <button type="button" id="upscaleAiBtn">Aprimorar com IA</button>
