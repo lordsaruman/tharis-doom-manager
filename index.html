@@ -1152,9 +1152,9 @@ function drawInsigniaFlag(ctx,c,w,h,layer='all'){
  if(factionImg?.complete&&factionImg.naturalWidth)items.push(factionImg);
  if(!items.length)return;
  const size=w*.088,gap=w*.012,pad=w*.012,flagWidth=w*.112;
- const flagX=w*.95-flagWidth/2,flagY=h*.018;
+ const flagX=w*.95-flagWidth/2,flagY=-h*.012;
  // As insígnias começam somente depois da borda inferior da esfera de custo.
- const emblemTop=Math.max(flagY+pad,h*.078);
+ const emblemTop=Math.max(flagY+pad,h*.115);
  const flagHeight=(emblemTop-flagY)+pad+items.length*size+(items.length-1)*gap+w*.025;
  ctx.save();
  if(layer==='all'||layer==='background'){
@@ -1164,15 +1164,16 @@ function drawInsigniaFlag(ctx,c,w,h,layer='all'){
   ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();
  }
  if(layer==='all'||layer==='emblems'){
-  // Recoloca a parte visível da bandeira à frente da moldura, mas abaixo da esfera.
-  // Assim, a haste continua por trás do custo e o painel acompanha todas as insígnias.
+  // A bandeira sobe por trás da esfera de custo e reaparece abaixo dela.
+  // O recorte circular preserva a esfera e deixa um trecho de haste visível até a primeira insígnia.
+  ctx.save();
+  ctx.beginPath();ctx.rect(0,0,w,h);ctx.arc(w*.95,h*.024,h*.055,0,Math.PI*2);ctx.clip('evenodd');
   ctx.beginPath();
-  ctx.moveTo(flagX,emblemTop);ctx.lineTo(flagX+flagWidth,emblemTop);
-  ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.84);
-  ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);
-  ctx.lineTo(flagX,flagY+flagHeight*.84);ctx.closePath();
+  ctx.moveTo(flagX,flagY);ctx.lineTo(flagX+flagWidth,flagY);ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.84);
+  ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);ctx.lineTo(flagX,flagY+flagHeight*.84);ctx.closePath();
   ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();
   ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();
+  ctx.restore();
   items.forEach((img,index)=>ctx.drawImage(img,flagX+(flagWidth-size)/2,emblemTop+index*(size+gap),size,size));
  }
  ctx.restore();
