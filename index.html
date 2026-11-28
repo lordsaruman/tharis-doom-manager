@@ -1097,7 +1097,7 @@ function drawCreatureCard(canvas,c){
    const maxMarkWidth=w*.78,maxMarkHeight=(abilityBottom-abilityTop)*1;
    const scale=Math.min(maxMarkWidth/moirasMarkImage.naturalWidth,maxMarkHeight/moirasMarkImage.naturalHeight);
    const markWidth=moirasMarkImage.naturalWidth*scale,markHeight=moirasMarkImage.naturalHeight*scale;
-   ctx.save();ctx.globalAlpha=.86;
+   ctx.save();ctx.globalAlpha=1;
    ctx.drawImage(moirasMarkImage,w*.5-markWidth/2,(abilityTop+abilityBottom)/2-markHeight/2,markWidth,markHeight);
    ctx.restore();
   }
