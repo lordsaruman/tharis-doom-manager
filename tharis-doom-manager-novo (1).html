@@ -431,6 +431,18 @@ footer:before{
 @keyframes platinumTwinkle{0%,100%{opacity:.12;transform:scale(.45) rotate(0deg)}38%{opacity:.95;transform:scale(1.25) rotate(45deg)}62%{opacity:.48;transform:scale(.8) rotate(90deg)}}
 @media(prefers-reduced-motion:reduce){.platinum-sparkle-overlay i{animation:none;opacity:.55}}
 @media(max-width:800px){.preview-wrap>.platinum-sparkle-overlay{width:min(70vw,270px)}}
+
+/* AJUSTES DE IMAGEM · PAINÉIS EXPANSÍVEIS */
+.image-adjust-group{border:1px solid #665238;border-radius:5px;background:linear-gradient(145deg,#211910,#15110d);margin:0 0 8px;overflow:hidden}
+.image-adjust-group>summary{list-style:none;cursor:pointer;padding:10px 12px;color:#d4b77d;font:600 11px 'Cinzel',Georgia,serif;letter-spacing:.09em;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.image-adjust-group>summary::-webkit-details-marker{display:none}
+.image-adjust-group>summary:after{content:'＋';font:14px Georgia,serif;color:#b89559}
+.image-adjust-group[open]>summary:after{content:'−'}
+.image-adjust-group>summary:hover{background:#b8955910}
+.image-adjust-content{padding:9px 11px 3px;border-top:1px solid #51412e}
+#magicGradientField{width:min(100%,330px);margin:12px auto 2px}
+#magicGradientField input[type=range]{padding:0;accent-color:var(--gold)}
+#modal:not(.magic-type) #magicGradientField{display:none}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -540,7 +552,6 @@ footer:before{
       <textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea>
       <div class="hint">A formatação aparece na prévia e na imagem exportada.</div>
      </div>
-     <div class="field span2" id="magicGradientField"><label for="magicTextGradient">Intensidade do degradê atrás dos textos <span id="magicTextGradientValue">100%</span></label><input id="magicTextGradient" type="range" min="0" max="200" step="5" value="100"><div class="hint">Ajusta a força do escurecimento na área de texto das cartas de magia. 0% remove o degradê; 100% mantém o padrão atual.</div></div>
      <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
      <div class="field span2"><label id="imageLabel">Ilustração específica desta carta (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">Esta imagem substitui a ilustração padrão somente nesta carta. Se não enviar uma imagem, será usada a imagem padrão definida em Aparência das cartas.</div><button type="button" id="clearCardImageBtn">Usar imagem padrão nesta carta</button></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
@@ -550,16 +561,27 @@ footer:before{
     <div class="preview-actions card-primary-actions"><button id="saveBtn" class="primary">Salvar carta</button><button id="pngBtn">Exportar PNG</button><button id="deleteBtn" class="danger" style="display:none">Excluir</button></div>
     <canvas id="preview" width="408" height="771"></canvas>
     <div class="crop-controls" id="cropControls">
-     <div class="field"><label>Zoom da ilustração <span id="zoomValue">100%</span></label><input id="imageZoom" type="range" min="100" max="250" value="100"></div>
-     <div class="field"><label>Enquadramento horizontal <span id="imageXValue">0</span></label><input id="imageX" type="range" min="-100" max="100" value="0"></div>
-     <div class="field"><label>Enquadramento vertical <span id="imageYValue">0</span></label><input id="imageY" type="range" min="-2000" max="2000" value="0"></div>
-     <div class="field"><label>Largura da ilustração <span id="imageWidthValue">100%</span></label><input id="imageWidth" type="range" min="25" max="300" value="100"></div>
-     <div class="field"><label>Altura da ilustração <span id="imageHeightValue">100%</span></label><input id="imageHeight" type="range" min="25" max="300" value="100"></div>
-     <div class="field"><label>Contraste <span id="imageContrastValue">100%</span></label><input id="imageContrast" type="range" min="0" max="250" value="100"></div>
-     <div class="field"><label>Brilho <span id="imageBrightnessValue">100%</span></label><input id="imageBrightness" type="range" min="0" max="200" value="100"></div>
-     <div class="field"><label>Saturação <span id="imageSaturationValue">100%</span></label><input id="imageSaturation" type="range" min="0" max="250" value="100"></div>
-     <div class="field"><label>Nitidez <span id="imageSharpnessValue">0</span></label><input id="imageSharpness" type="range" min="0" max="100" value="0"></div>
+     <details class="image-adjust-group">
+      <summary>Ajustes de posicionamento</summary>
+      <div class="image-adjust-content">
+       <div class="field"><label>Zoom da ilustração <span id="zoomValue">100%</span></label><input id="imageZoom" type="range" min="100" max="250" value="100"></div>
+       <div class="field"><label>Enquadramento horizontal <span id="imageXValue">0</span></label><input id="imageX" type="range" min="-100" max="100" value="0"></div>
+       <div class="field"><label>Enquadramento vertical <span id="imageYValue">0</span></label><input id="imageY" type="range" min="-2000" max="2000" value="0"></div>
+       <div class="field"><label>Largura da ilustração <span id="imageWidthValue">100%</span></label><input id="imageWidth" type="range" min="25" max="300" value="100"></div>
+       <div class="field"><label>Altura da ilustração <span id="imageHeightValue">100%</span></label><input id="imageHeight" type="range" min="25" max="300" value="100"></div>
+      </div>
+     </details>
+     <details class="image-adjust-group">
+      <summary>Ajustes de personalização</summary>
+      <div class="image-adjust-content">
+       <div class="field"><label>Contraste <span id="imageContrastValue">100%</span></label><input id="imageContrast" type="range" min="0" max="250" value="100"></div>
+       <div class="field"><label>Brilho <span id="imageBrightnessValue">100%</span></label><input id="imageBrightness" type="range" min="0" max="200" value="100"></div>
+       <div class="field"><label>Saturação <span id="imageSaturationValue">100%</span></label><input id="imageSaturation" type="range" min="0" max="250" value="100"></div>
+       <div class="field"><label>Nitidez <span id="imageSharpnessValue">0</span></label><input id="imageSharpness" type="range" min="0" max="100" value="0"></div>
+      </div>
+     </details>
     </div>
+    <div class="field span2" id="magicGradientField"><label for="magicTextGradient">Intensidade do degradê atrás dos textos <span id="magicTextGradientValue">150%</span></label><input id="magicTextGradient" type="range" min="0" max="200" step="5" value="150"><div class="hint">Ajusta a força do escurecimento na área de texto das cartas de magia. 0% remove o degradê; 150% é a intensidade padrão.</div></div>
     <div class="image-tools">
      <button type="button" id="upscaleLocalBtn">Melhorar resolução (local)</button>
      <button type="button" id="upscaleAiBtn">Aprimorar com IA</button>
@@ -1128,7 +1150,7 @@ function drawMagicCard(canvas,c){
   // É pintado antes do molde para preservar os ornamentos dourados.
   const top=h*(.744+(+c.nameOffsetY||0)),bottom=h*.985;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
-  const gradientStrength=Math.max(0,Math.min(200,+c.magicTextGradient||0))/100;
+  const gradientStrength=Math.max(0,Math.min(200,c.magicTextGradient==null?150:+c.magicTextGradient))/100;
   shade.addColorStop(0,'rgba(5,6,10,0)');
   shade.addColorStop(.16,'rgba(5,6,10,'+(.06*gradientStrength)+')');
   shade.addColorStop(.42,'rgba(5,6,10,'+(.20*gradientStrength)+')');
@@ -1377,7 +1399,7 @@ function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLab
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imageOriginalData=imageData;imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
- const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,magicTextGradient:100,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0,imageWidth:100,imageHeight:100,imageContrast:100,imageBrightness:100,imageSaturation:100,imageSharpness:0};
+ const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,magicTextGradient:150,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0,imageWidth:100,imageHeight:100,imageContrast:100,imageBrightness:100,imageSaturation:100,imageSharpness:0};
  $('isNew').checked=!!c?.isNew;
  Object.keys(vals).forEach(k=>{const el=$(k);let value=c?.[k]??vals[k];if(k==='rarity')value=rarityKey(value);if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
