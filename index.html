@@ -605,9 +605,9 @@ footer:before{
       <textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea>
       <div class="hint">A formatação aparece na prévia e na imagem exportada.</div>
      </div>
-     <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
      <div class="field span2"><label id="imageLabel">Ilustração específica desta carta (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">Escolha um arquivo ou informe um link público direto para uma imagem PNG/JPG. Links precisam permitir acesso externo (CORS).</div><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:9px"><input id="imageUrlInput" type="url" placeholder="https://exemplo.com/ilustracao.png" autocomplete="url"><button type="button" id="loadImageUrlBtn">Carregar link</button></div><div class="hint" id="imageUrlStatus" role="status" aria-live="polite"></div><button type="button" id="clearCardImageBtn">Usar imagem padrão nesta carta</button></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
+     <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
     </div>
    </div>
    <div class="preview-wrap">
@@ -1458,7 +1458,30 @@ function openEditor(c=null){
  Object.keys(vals).forEach(k=>{const el=$(k);let value=c?.[k]??vals[k];if(k==='rarity')value=rarityKey(value);if((k==='faction'||k==='alignment')&&value&&el.options&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';$('imageUrlInput').value='';$('imageUrlStatus').textContent='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
 function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),nameOffsetY:+$('nameOffsetY').value||0,effectOffsetY:+$('effectOffsetY').value||0,magicTextGradient:+$('magicTextGradient').value||0,faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,imageWidth:+$('imageWidth').value,imageHeight:+$('imageHeight').value,imageContrast:+$('imageContrast').value,imageBrightness:+$('imageBrightness').value,imageSaturation:+$('imageSaturation').value,imageSharpness:+$('imageSharpness').value,updated:Date.now()}}
+async function correctPortugueseSpelling(text){
+ if(!text||!text.trim())return text;
+ const params=new URLSearchParams({language:'pt-BR',text});
+ const response=await fetch('https://api.languagetool.org/v2/check',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:params.toString()});
+ if(!response.ok)throw new Error('Serviço de revisão indisponível');
+ const result=await response.json();
+ let corrected=text;
+ const matches=(result.matches||[]).filter(m=>(m.rule?.issueType==='misspelling'||m.rule?.category?.id==='TYPOS')&&m.replacements?.length&&Number.isInteger(m.offset)&&Number.isInteger(m.length)).sort((x,y)=>y.offset-x.offset);
+ for(const match of matches){const replacement=match.replacements[0].value;corrected=corrected.slice(0,match.offset)+replacement+corrected.slice(match.offset+match.length)}
+ return corrected;
+}
+async function reviewCardSpelling(){
+ const ids=['name','trait','effect','flavor'];
+ const results=await Promise.all(ids.map(async id=>{const el=$(id),original=el.value;try{return {id,value:await correctPortugueseSpelling(original),original,failed:false}}catch(error){console.warn('Revisão ortográfica falhou no campo '+id,error);return {id,value:original,original,failed:true}}}));
+ let changed=false,failed=false;
+ for(const item of results){$(item.id).value=item.value;if(item.value!==item.original)changed=true;failed=failed||item.failed}
+ if(changed)drawCard($('preview'),collect());
+ return failed;
+}
 async function save(){
+ const saveButton=$('saveBtnBottom');
+ saveButton.disabled=true;saveButton.textContent='Revisando ortografia…';
+ const spellingReviewFailed=await reviewCardSpelling();
+ saveButton.disabled=false;saveButton.textContent='Salvar carta';
  const c=collect();
  const previousCard=cards.find(x=>x.id===c.id);
  if(c.isNew)c.newSince=previousCard?.isNew&&previousCard.newSince?previousCard.newSince:Date.now();else delete c.newSince;
