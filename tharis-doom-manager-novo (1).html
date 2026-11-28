@@ -12,7 +12,7 @@ header{padding:22px clamp(16px,4vw,48px);border-bottom:1px solid var(--line);dis
 button,.button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:8px;padding:9px 13px;cursor:pointer;font-weight:600}button:hover,.button:hover{border-color:var(--gold)}button.primary{background:var(--gold);color:#17130d;border-color:var(--gold)}button.danger{border-color:#793b42;color:#ffb6bb}.actions{display:flex;gap:8px;flex-wrap:wrap}
 main{max-width:1500px;margin:auto;padding:24px clamp(14px,3vw,40px) 60px}.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:20px}.stat,.panel{background:linear-gradient(145deg,var(--panel),#171920);border:1px solid var(--line);border-radius:12px}.stat{padding:14px 16px}.stat strong{display:block;font-size:24px;color:var(--gold)}.stat span{color:var(--muted);font-size:12px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.toolbar input,.toolbar select{max-width:260px}
-input,select,textarea{width:100%;background:#111319;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:10px;font:inherit;min-width:0}textarea{min-height:88px;resize:vertical}label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px}.field{margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}.cardtile{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:10px;cursor:pointer;transition:.15s}.cardtile:hover{transform:translateY(-2px);border-color:var(--gold)}.thumb{aspect-ratio:408/771;width:100%;height:auto;border-radius:7px;overflow:hidden;background:#0c0d11;display:block;position:relative;border:1px solid #45404b}.thumb canvas{display:block;width:100%;height:auto;object-fit:contain}.tile-title{font-weight:700;margin:9px 0 3px}.tile-meta{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:5px}.tile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:9px}.tile-stats span{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:5px 2px;border:1px solid #45404b;border-radius:6px;background:#111319}.tile-stats small{font-size:9px;letter-spacing:.04em;color:var(--muted)}.tile-stats b{font-size:15px;color:#f0d28d;font-variant-numeric:tabular-nums}.faction-line{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;color:#d8d2df}.sigil{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;flex:none;background:#19191d;border:1px solid #777;color:#ddd}.sigil svg{width:13px;height:13px}
+input,select,textarea{width:100%;background:#111319;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:10px;font:inherit;min-width:0}textarea{min-height:88px;resize:vertical}label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px}.field{margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}.cardtile{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:10px;cursor:pointer;transition:.15s}.cardtile:hover{transform:translateY(-2px);border-color:var(--gold)}.thumb{aspect-ratio:408/771;width:100%;height:auto;border-radius:7px;overflow:hidden;background:#0c0d11;display:block;position:relative;border:1px solid #45404b}.thumb canvas{display:block;width:100%;height:auto;object-fit:contain}.tile-title{font-weight:700;margin:9px 0 3px}.creator-signature{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;margin-left:6px;border:1px solid rgba(214,184,119,.48);border-radius:50%;color:#e3c88e;background:rgba(194,151,74,.09);font-size:12px;line-height:1;vertical-align:middle;cursor:help;box-shadow:0 0 7px rgba(205,169,99,.12)}.creator-signature.unknown{opacity:.45;border-color:#777;color:#aaa;background:transparent;box-shadow:none}.tile-meta{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:5px}.tile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:9px}.tile-stats span{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:5px 2px;border:1px solid #45404b;border-radius:6px;background:#111319}.tile-stats small{font-size:9px;letter-spacing:.04em;color:var(--muted)}.tile-stats b{font-size:15px;color:#f0d28d;font-variant-numeric:tabular-nums}.faction-line{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;color:#d8d2df}.sigil{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;flex:none;background:#19191d;border:1px solid #777;color:#ddd}.sigil svg{width:13px;height:13px}
 .empty{padding:50px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
 .modal{position:fixed;inset:0;background:#000b;z-index:10;display:none;align-items:center;justify-content:center;padding:16px}.modal.open{display:flex}.dialog{width:min(1100px,100%);max-height:94vh;overflow:auto;background:#191b22;border:1px solid #55505f;border-radius:14px;padding:18px}.dialog-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}.dialog-head h2{margin:0;font-size:18px}.editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,390px);gap:20px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.span2{grid-column:span 2}.preview-wrap{background:#0e0f13;border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;place-items:center;align-content:start}.preview-wrap canvas{width:min(100%,300px);height:auto;max-height:70vh;object-fit:contain}.crop-controls{width:min(100%,330px);margin-top:12px;display:grid;grid-template-columns:1fr;gap:2px;text-align:left}.crop-controls .field{margin-bottom:6px}.crop-controls label{font-size:12px}.crop-controls input[type=range]{padding:0;accent-color:var(--gold)}.image-tools{width:min(100%,330px);display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.image-tools button{font-size:11px;padding:8px 6px}.image-tools .span-all{grid-column:1/-1}.preview-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;justify-content:center}
 .card-secondary-actions{margin-top:0;margin-bottom:10px;width:min(100%,330px);justify-content:center}.card-secondary-actions button{flex:1 1 auto}.preview-actions-top{order:0}.preview-wrap>#preview{order:1}.preview-wrap>.crop-controls{order:2}.hint{font-size:11px;color:var(--muted);margin-top:4px}.faction-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}.faction-chip{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--line);border-radius:20px;color:var(--muted);font-size:11px}
@@ -673,9 +673,10 @@ $('loginBtn').addEventListener('click',async()=>{
  finally{button.disabled=false}
 });
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
-const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
+const KEY='tharisDoomManagerV2';
 let cards=[],editingId=null,imageData='',imagePath='',imageOriginalData='',cloudUser=null,selectedCardId=null;
-let defaultCardArt='',cardBackArt='';
+let defaultCardArt='',cardBackArt='',defaultCardArtPath=null,cardBackArtPath=null;
+let collaboratorDirectory={},cardsRealtimeChannel=null;
 let isAdmin=false,assetFileObject=null;
 const SUPABASE_URL='https://zzwabaaeexidmzyzuvdd.supabase.co';
 const SUPABASE_KEY='sb_publishable_hOAgiQUZtzOg0kolL606mQ_RGoootVu';
@@ -751,21 +752,41 @@ alignmentInsignias.Sombra.src='INSIGNIA%20SOMBRAS.png';
 Object.values(alignmentInsignias).forEach(img=>img.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())});
 
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function load(){try{cards=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(cards))cards=[]}catch{cards=[]}}
-function loadVisualSettings(){try{const v=JSON.parse(localStorage.getItem(VISUAL_KEY)||'{}');defaultCardArt=v.defaultCardArt||'';cardBackArt=v.cardBackArt||''}catch{defaultCardArt='';cardBackArt=''}}
-function saveVisualSettings(){try{localStorage.setItem(VISUAL_KEY,JSON.stringify({defaultCardArt,cardBackArt}));return true}catch(error){console.error('Não foi possível salvar as imagens padrão:',error);$('cardVisualsStatus').textContent='Não foi possível salvar. A imagem pode ser grande demais para o armazenamento deste navegador.';return false}}
-loadVisualSettings();
-function persist(){
- try{localStorage.setItem(KEY,JSON.stringify(cards));render();return true}
- catch(error){
-  console.error('Falha ao salvar cartas no armazenamento local:',error);
-  const quota=error?.name==='QuotaExceededError'||error?.name==='NS_ERROR_DOM_QUOTA_REACHED';
-  alert(quota
-   ?'Não foi possível salvar: o armazenamento deste navegador está cheio. Exporte/guarde suas cartas e remova dados ou imagens grandes para liberar espaço.'
-   :'Não foi possível salvar as cartas neste navegador. Verifique as permissões de armazenamento e tente novamente.');
-  return false;
- }
+function load(){cards=[]}
+async function uploadSharedVisual(dataUrl,path){
+ if(!dataUrl||!dataUrl.startsWith('data:'))return path||null;
+ const response=await fetch(dataUrl),blob=await response.blob();
+ const ext=(blob.type.split('/')[1]||'jpeg').replace('jpeg','jpg');
+ const target=path||('shared/visuals/'+crypto.randomUUID()+'.'+ext);
+ const {error}=await sb.storage.from('tharis-cartas').upload(target,blob,{upsert:true,contentType:blob.type||'image/jpeg'});
+ if(error)throw error;return target;
 }
+async function loadVisualSettings(){
+ defaultCardArt='';cardBackArt='';defaultCardArtPath=null;cardBackArtPath=null;
+ if(!cloudUser||!sb)return;
+ const {data,error}=await sb.from('manager_settings').select('settings').eq('id','global').maybeSingle();
+ if(error)throw error;
+ const cfg=data?.settings||{};
+ defaultCardArtPath=cfg.defaultCardArtPath||null;cardBackArtPath=cfg.cardBackArtPath||null;
+ if(defaultCardArtPath)defaultCardArt=await signedImage(defaultCardArtPath);
+ if(cardBackArtPath)cardBackArt=await signedImage(cardBackArtPath);
+ if($('defaultCardArtPreview')){if(defaultCardArt)$('defaultCardArtPreview').src=defaultCardArt;else $('defaultCardArtPreview').removeAttribute('src')}
+ if($('cardBackPreview')){if(cardBackArt)$('cardBackPreview').src=cardBackArt;else $('cardBackPreview').removeAttribute('src')}
+}
+async function saveVisualSettings(){
+ if(!cloudUser||!sb){$('cardVisualsStatus').textContent='Entre na conta para salvar configurações compartilhadas.';return false}
+ try{
+  if(defaultCardArt.startsWith('data:'))defaultCardArtPath=await uploadSharedVisual(defaultCardArt,'shared/visuals/default-card-art.'+(defaultCardArt.startsWith('data:image/png')?'png':'jpg'));
+  if(cardBackArt.startsWith('data:'))cardBackArtPath=await uploadSharedVisual(cardBackArt,'shared/visuals/card-back-art.'+(cardBackArt.startsWith('data:image/png')?'png':'jpg'));
+  const settings={defaultCardArtPath:defaultCardArtPath||null,cardBackArtPath:cardBackArtPath||null};
+  const {error}=await sb.from('manager_settings').upsert({id:'global',settings,updated_by:cloudUser.id,updated_at:new Date().toISOString()});
+  if(error)throw error;
+  if(defaultCardArtPath)defaultCardArt=await signedImage(defaultCardArtPath);
+  if(cardBackArtPath)cardBackArt=await signedImage(cardBackArtPath);
+  return true;
+ }catch(error){console.error('Não foi possível salvar configurações compartilhadas:',error);$('cardVisualsStatus').textContent='Falha ao salvar na nuvem: '+error.message;return false}
+}
+function persist(){if(!cloudUser){alert('Conecte-se à conta do Tharis Doom para salvar alterações. A biblioteca não é armazenada neste navegador.');return false}render();return true}
 const INSIGNIA_FILES={
  'Kalassiria':'INSIGNIA-KALASSIRIA.jpg',
  'Caras Galadhon':'INSIGNIA-CARAS-GALADHON.jpg',
@@ -842,8 +863,6 @@ function expireNewCardFlags(){
  if(!changed.length)return;
  if(cloudUser&&sb){
   changed.forEach(c=>sb.from('cards').update({card_data:{...c,image:''}}).eq('id',c.id).then(({error})=>{if(error)console.warn('Não foi possível sincronizar a validade da marcação Carta nova:',error)}));
- }else{
-  try{localStorage.setItem(KEY,JSON.stringify(cards))}catch(error){console.warn('Não foi possível salvar a expiração de Cartas Novas:',error)}
  }
 }
 function render(){
@@ -860,7 +879,7 @@ function render(){
   list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t)&&(!n||c.isNew));
   const sort=$('sort').value;if(sort==='new-first')list.sort((a,b)=>(Number(!!b.isNew)-Number(!!a.isNew))||(a.name||'').localeCompare(b.name||''));if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
  $('resultCount').textContent=`${list.length} de ${cards.length} cartas`;
- $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div>${c.isNew?`<div class="new-card-badge tile-new-flag">✦ Carta nova</div>`:''}<div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div>${c.type==='Magias'?`<div class="tile-stats magic-stats"><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span></div>`:`<div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div>`}<div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
+ $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}<span class="creator-signature ${c.createdBy?'':'unknown'}" title="${escapeHtml(c.createdBy?(collaboratorDirectory[c.createdBy]?.display_name||'Criador identificado'):'Autoria não registrada')}">${escapeHtml(c.createdBy?(collaboratorDirectory[c.createdBy]?.signature||'✦'):'?')}</span></div>${c.isNew?`<div class="new-card-badge tile-new-flag">✦ Carta nova</div>`:''}<div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div>${c.type==='Magias'?`<div class="tile-stats magic-stats"><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span></div>`:`<div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div>`}<div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
  document.querySelectorAll('canvas[data-card]').forEach(cv=>{const c=cards.find(x=>x.id===cv.dataset.card);if(c)drawCard(cv,c)});
  if(!list.some(x=>x.id===selectedCardId))selectedCardId=list[0]?.id||null;
  document.querySelectorAll('.cardtile[data-id]').forEach(tile=>tile.classList.toggle('is-selected',tile.dataset.id===selectedCardId));
@@ -1500,7 +1519,9 @@ async function save(){
   $('saveBtnBottom').disabled=true;$('saveBtnBottom').textContent='Salvando online…';
   try{
    const path=await uploadCardImage(c);
-   const payload={id:c.id,name:c.name,faction:c.faction||null,card_type:c.type||null,rarity:c.rarity||null,card_data:{...c,image:'',imagePath:path},image_path:path,updated_by:cloudUser.id,updated_at:new Date().toISOString()};
+   const isNewRecord=!previousCard;
+   if(isNewRecord)c.createdBy=cloudUser.id;
+   const payload={id:c.id,name:c.name,faction:c.faction||null,card_type:c.type||null,rarity:c.rarity||null,card_data:{...c,image:'',imagePath:path,createdBy:c.createdBy||null},image_path:path,...(isNewRecord?{created_by:cloudUser.id}:{}),updated_by:cloudUser.id,updated_at:new Date().toISOString()};
    const {error}=await sb.from('cards').upsert(payload);
    if(error)throw error;
    c.imagePath=path;c.image=path?await signedImage(path):'';const i=cards.findIndex(x=>x.id===c.id);if(i>=0)cards[i]=c;else cards.push(c);
@@ -1509,9 +1530,7 @@ async function save(){
   finally{$('saveBtnBottom').disabled=false;$('saveBtnBottom').textContent='Salvar carta'}
   return;
  }
- const previous=cards.slice(),i=cards.findIndex(x=>x.id===c.id);
- if(i>=0)cards[i]=c;else cards.push(c);
- if(persist())$('modal').classList.remove('open');else cards=previous;
+ alert('Conecte-se à conta do Tharis Doom para salvar cartas. Os dados não são guardados localmente.');
 }
 async function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;if(c.creationMode==='ready'){const readyImg=new Image();readyImg.onload=()=>{const ctx=cv.getContext('2d');ctx.fillStyle='#09090c';ctx.fillRect(0,0,cv.width,cv.height);const scale=Math.min(cv.width/readyImg.width,cv.height/readyImg.height),dw=readyImg.width*scale,dh=readyImg.height*scale;ctx.drawImage(readyImg,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\\w\\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()};readyImg.src=c.image;return}const waitForImage=src=>new Promise(resolve=>{if(!src)return resolve();const img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;if(img.complete)resolve()});await Promise.all([waitForImage(c.image),waitForImage(c.type==='Magias'?'Molde%20Magias.png':c.type==='Criatura'?'Modelo%20Carta%20Ouro.png':'')]);drawCard(cv,c);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('creationMode').addEventListener('change',updateCreationMode);
@@ -1520,7 +1539,7 @@ $('faction').addEventListener('change',updateFactionPicker);$('type').addEventLi
 
 $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))return;
  if(cloudUser){const c=cards.find(x=>x.id===editingId);try{const {error}=await sb.from('cards').delete().eq('id',editingId);if(error)throw error;if(c?.imagePath)await sb.storage.from('tharis-cartas').remove([c.imagePath]);cards=cards.filter(x=>x.id!==editingId);render();$('modal').classList.remove('open')}catch(error){alert('Não foi possível excluir online: '+error.message)}}
- else{cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}
+ else{alert('Conecte-se à conta do Tharis Doom para excluir cartas.')}
 };
 $('image').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!/^image\/(png|jpeg)$/.test(f.type)){alert('Envie somente uma imagem PNG ou JPG.');e.target.value='';return}imagePath='';const r=new FileReader();r.onload=async()=>{imageData=r.result;imageOriginalData=imageData;drawCard($('preview'),collect());$('imageQualityStatus').textContent='Imagem carregada. Verificando resolução…';await autoUpscaleIfLowResolution();drawCard($('preview'),collect());if($('creationMode').value==='ready')runCardOCR(f)};r.readAsDataURL(f)};
 $('loadImageUrlBtn').onclick=async()=>{
@@ -1623,10 +1642,10 @@ $('editSelectedBtn').onclick=()=>{const c=cards.find(x=>x.id===selectedCardId);i
 $('cardVisualsBtn').onclick=()=>{$('cardVisualsStatus').textContent='';if(cardBackArt)$('cardBackPreview').src=cardBackArt;else $('cardBackPreview').removeAttribute('src');if(defaultCardArt)$('defaultCardArtPreview').src=defaultCardArt;else $('defaultCardArtPreview').removeAttribute('src');$('cardVisualsModal').classList.add('open')};
 $('cardVisualsCloseBtn').onclick=()=>$('cardVisualsModal').classList.remove('open');
 function optimizeVisualFile(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{const scale=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(img.naturalWidth*scale));cv.height=Math.max(1,Math.round(img.naturalHeight*scale));cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);resolve(cv.toDataURL('image/jpeg',.86))};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Não foi possível abrir a imagem selecionada.'))};img.src=url})}
-$('cardBackFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{cardBackArt=await optimizeVisualFile(f);if(saveVisualSettings()){$('cardBackPreview').src=cardBackArt;$('cardVisualsStatus').textContent='Imagem do verso salva.';if(selectedCardId)updateCardInspector()}}catch(err){$('cardVisualsStatus').textContent=err.message}};
-$('defaultCardArtFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{defaultCardArt=await optimizeVisualFile(f);if(saveVisualSettings()){$('defaultCardArtPreview').src=defaultCardArt;$('cardVisualsStatus').textContent='Ilustração padrão salva.';render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())}}catch(err){$('cardVisualsStatus').textContent=err.message}};
-$('clearCardBackBtn').onclick=()=>{cardBackArt='';$('cardBackFile').value='';saveVisualSettings();$('cardBackPreview').removeAttribute('src');$('cardVisualsStatus').textContent='Imagem do verso removida.';if(selectedCardId)updateCardInspector()};
-$('clearDefaultCardArtBtn').onclick=()=>{defaultCardArt='';$('defaultCardArtFile').value='';saveVisualSettings();$('defaultCardArtPreview').removeAttribute('src');$('cardVisualsStatus').textContent='Ilustração padrão removida.';render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};
+$('cardBackFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{cardBackArt=await optimizeVisualFile(f);const saved=await saveVisualSettings();if(saved){$('cardBackPreview').src=cardBackArt;$('cardVisualsStatus').textContent='Imagem do verso salva para todos os colaboradores.';if(selectedCardId)updateCardInspector()}}catch(err){$('cardVisualsStatus').textContent=err.message}};
+$('defaultCardArtFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{defaultCardArt=await optimizeVisualFile(f);const saved=await saveVisualSettings();if(saved){$('defaultCardArtPreview').src=defaultCardArt;$('cardVisualsStatus').textContent='Ilustração padrão salva para todos os colaboradores.';render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())}}catch(err){$('cardVisualsStatus').textContent=err.message}};
+$('clearCardBackBtn').onclick=async()=>{cardBackArt='';cardBackArtPath=null;$('cardBackFile').value='';if(await saveVisualSettings()){$('cardBackPreview').removeAttribute('src');$('cardVisualsStatus').textContent='Imagem do verso removida para todos os colaboradores.';if(selectedCardId)updateCardInspector()}};
+$('clearDefaultCardArtBtn').onclick=async()=>{defaultCardArt='';defaultCardArtPath=null;$('defaultCardArtFile').value='';if(await saveVisualSettings()){$('defaultCardArtPreview').removeAttribute('src');$('cardVisualsStatus').textContent='Ilustração padrão removida para todos os colaboradores.';render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())}};
 const inspectorStage=$('inspectorCardStage');
 inspectorStage.addEventListener('mousemove',e=>{const r=inspectorStage.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height,rx=(.5-y)*10,ry=(x-.5)*12;$('inspectorTilt').style.transform='rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'});
 inspectorStage.addEventListener('mouseleave',()=>{$('inspectorTilt').style.transform='rotateX(0deg) rotateY(0deg)'});
@@ -1637,7 +1656,7 @@ inspectorStage.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e
 $('exportGifBtn').onclick=exportInspectorGIF;
 $('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Tharis Doom Manager',version:2,exportedAt:new Date().toISOString(),cards},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tharis-doom-backup.json';a.click();URL.revokeObjectURL(a.href)};
 $('importBtn').onclick=()=>$('importFile').click();
-$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result),incoming=Array.isArray(data)?data:data.cards;if(!Array.isArray(incoming))throw Error('Formato inválido');if(confirm(`Importar ${incoming.length} cartas? Isso substituirá a biblioteca atual.`)){cards=incoming.map(c=>({...c,id:c.id||crypto.randomUUID()}));persist();alert('Importação concluída.')}}catch(err){alert('Não foi possível importar: '+err.message)}e.target.value=''};r.readAsText(f)};
+$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(!cloudUser)throw Error('Entre na conta antes de importar cartas.');const data=JSON.parse(r.result),incoming=Array.isArray(data)?data:data.cards;if(!Array.isArray(incoming))throw Error('Formato inválido');if(!confirm(`Importar ${incoming.length} cartas para a biblioteca compartilhada? Cartas com o mesmo ID serão atualizadas.`))return;for(const raw of incoming){const c={...raw,id:raw.id||crypto.randomUUID()};const path=await uploadCardImage(c);const payload={id:c.id,name:c.name,faction:c.faction||null,card_type:c.type||null,rarity:c.rarity||null,card_data:{...c,image:'',imagePath:path,createdBy:c.createdBy||cloudUser.id},image_path:path,created_by:c.createdBy||cloudUser.id,updated_by:cloudUser.id,updated_at:new Date().toISOString()};const {error}=await sb.from('cards').upsert(payload);if(error)throw error;}await loadCloudCards();alert('Importação concluída na biblioteca compartilhada.')}catch(err){alert('Não foi possível importar: '+err.message)}finally{e.target.value=''}};r.readAsText(f)};
 
 async function uploadCardImage(c){
  if(!c.image)return c.imagePath||null;
@@ -1682,12 +1701,33 @@ async function setCardsFromCloud(rows){
   }
   completed++;
   $('cloudStatus').textContent='Online · preparando cartas '+completed+'/'+rows.length+'…';
-  return {...base,id:row.id,name:row.name,faction:row.faction||base.faction||'',type:row.card_type||base.type||'Criatura',rarity:row.rarity||base.rarity||'Bronze',image,imagePath:path,updated:row.updated_at?new Date(row.updated_at).getTime():Date.now()};
+  return {...base,id:row.id,name:row.name,faction:row.faction||base.faction||'',type:row.card_type||base.type||'Criatura',rarity:row.rarity||base.rarity||'Bronze',createdBy:row.created_by||base.createdBy||null,image,imagePath:path,updated:row.updated_at?new Date(row.updated_at).getTime():Date.now()};
  }));
  cards=converted;render();$('cloudStatus').textContent='Online · '+cards.length+' carta(s) sincronizada(s)';
 }
+async function loadCollaboratorDirectory(){
+ const {data,error}=await sb.from('collaborator_directory').select('id,display_name,signature');
+ if(error)throw error;
+ collaboratorDirectory=Object.fromEntries((data||[]).map(p=>[p.id,p]));
+}
+function startCardsRealtime(){
+ if(!cloudUser||!sb)return;
+ if(cardsRealtimeChannel)sb.removeChannel(cardsRealtimeChannel);
+ cardsRealtimeChannel=sb.channel('tharis-cards-live')
+  .on('postgres_changes',{event:'*',schema:'public',table:'cards'},()=>{
+   if(!cloudUser)return;
+   if(window.__tharisCardsReloadTimer)clearTimeout(window.__tharisCardsReloadTimer);
+   window.__tharisCardsReloadTimer=setTimeout(()=>loadCloudCards().catch(error=>{
+    console.warn('Falha ao atualizar biblioteca em tempo real:',error);
+    $('cloudStatus').textContent='Online · falha ao atualizar';
+   }),350);
+  })
+  .subscribe(status=>{if(status==='SUBSCRIBED')$('cloudStatus').textContent='Online · sincronização ativa'});
+}
+function stopCardsRealtime(){if(cardsRealtimeChannel&&sb)sb.removeChannel(cardsRealtimeChannel);cardsRealtimeChannel=null;}
 async function handleSession(session){
  cloudLibraryReady=false;
+ if(cloudUser?.id!==session?.user?.id)stopCardsRealtime();
  cloudUser=session?.user||null;isAdmin=false;
  if(cloudUser){$('authModal').classList.remove('open');$('cloudStatus').textContent='Online · verificando acesso…';try{const {data:profile}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();isAdmin=profile?.role==='admin'}catch(error){console.warn('Não foi possível validar o perfil administrativo:',error)}}
  $('assetsBtn').style.display=isAdmin?'inline-block':'none';
@@ -1696,7 +1736,10 @@ async function handleSession(session){
  $('logoutBtn').style.display=cloudUser?'inline-block':'none';
  if(cloudUser){
   try{
+   await loadCollaboratorDirectory();
+   await loadVisualSettings();
    await loadCloudCards();
+   startCardsRealtime();
    $('authModal').classList.remove('open');
   }catch(error){
    cards=[];$('cloudStatus').textContent='Erro na sincronização';
@@ -1704,8 +1747,7 @@ async function handleSession(session){
    console.error(error);
   }
  }else{
-  // Sem sessão online, a biblioteca permanece vazia; nunca substitui a nuvem pelo cache deste navegador.
-  cards=[];$('cloudStatus').textContent='Modo local · não conectado';
+  stopCardsRealtime();cards=[];collaboratorDirectory={};defaultCardArt='';cardBackArt='';$('cloudStatus').textContent='Entre para acessar a biblioteca compartilhada';
  }
  cloudLibraryReady=true;render();
  if(cloudUser&&$('cloudStatus').textContent==='Erro na sincronização')$('library').innerHTML='<div class="empty" style="grid-column:1/-1">Não foi possível sincronizar a biblioteca: '+escapeHtml($('authMessage').textContent.replace('Falha ao carregar biblioteca: ',''))+'</div>';
@@ -1787,7 +1829,7 @@ $('setPasswordBtn').onclick=async()=>{
 
 $('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}$('authModal').classList.remove('open')};
 if(sb){
- // Não lê nem renderiza localStorage: a biblioteca online é a única fonte exibida neste modo.
+ // A biblioteca online é a única fonte exibida neste modo.
  cards=[];cloudLibraryReady=false;
  $('library').innerHTML='<div class="empty" style="grid-column:1/-1">Carregando biblioteca online…</div>';
  // INITIAL_SESSION é a fonte única da sessão inicial. O setTimeout evita executar consultas
