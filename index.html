@@ -532,7 +532,7 @@ footer:before{
     <div class="crop-controls" id="cropControls">
      <div class="field"><label>Zoom da ilustração <span id="zoomValue">100%</span></label><input id="imageZoom" type="range" min="100" max="250" value="100"></div>
      <div class="field"><label>Enquadramento horizontal <span id="imageXValue">0</span></label><input id="imageX" type="range" min="-100" max="100" value="0"></div>
-     <div class="field"><label>Enquadramento vertical <span id="imageYValue">0</span></label><input id="imageY" type="range" min="-500" max="500" value="0"></div>
+     <div class="field"><label>Enquadramento vertical <span id="imageYValue">0</span></label><input id="imageY" type="range" min="-2000" max="2000" value="0"></div>
      <div class="field"><label>Largura da ilustração <span id="imageWidthValue">100%</span></label><input id="imageWidth" type="range" min="25" max="300" value="100"></div>
      <div class="field"><label>Altura da ilustração <span id="imageHeightValue">100%</span></label><input id="imageHeight" type="range" min="25" max="300" value="100"></div>
      <div class="field"><label>Contraste <span id="imageContrastValue">100%</span></label><input id="imageContrast" type="range" min="0" max="250" value="100"></div>
@@ -1380,8 +1380,21 @@ $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))
  if(cloudUser){const c=cards.find(x=>x.id===editingId);try{const {error}=await sb.from('cards').delete().eq('id',editingId);if(error)throw error;if(c?.imagePath)await sb.storage.from('tharis-cartas').remove([c.imagePath]);cards=cards.filter(x=>x.id!==editingId);render();$('modal').classList.remove('open')}catch(error){alert('Não foi possível excluir online: '+error.message)}}
  else{cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}
 };
-$('image').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!/^image\/(png|jpeg)$/.test(f.type)){alert('Envie somente uma imagem PNG ou JPG.');e.target.value='';return}imagePath='';const r=new FileReader();r.onload=()=>{imageData=r.result;imageOriginalData=imageData;drawCard($('preview'),collect());$('imageQualityStatus').textContent='Imagem carregada. Ajuste enquadramento, dimensões, contraste, brilho, saturação e nitidez abaixo.';if($('creationMode').value==='ready')runCardOCR(f)};r.readAsDataURL(f)};
+$('image').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!/^image\/(png|jpeg)$/.test(f.type)){alert('Envie somente uma imagem PNG ou JPG.');e.target.value='';return}imagePath='';const r=new FileReader();r.onload=async()=>{imageData=r.result;imageOriginalData=imageData;drawCard($('preview'),collect());$('imageQualityStatus').textContent='Imagem carregada. Verificando resolução…';await autoUpscaleIfLowResolution();drawCard($('preview'),collect());if($('creationMode').value==='ready')runCardOCR(f)};r.readAsDataURL(f)};
 $('clearCardImageBtn').onclick=()=>{imageData='';imageOriginalData='';imagePath='';$('image').value='';drawCard($('preview'),collect())};
+async function autoUpscaleIfLowResolution(){
+ if(!imageData)return;
+ try{
+  const img=new Image();img.src=imageData;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject});
+  if(Math.max(img.naturalWidth,img.naturalHeight)>=1000){$('imageQualityStatus').textContent='Resolução detectada: '+img.naturalWidth+' × '+img.naturalHeight+' px. Nenhuma ampliação automática necessária.';return}
+  const factor=Math.min(2,4096/Math.max(img.naturalWidth,img.naturalHeight));
+  if(factor<=1)return;
+  const cv=document.createElement('canvas');cv.width=Math.round(img.naturalWidth*factor);cv.height=Math.round(img.naturalHeight*factor);
+  const cx=cv.getContext('2d');cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(img,0,0,cv.width,cv.height);
+  imageData=cv.toDataURL('image/png');
+  $('imageQualityStatus').textContent='Imagem pequena detectada ('+img.naturalWidth+' × '+img.naturalHeight+' px). Ampliação local automática aplicada: '+cv.width+' × '+cv.height+' px. Para reconstrução de detalhes, use Aprimorar com IA.';
+ }catch(error){$('imageQualityStatus').textContent='Imagem carregada; não foi possível analisar a resolução automaticamente.'}
+}
 async function upscaleImageLocally(){
  if(!imageData){$('imageQualityStatus').textContent='Envie uma ilustração antes de melhorar a resolução.';return}
  const img=new Image();img.src=imageData;
