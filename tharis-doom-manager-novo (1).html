@@ -1020,6 +1020,9 @@ function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lin
  });
  ctx.restore();
 }
+const moirasMarkImage=new Image();
+moirasMarkImage.onload=()=>{render();if($('modal')?.classList.contains('open')&&$('preview'))drawCard($('preview'),collect())};
+moirasMarkImage.src='assets/referencias/MARCA-MOIRAS.png';
 function drawCreatureCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
  const creatureTextColor='#98713b';
@@ -1090,6 +1093,14 @@ function drawCreatureCard(canvas,c){
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
   // Habilidades: painel central claro, com margens internas e parágrafos preservados.
   const abilityTop=h*(.765+(+c.effectOffsetY||0)),abilityBottom=h*(.872+(+c.effectOffsetY||0));
+  if(c.faction==='Moiras'&&moirasMarkImage.complete&&moirasMarkImage.naturalWidth){
+   const maxMarkWidth=w*.46,maxMarkHeight=(abilityBottom-abilityTop)*.82;
+   const scale=Math.min(maxMarkWidth/moirasMarkImage.naturalWidth,maxMarkHeight/moirasMarkImage.naturalHeight);
+   const markWidth=moirasMarkImage.naturalWidth*scale,markHeight=moirasMarkImage.naturalHeight*scale;
+   ctx.save();ctx.globalAlpha=.5;
+   ctx.drawImage(moirasMarkImage,w*.5-markWidth/2,(abilityTop+abilityBottom)/2-markHeight/2,markWidth,markHeight);
+   ctx.restore();
+  }
   if(c.effect)drawEffectRichText(
    ctx,c.effect,w*.5,(abilityTop+abilityBottom)/2,
    w*.72,abilityBottom-abilityTop,
