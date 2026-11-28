@@ -638,7 +638,7 @@ function startInspectorGlint(){
  const overlay=$('inspectorGlint');if(!overlay)return;
  if(inspectorGlintRaf)cancelAnimationFrame(inspectorGlintRaf);
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,started=performance.now();
- const tick=now=>{const phase=((now-started)%5200)/5200;paintMetallicGlint(overlay.getContext('2d'),overlay.width,overlay.height,phase,$('selectedCardCanvas'));if(!reduced)inspectorGlintRaf=requestAnimationFrame(tick)};
+ const tick=now=>{const phase=((now-started)%2400)/2400;paintMetallicGlint(overlay.getContext('2d'),overlay.width,overlay.height,phase,$('selectedCardCanvas'));if(!reduced)inspectorGlintRaf=requestAnimationFrame(tick)};
  tick(started);
 }
 async function exportInspectorGIF(){
@@ -649,8 +649,10 @@ async function exportInspectorGIF(){
   await new Promise(resolve=>setTimeout(resolve,450));
   const gif=new GIF({workers:2,quality:10,width:base.width,height:base.height,workerScript:'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js'});
   const frame=document.createElement('canvas');frame.width=base.width;frame.height=base.height;
-  const ctx=frame.getContext('2d'),frames=24;
-  for(let i=0;i<frames;i++){ctx.clearRect(0,0,frame.width,frame.height);ctx.drawImage(base,0,0);paintMetallicGlint(ctx,frame.width,frame.height,i/frames,base);gif.addFrame(frame,{copy:true,delay:100})}
+  const ctx=frame.getContext('2d'),frames=30;
+  // Detecta imagens sem CORS antes de iniciar a codificação do GIF.
+  base.getContext('2d').getImageData(0,0,1,1);
+  for(let i=0;i<frames;i++){ctx.clearRect(0,0,frame.width,frame.height);ctx.drawImage(base,0,0);paintMetallicGlint(ctx,frame.width,frame.height,i/frames,base);gif.addFrame(frame,{copy:true,delay:80})}
   gif.on('progress',p=>{button.textContent='Gerando GIF · '+Math.round(p*100)+'%'});
   const blob=await new Promise((resolve,reject)=>{gif.on('finished',resolve);gif.on('abort',()=>reject(Error('Exportação cancelada')));gif.render()});
   const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;
@@ -809,7 +811,7 @@ function drawCreatureCard(canvas,c){
  };
  ctx.clearRect(0,0,w,h);
  if(c.image){
-  const img=new Image();
+  const img=new Image();img.crossOrigin='anonymous';
   const drawArt=()=>{
    // Cover sem deformar: mantém a proporção original e preenche a janela de ilustração.
    ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();
@@ -973,7 +975,7 @@ function drawMagicCard(canvas,c){
   ctx.fillText(String(c.cost??0),w*.95,h*.024);ctx.shadowBlur=0;
  };
  if(c.image){
-  const img=new Image();img.onload=()=>drawLayout(img);img.onerror=()=>drawLayout(null);img.src=c.image;
+  const img=new Image();img.crossOrigin='anonymous';img.onload=()=>drawLayout(img);img.onerror=()=>drawLayout(null);img.src=c.image;
   if(img.complete&&img.naturalWidth)drawLayout(img);
  }else drawLayout(null);
 }
@@ -1323,9 +1325,13 @@ $('setPasswordBtn').onclick=async()=>{
 $('authCloseBtn').onclick=()=>$('authModal').classList.remove('open');
 $('loginBtn').onclick=async()=>{if(!sb){alert('Não foi possível iniciar o cliente Supabase.');return}const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}$('loginBtn').disabled=true;$('authMessage').textContent='Conectando…';try{const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await handleSession(data.session)}catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}finally{$('loginBtn').disabled=false}};
 $('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}cloudUser=null;load();render();handleSession(null);$('authModal').classList.remove('open')};
-if(sb){sb.auth.getSession().then(({data})=>{handleSession(data.session);showPasswordSetup()});sb.auth.onAuthStateChange((event,session)=>{if(session?.user?.id!==cloudUser?.id)handleSession(session);if(event==='PASSWORD_RECOVERY'||inviteInUrl())showPasswordSetup()})}
-
-load();render();
+load();
+if(sb){
+ // Em sessão online, não mostra o cache local antigo antes da sincronização.
+ $('library').innerHTML='<div class="empty" style="grid-column:1/-1">Carregando biblioteca online…</div>';
+ sb.auth.getSession().then(({data,error})=>{if(error)throw error;handleSession(data.session);showPasswordSetup()}).catch(error=>{$('cloudStatus').textContent='Falha ao verificar sessão';console.error(error);render()});
+ sb.auth.onAuthStateChange((event,session)=>{if(session?.user?.id!==cloudUser?.id)handleSession(session);if(event==='PASSWORD_RECOVERY'||inviteInUrl())showPasswordSetup()});
+}else render();
 })();
 </script>
 </body></html>
