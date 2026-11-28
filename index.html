@@ -610,7 +610,7 @@ function getRarityFrame(source,rarity){
    px[i]=Math.min(255,Math.round(rr*factor));px[i+1]=Math.min(255,Math.round(gg*factor));px[i+2]=Math.min(255,Math.round(bb*factor));
   }
   cx.putImageData(image,0,0);
-  const out=new Image();out.src=cv.toDataURL('image/png');cache[key]=out;return out;
+  cache[key]=cv;return cv;
  }catch(error){console.warn('Não foi possível aplicar a moldura metálica:',error);return source}
 }
 function drawPlatinumSparkles(ctx,w,h){
