@@ -553,6 +553,22 @@ footer:before{
 .codex-empty{padding:14px;color:#aa9b83;font-size:12px}
 @media(max-width:700px){.codex-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.codex-tab{padding:8px 4px;font-size:9px}.codex-table{min-width:590px}}
 
+
+.glossary-dialog{width:min(1080px,100%)!important}
+.glossary-toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,230px);gap:10px;margin:14px 0}
+.glossary-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,.82fr);gap:14px;align-items:start}
+.glossary-list{display:flex;flex-direction:column;gap:8px;max-height:62vh;overflow:auto;padding-right:3px}
+.glossary-entry{display:grid;grid-template-columns:minmax(115px,.65fr) minmax(0,1.35fr) auto;gap:12px;align-items:start;padding:12px;border:1px solid #57452f;border-radius:5px;background:linear-gradient(145deg,#211a13,#15110d)}
+.glossary-entry-term{font:600 15px 'Cinzel',Georgia,serif;color:#e4cfaa;overflow-wrap:anywhere}
+.glossary-entry-definition{font-size:15px;color:#d2c5ae;white-space:pre-wrap;overflow-wrap:anywhere}
+.glossary-entry-category{display:block;color:#a99064;font:10px 'Cinzel',Georgia,serif;letter-spacing:.08em;margin-top:5px}
+.glossary-entry-actions{display:flex;gap:5px}
+.glossary-entry-actions button{padding:6px 8px;font-size:12px}
+.glossary-editor{border:1px solid #806541;border-radius:6px;padding:14px;background:linear-gradient(145deg,#2a2117,#17120e);position:sticky;top:8px}
+.glossary-editor h3{font:600 15px 'Cinzel',Georgia,serif;color:#e2c995;margin:0 0 12px}
+.glossary-empty{padding:28px 14px;text-align:center;border:1px dashed #6b5435;color:#aa9b83;border-radius:5px}
+.glossary-count{color:#aa9b83;font-size:12px}
+@media(max-width:760px){.glossary-layout{grid-template-columns:1fr}.glossary-editor{position:static}.glossary-list{max-height:42vh}.glossary-toolbar{grid-template-columns:1fr}.glossary-entry{grid-template-columns:1fr auto;gap:5px}.glossary-entry-definition{grid-column:1/-1;grid-row:2}.glossary-entry-actions{grid-column:2;grid-row:1}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -561,7 +577,7 @@ footer:before{
 <header>
  <div class="brand"><div class="brand-mark">✦</div><div><h1>THARIS DOOM</h1><small>CARD MANAGER · NOVA EDIÇÃO</small></div></div>
  <div class="actions">
-  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="cardVisualsBtn">Aparência das cartas</button><button id="codexBtn">Códice da coleção</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="teamBtn" style="display:none">Gerenciar colaboradores</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
+  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="cardVisualsBtn">Aparência das cartas</button><button id="codexBtn">Códice da coleção</button><button id="glossaryBtn">Glossário do jogo</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="teamBtn" style="display:none">Gerenciar colaboradores</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
   <input type="file" id="importFile" accept=".json,application/json" hidden>
  </div>
 </header>
@@ -607,6 +623,7 @@ footer:before{
 
 
 <div class="modal" id="codexModal"><div class="dialog codex-dialog"><div class="dialog-head"><div><h2>Códice da Coleção</h2><div class="hint">Indicadores da coleção para análise e balanceamento</div></div><button id="codexCloseBtn">✕ Fechar</button></div><div id="codexContent"><div class="empty">Carregando indicadores…</div></div></div></div>
+<div class="modal" id="glossaryModal"><div class="dialog glossary-dialog"><div class="dialog-head"><div><h2>Glossário do Jogo</h2><div class="hint">Termos, características e conceitos oficiais de Tharis Doom</div></div><button id="glossaryCloseBtn">✕ Fechar</button></div><div class="glossary-toolbar"><input id="glossarySearch" placeholder="Buscar termo ou palavra na explicação…"><select id="glossaryFilter"><option value="">Todas as categorias</option><option>Características</option><option>Palavras-chave</option><option>Combate</option><option>Regras</option><option>Tipos de carta</option><option>Outros</option></select></div><div class="glossary-count" id="glossaryCount">Carregando termos…</div><div class="glossary-layout" style="margin-top:10px"><div class="glossary-list" id="glossaryList"><div class="glossary-empty">Carregando glossário…</div></div><form class="glossary-editor" id="glossaryForm"><h3 id="glossaryFormTitle">Adicionar novo termo</h3><input type="hidden" id="glossaryId"><div class="field"><label for="glossaryTerm">Termo</label><input id="glossaryTerm" maxlength="90" placeholder="Ex.: Atordoamento" required></div><div class="field"><label for="glossaryCategory">Categoria</label><select id="glossaryCategory"><option>Características</option><option>Palavras-chave</option><option>Combate</option><option>Regras</option><option>Tipos de carta</option><option>Outros</option></select></div><div class="field"><label for="glossaryDefinition">Explicação</label><textarea id="glossaryDefinition" rows="6" maxlength="1800" placeholder="Explique o significado e como funciona durante o jogo…" required></textarea></div><div class="actions"><button class="primary" id="glossarySaveBtn" type="submit">Salvar termo</button><button type="button" id="glossaryCancelBtn">Limpar</button></div><div class="asset-status" id="glossaryStatus" aria-live="polite"></div></form></div></div></div>
 <div class="modal" id="assetsModal"><div class="dialog" style="width:min(760px,100%)"><div class="dialog-head"><h2>Gerenciar imagens do projeto</h2><button id="assetsCloseBtn">✕ Fechar</button></div><div class="asset-note">Envio exclusivo do administrador. Os arquivos serão publicados na branch de testes do GitHub, dentro de <b>assets/</b>. Formatos aceitos: PNG, JPG e WEBP (até 8 MB).</div><div class="asset-grid"><div><div class="field"><label>Categoria / pasta de destino</label><select id="assetFolder"><option value="insignias">Insígnias</option><option value="referencias">Imagens de referência</option></select></div><div class="field"><label>Nome do arquivo (sem extensão)</label><input id="assetName" maxlength="80" placeholder="Ex.: insignia-nova-faccao"></div><div class="field"><label>Selecionar imagem</label><input id="assetFile" type="file" accept="image/png,image/jpeg,image/webp"></div><div class="hint">Se já existir um arquivo com o mesmo nome, o gerenciador pedirá confirmação antes de substituí-lo.</div><div class="actions" style="margin-top:14px"><button class="primary" id="assetUploadBtn">Enviar para o GitHub</button></div><div class="asset-status" id="assetStatus" aria-live="polite"></div></div><div><label>Pré-visualização</label><div class="asset-preview" id="assetPreview"><span class="hint">Selecione uma imagem para visualizar.</span></div></div></div></div></div><div class="modal" id="authModal">
  <div class="dialog" style="width:min(430px,100%)">
   <div class="dialog-head"><h2>Acesso ao Tharis Doom</h2><button id="authCloseBtn">✕ Fechar</button></div>
@@ -734,7 +751,7 @@ $('loginBtn').addEventListener('click',async()=>{
 });
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
 const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
-let cards=[],editingId=null,imageData='',imagePath='',imageOriginalData='',cloudUser=null,selectedCardId=null;
+let cards=[],editingId=null,imageData='',imagePath='',imageOriginalData='',cloudUser=null,selectedCardId=null,glossaryEntries=[];
 let defaultCardArt='',cardBackArt='',defaultCardArtPath=null,cardBackArtPath=null;
 let collaboratorDirectory={},cardsRealtimeChannel=null,traitCatalog=[];
 let isAdmin=false,assetFileObject=null;
@@ -2014,6 +2031,53 @@ async function openCodex(){
  try{await renderCodex()}catch(error){$('codexContent').innerHTML='<div class="empty">Não foi possível montar o Códice: '+escapeHtml(error.message)+'</div>'}
 }
 
+
+function resetGlossaryForm(){
+ $('glossaryId').value='';$('glossaryTerm').value='';$('glossaryCategory').value='Características';$('glossaryDefinition').value='';
+ $('glossaryFormTitle').textContent='Adicionar novo termo';$('glossarySaveBtn').textContent='Salvar termo';
+}
+function renderGlossary(){
+ const query=$('glossarySearch').value.trim().toLocaleLowerCase('pt-BR'),category=$('glossaryFilter').value;
+ const entries=glossaryEntries.filter(entry=>(!category||entry.category===category)&&(!query||(entry.term+' '+entry.definition+' '+entry.category).toLocaleLowerCase('pt-BR').includes(query))).sort((a,b)=>a.term.localeCompare(b.term,'pt-BR'));
+ $('glossaryCount').textContent=entries.length+' de '+glossaryEntries.length+' termos';
+ $('glossaryList').innerHTML=entries.length?entries.map(entry=>'<article class="glossary-entry"><div><div class="glossary-entry-term">'+escapeHtml(entry.term)+'</div><span class="glossary-entry-category">'+escapeHtml(entry.category)+'</span></div><div class="glossary-entry-definition">'+escapeHtml(entry.definition)+'</div><div class="glossary-entry-actions"><button type="button" data-glossary-edit="'+escapeHtml(entry.id)+'" title="Editar termo">✎</button><button type="button" class="danger" data-glossary-delete="'+escapeHtml(entry.id)+'" title="Excluir termo">×</button></div></article>').join(''):'<div class="glossary-empty">Nenhum termo encontrado. Adicione o primeiro pelo formulário ao lado.</div>';
+}
+async function loadGlossary(){
+ if(!cloudUser||!sb){glossaryEntries=[];renderGlossary();$('glossaryStatus').textContent='Entre na biblioteca compartilhada para consultar e editar o glossário.';return}
+ $('glossaryList').innerHTML='<div class="glossary-empty">Carregando termos compartilhados…</div>';
+ const {data,error}=await sb.from('game_glossary').select('id,term,definition,category,created_by,created_at,updated_at').order('term');
+ if(error)throw error;
+ glossaryEntries=data||[];renderGlossary();
+}
+async function openGlossary(){
+ $('glossaryModal').classList.add('open');$('glossaryStatus').textContent='';
+ try{await loadGlossary()}catch(error){$('glossaryList').innerHTML='<div class="glossary-empty">Não foi possível carregar o glossário: '+escapeHtml(error.message)+'</div>'}
+}
+async function saveGlossaryEntry(event){
+ event.preventDefault();
+ if(!cloudUser||!sb){$('glossaryStatus').textContent='Entre na biblioteca compartilhada antes de salvar.';return}
+ const id=$('glossaryId').value,term=$('glossaryTerm').value.trim(),definition=$('glossaryDefinition').value.trim(),category=$('glossaryCategory').value;
+ if(!term||!definition){$('glossaryStatus').textContent='Preencha o termo e a explicação.';return}
+ $('glossarySaveBtn').disabled=true;$('glossaryStatus').textContent='Salvando no glossário compartilhado…';
+ try{
+  const payload={term,definition,category,updated_at:new Date().toISOString()};
+  const result=id?await sb.from('game_glossary').update(payload).eq('id',id).select('id').single():await sb.from('game_glossary').insert({...payload,created_by:cloudUser.id}).select('id').single();
+  if(result.error)throw result.error;
+  $('glossaryStatus').textContent=id?'Termo atualizado.':'Termo adicionado.';
+  resetGlossaryForm();await loadGlossary();
+ }catch(error){$('glossaryStatus').textContent='Não foi possível salvar: '+error.message}
+ finally{$('glossarySaveBtn').disabled=false}
+}
+async function deleteGlossaryEntry(id){
+ const entry=glossaryEntries.find(item=>item.id===id);if(!entry)return;
+ if(!confirm('Excluir o termo "'+entry.term+'"? Esta ação afeta o glossário compartilhado.'))return;
+ $('glossaryStatus').textContent='Excluindo termo…';
+ const {error}=await sb.from('game_glossary').delete().eq('id',id);
+ if(error){$('glossaryStatus').textContent='Não foi possível excluir: '+error.message;return}
+ if($('glossaryId').value===id)resetGlossaryForm();
+ $('glossaryStatus').textContent='Termo excluído.';await loadGlossary();
+}
+
 async function loadCollaboratorDirectory(){
  const {data,error}=await sb.from('collaborator_directory').select('id,display_name,signature');
  if(error)throw error;
@@ -2059,6 +2123,9 @@ function startCardsRealtime(){
   .on('postgres_changes',{event:'*',schema:'public',table:'creature_traits'},()=>{
    if(cloudUser)loadCreatureTraits().catch(error=>console.warn('Falha ao sincronizar catálogo de características:',error));
   })
+  .on('postgres_changes',{event:'*',schema:'public',table:'game_glossary'},()=>{
+   if(cloudUser&&$('glossaryModal').classList.contains('open'))loadGlossary().catch(error=>console.warn('Falha ao sincronizar glossário:',error));
+  })
   .subscribe(status=>{if(status==='SUBSCRIBED')$('cloudStatus').textContent='Online · sincronização ativa'});
 }
 function stopCardsRealtime(){if(cardsRealtimeChannel&&sb)sb.removeChannel(cardsRealtimeChannel);cardsRealtimeChannel=null;}
@@ -2093,6 +2160,16 @@ async function handleSession(session){
 
 
 $('codexBtn').onclick=openCodex;$('codexCloseBtn').onclick=()=>$('codexModal').classList.remove('open');
+$('glossaryBtn').onclick=openGlossary;$('glossaryCloseBtn').onclick=()=>$('glossaryModal').classList.remove('open');
+$('glossarySearch').addEventListener('input',renderGlossary);$('glossaryFilter').addEventListener('change',renderGlossary);
+$('glossaryForm').addEventListener('submit',saveGlossaryEntry);$('glossaryCancelBtn').onclick=resetGlossaryForm;
+$('glossaryList').addEventListener('click',e=>{
+ const edit=e.target.closest('[data-glossary-edit]'),remove=e.target.closest('[data-glossary-delete]');
+ if(edit){const item=glossaryEntries.find(entry=>entry.id===edit.dataset.glossaryEdit);if(!item)return;
+  $('glossaryId').value=item.id;$('glossaryTerm').value=item.term;$('glossaryCategory').value=item.category;$('glossaryDefinition').value=item.definition;
+  $('glossaryFormTitle').textContent='Editar termo';$('glossarySaveBtn').textContent='Atualizar termo';$('glossaryStatus').textContent='';$('glossaryTerm').focus();
+ }else if(remove)deleteGlossaryEntry(remove.dataset.glossaryDelete);
+});
 $('codexModal').addEventListener('click',e=>{
  const tab=e.target.closest('[data-codex-tab]'),selectFaction=e.target.closest('[data-codex-select-faction]'),faction=e.target.closest('[data-codex-faction]'),trait=e.target.closest('[data-codex-trait]');
  if(tab){codexActiveTab=tab.dataset.codexTab;renderCodex().catch(error=>{$('codexContent').innerHTML='<div class="empty">'+escapeHtml(error.message)+'</div>'})}
