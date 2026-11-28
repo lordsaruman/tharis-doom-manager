@@ -343,6 +343,10 @@ footer:before{
 .faction-pick span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:520px){.faction-picker{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #ocrPanel{padding:13px;border:1px solid #8d713f;border-radius:10px;background:linear-gradient(145deg,#29231a,#19191d);gap:9px}#ocrPanel textarea{width:100%;margin-top:8px;background:#111216;color:#e8dfce;border:1px solid #51452f;border-radius:7px;padding:9px;font:12px/1.45 ui-monospace,monospace}#ocrBtn{border:1px solid #a98a4d;color:#f0d9aa;background:#302719;border-radius:7px;padding:8px 12px;cursor:pointer}#ocrBtn:disabled{opacity:.55;cursor:wait}
+.effect-toolbar{display:flex;align-items:center;gap:6px;margin:0 0 7px}
+.effect-toolbar button{min-width:34px;padding:5px 10px;border:1px solid rgba(201,164,92,.55);border-radius:6px;background:linear-gradient(180deg,#30271e,#191613);color:#ead5aa;cursor:pointer}
+.effect-toolbar button:hover{border-color:#d8b66e;background:#403222}
+.effect-toolbar span{font-size:11px;color:var(--muted,#a99b85);margin-left:4px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -433,7 +437,15 @@ footer:before{
       <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
       <div class="field"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
      </div>
-     <div class="field span2"><label id="effectLabel">Habilidades</label><textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea></div>
+     <div class="field span2"><label id="effectLabel">Habilidades</label>
+      <div class="effect-toolbar" role="toolbar" aria-label="Formatação das habilidades">
+       <button type="button" data-effect-format="bold" title="Negrito"><b>B</b></button>
+       <button type="button" data-effect-format="underline" title="Sublinhado"><u>U</u></button>
+       <span>Selecione um trecho e aplique a formatação</span>
+      </div>
+      <textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea>
+      <div class="hint">A formatação aparece na prévia e na imagem exportada.</div>
+     </div>
      <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
      <div class="field span2"><label id="imageLabel">Ilustração (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">A imagem é incorporada ao registro local da carta.</div></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
@@ -579,6 +591,63 @@ function updateCardInspector(){
  $('selectedCardStats').innerHTML=(c.type==='Magias'?[['CUSTO',c.cost??0]]:[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']]).map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');$('selectedCardStats').classList.toggle('magic-stats',c.type==='Magias');
  drawCard($('selectedCardCanvas'),c);
 }
+function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color){
+ const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
+ if(!paragraphs.some(p=>p.trim()))return;
+ let size=baseSize,lines=[];
+ const makeLines=()=>{
+  lines=[];
+  paragraphs.forEach(paragraph=>{
+   const parts=paragraph.split(/(\*\*[^*]+\*\*|__[^_]+__)/g).filter(Boolean);
+   let line=[],lineWidth=0;
+   const push=()=>{lines.push({runs:line,width:lineWidth});line=[];lineWidth=0};
+   parts.forEach(part=>{
+    const bold=part.startsWith('**')&&part.endsWith('**');
+    const underline=part.startsWith('__')&&part.endsWith('__');
+    const clean=(bold||underline)?part.slice(2,-2):part;
+    clean.split(/(\s+)/).filter(Boolean).forEach(word=>{
+     const font=(bold?'bold ':'')+'italic '+size+'px Georgia';
+     ctx.font=font;
+     const width=ctx.measureText(word).width;
+     if(line.length&&lineWidth+width>maxWidth&&word.trim()){push()}
+     if(word.length){
+      const last=line[line.length-1];
+      if(last&&last.bold===bold&&last.underline===underline&&/^\s+$/.test(word)===last.space){
+       last.text+=word;last.width+=width;
+      }else line.push({text:word,width,bold,underline,space:/^\s+$/.test(word)});
+      lineWidth+=width;
+     }
+    });
+   });
+   if(line.length)push();
+   else if(!paragraph.trim())lines.push({runs:[],width:0});
+  });
+ };
+ while(true){
+  makeLines();
+  if(lines.length*lineHeight<=maxHeight||size<=minSize)break;
+  size=Math.max(minSize,size-.25);
+ }
+ const lh=Math.min(lineHeight,maxHeight/Math.max(1,lines.length));
+ ctx.save();ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
+ ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle=color;
+ const total=Math.min(lines.length*lh,maxHeight),top=y-total/2+lh/2;
+ lines.forEach((ln,i)=>{
+  let cursor=x-ln.width/2;
+  ln.runs.forEach(run=>{
+   if(!run.text.trim()){cursor+=run.width;return}
+   ctx.font=(run.bold?'bold ':'')+'italic '+size+'px Georgia';
+   ctx.fillText(run.text,cursor,top+i*lh);
+   if(run.underline){
+    const uy=top+i*lh+size*.38;
+    ctx.save();ctx.strokeStyle=color;ctx.lineWidth=Math.max(1,size*.045);
+    ctx.beginPath();ctx.moveTo(cursor,uy);ctx.lineTo(cursor+run.width,uy);ctx.stroke();ctx.restore();
+   }
+   cursor+=run.width;
+  });
+ });
+ ctx.restore();
+}
 function drawCreatureCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
  const ix=w*.061,iy=h*.066,iw=w*.878,ih=h*.622;
@@ -646,10 +715,10 @@ function drawCreatureCard(canvas,c){
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
   // Habilidades: painel central claro, com margens internas e parágrafos preservados.
   const abilityTop=h*.765,abilityBottom=h*.872;
-  if(c.effect)drawRichText(
-   c.effect,w*.5,(abilityTop+abilityBottom)/2,
+  if(c.effect)drawEffectRichText(
+   ctx,c.effect,w*.5,(abilityTop+abilityBottom)/2,
    w*.72,abilityBottom-abilityTop,
-   w*.037,w*.018,h*.027,'#35291d',true
+   w*.037,w*.018,h*.027,'#35291d'
   );
   // Linha divisória dentro da área branca e afastada da moldura.
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
@@ -805,7 +874,7 @@ function drawMagicCard(canvas,c){
  };
  // Efeito e ambientação usam a mesma lógica de quebra, fonte e ajuste
  // empregada nas habilidades e no flavor das cartas de criatura.
- if(c.effect)drawRichText(c.effect,w*.5,h*.809,w*.70,h*.087,w*.037,w*.018,h*.027,'#f1d18a',true);
+ if(c.effect)drawEffectRichText(ctx,c.effect,w*.5,h*.809,w*.70,h*.087,w*.037,w*.018,h*.027,'#f1d18a');
  // Divisória dourada entre o efeito e o texto de ambientação.
  ctx.save();ctx.strokeStyle='rgba(201,164,92,.95)';ctx.lineWidth=Math.max(1.5,w*.0025);
  ctx.shadowColor='rgba(201,164,92,.45)';ctx.shadowBlur=3;
@@ -1027,6 +1096,16 @@ $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))
 $('image').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!/^image\/(png|jpeg)$/.test(f.type)){alert('Envie somente uma imagem PNG ou JPG.');e.target.value='';return}imagePath='';const r=new FileReader();r.onload=()=>{imageData=r.result;drawCard($('preview'),collect());if($('creationMode').value==='ready')runCardOCR(f)};r.readAsDataURL(f)};
 function updateCropLabels(){$('zoomValue').textContent=$('imageZoom').value+'%';$('imageXValue').textContent=$('imageX').value;$('imageYValue').textContent=$('imageY').value}
 ['name','faction','type','rarity','cost','alignment','trait','life','power','defense','description','effect','flavor','imageZoom','imageX','imageY'].forEach(id=>$(id).addEventListener('input',()=>{updateCropLabels();drawCard($('preview'),collect())}));
+document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListener('click',()=>{
+ const field=$('effect'),format=btn.dataset.effectFormat,marker=format==='bold'?'**':'__';
+ const start=field.selectionStart,end=field.selectionEnd;
+ const selected=field.value.slice(start,end);
+ const content=selected||'texto';
+ const replacement=marker+content+marker;
+ field.setRangeText(replacement,start,end,'select');
+ field.focus();
+ field.dispatchEvent(new Event('input',{bubbles:true}));
+}));
 ['search','filterFaction','filterRarity','filterType','sort'].forEach(id=>$(id).addEventListener('input',render));
 $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]');if(tile){selectedCardId=tile.dataset.id;document.querySelectorAll('.cardtile[data-id]').forEach(el=>el.classList.toggle('is-selected',el.dataset.id===selectedCardId));updateCardInspector()}});
 $('editSelectedBtn').onclick=()=>{const c=cards.find(x=>x.id===selectedCardId);if(c)openEditor(c)};
