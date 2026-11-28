@@ -390,7 +390,7 @@ footer:before{
  <section class="stats">
   <div class="stat"><strong id="statCards">0</strong><span>Cartas cadastradas</span></div>
   <div class="stat"><strong id="statFactions">0</strong><span>Facções representadas</span></div>
-  <div class="stat"><strong id="statTypes">0</strong><span>Tipos de carta</span></div>
+  <div class="stat"><strong id="statNewCards">0</strong><span>Cartas Novas</span></div>
   <div class="stat"><strong id="statRarities">0</strong><span>Raridades utilizadas</span></div>
  </section>
  <div class="panel" style="padding:14px">
@@ -399,8 +399,8 @@ footer:before{
    <input id="search" placeholder="Buscar por nome, efeito ou descrição…">
    <select id="filterFaction"><option value="">Todas as facções</option></select>
    <select id="filterRarity"><option value="">Todas as raridades</option></select>
-   <select id="filterType"><option value="">Todos os tipos</option></select>
-   <select id="sort"><option value="name">Nome (A–Z)</option><option value="newest">Mais recentes</option><option value="cost">Custo</option></select>
+   <select id="filterNew"><option value="">Todas as cartas</option><option value="new">Apenas cartas novas</option></select>
+   <select id="sort"><option value="new-first">Padrão · cartas novas primeiro</option><option value="name">Nome (A–Z)</option><option value="newest">Mais recentes</option><option value="cost">Custo</option></select>
   </div>
   <div class="faction-options" id="factionLegend"></div>
   <div class="library-workspace">
@@ -603,17 +603,33 @@ function refreshSelects(){
  updateFactionPicker();
 }
 let cloudLibraryReady=false;
+const NEW_CARD_LIFETIME=30*24*60*60*1000;
+function expireNewCardFlags(){
+ const now=Date.now(),changed=[];
+ cards.forEach(c=>{
+  if(!c.isNew)return;
+  if(!c.newSince){c.newSince=now;changed.push(c);return}
+  if(now-Number(c.newSince)>=NEW_CARD_LIFETIME){c.isNew=false;delete c.newSince;changed.push(c)}
+ });
+ if(!changed.length)return;
+ if(cloudUser&&sb){
+  changed.forEach(c=>sb.from('cards').update({card_data:{...c,image:''}}).eq('id',c.id).then(({error})=>{if(error)console.warn('Não foi possível sincronizar a validade da marcação Carta nova:',error)}));
+ }else{
+  try{localStorage.setItem(KEY,JSON.stringify(cards))}catch(error){console.warn('Não foi possível salvar a expiração de Cartas Novas:',error)}
+ }
+}
 function render(){
  // Enquanto o Supabase verifica a sessão e carrega as cartas, callbacks de imagens não podem exibir o cache local.
  if(sb&&!cloudLibraryReady)return;
+ expireNewCardFlags();
  refreshSelects();
  $('statCards').textContent=cards.length;
  $('statFactions').textContent=new Set(cards.map(c=>c.faction).filter(Boolean)).size;
- $('statTypes').textContent=new Set(cards.map(c=>c.type).filter(Boolean)).size;
+   $('statNewCards').textContent=cards.filter(c=>c.isNew).length;
  $('statRarities').textContent=new Set(cards.map(c=>c.rarity).filter(Boolean)).size;
- let list=cards.slice(),q=$('search').value.toLowerCase(),f=$('filterFaction').value,r=$('filterRarity').value,t=$('filterType').value;
- list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t));
- const sort=$('sort').value;if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
+   let list=cards.slice(),q=$('search').value.toLowerCase(),f=$('filterFaction').value,r=$('filterRarity').value,t=$('filterType').value,n=$('filterNew').value;
+  list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t)&&(!n||c.isNew));
+  const sort=$('sort').value;if(sort==='new-first')list.sort((a,b)=>(Number(!!b.isNew)-Number(!!a.isNew))||(a.name||'').localeCompare(b.name||''));if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
  $('resultCount').textContent=`${list.length} de ${cards.length} cartas`;
  $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div>${c.isNew?`<div class="new-card-badge tile-new-flag">✦ Carta nova</div>`:''}<div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div>${c.type==='Magias'?`<div class="tile-stats magic-stats"><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span></div>`:`<div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div>`}<div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
  document.querySelectorAll('canvas[data-card]').forEach(cv=>{const c=cards.find(x=>x.id===cv.dataset.card);if(c)drawCard(cv,c)});
@@ -1196,6 +1212,8 @@ function openEditor(c=null){
 function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 async function save(){
  const c=collect();
+ const previousCard=cards.find(x=>x.id===c.id);
+ if(c.isNew)c.newSince=previousCard?.isNew&&previousCard.newSince?previousCard.newSince:Date.now();else delete c.newSince;
  if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}
  if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');$('image').focus();return}
  if(cloudUser){
@@ -1238,7 +1256,7 @@ document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListe
  field.focus();
  field.dispatchEvent(new Event('input',{bubbles:true}));
 }));
-['search','filterFaction','filterRarity','filterType','sort'].forEach(id=>$(id).addEventListener('input',render));
+['search','filterFaction','filterRarity','filterType','filterNew','sort'].forEach(id=>$(id).addEventListener('input',render));
 $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]');if(tile){selectedCardId=tile.dataset.id;document.querySelectorAll('.cardtile[data-id]').forEach(el=>el.classList.toggle('is-selected',el.dataset.id===selectedCardId));updateCardInspector()}});
 $('library').addEventListener('dblclick',e=>{const tile=e.target.closest('.cardtile[data-id]');if(!tile)return;const c=cards.find(card=>card.id===tile.dataset.id);if(c)openEditor(c)});
 $('editSelectedBtn').onclick=()=>{const c=cards.find(x=>x.id===selectedCardId);if(c)openEditor(c)};
