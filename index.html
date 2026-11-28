@@ -619,7 +619,7 @@ function updateFactionPicker(){
 function refreshSelects(){
  const all=[...new Set([...FACTIONS,...cards.map(c=>c.faction).filter(Boolean)])];
  const factionOptions=$('factionOptions');if(factionOptions)factionOptions.innerHTML=all.map(x=>`<option value="${escapeHtml(x)}">`).join('');
- const fill=(id,values,label)=>{const old=$(id).value;$(id).innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option>${escapeHtml(v)}</option>`).join('');$(id).value=old};
+ const fill=(id,values,label)=>{const el=$(id);if(!el)return;const old=el.value;el.innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option>${escapeHtml(v)}</option>`).join('');el.value=old};
  fill('filterFaction',all,'Todas as facções');fill('filterRarity',[...new Set(cards.map(c=>c.rarity).filter(Boolean))].sort(),'Todas as raridades');if($('filterType'))fill('filterType',[...new Set(cards.map(c=>c.type).filter(Boolean))].sort(),'Todos os tipos');
  $('factionLegend').innerHTML=all.map(f=>`<span class="faction-chip">${sigil(f,22)}${escapeHtml(f)}</span>`).join('');
  updateFactionPicker();
@@ -1278,7 +1278,7 @@ document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListe
  field.focus();
  field.dispatchEvent(new Event('input',{bubbles:true}));
 }));
-['search','filterFaction','filterRarity','filterType','filterNew','sort'].forEach(id=>$(id).addEventListener('input',render));
+['search','filterFaction','filterRarity','filterType','filterNew','sort'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',render)});
 $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]');if(tile){selectedCardId=tile.dataset.id;document.querySelectorAll('.cardtile[data-id]').forEach(el=>el.classList.toggle('is-selected',el.dataset.id===selectedCardId));updateCardInspector()}});
 $('library').addEventListener('dblclick',e=>{const tile=e.target.closest('.cardtile[data-id]');if(!tile)return;const c=cards.find(card=>card.id===tile.dataset.id);if(c)openEditor(c)});
 $('editSelectedBtn').onclick=()=>{const c=cards.find(x=>x.id===selectedCardId);if(c)openEditor(c)};
