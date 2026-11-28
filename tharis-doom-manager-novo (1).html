@@ -510,7 +510,7 @@ footer:before{
 /* CATÁLOGO COMPARTILHADO DE CARACTERÍSTICAS */
 .trait-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0 10px}
 .trait-option{display:flex;align-items:center;gap:6px;min-width:0;margin:0;padding:6px 7px;border:1px solid #57452f;border-radius:4px;background:linear-gradient(180deg,#211910,#15110d);color:#c9b895}.trait-option>label{display:flex;align-items:center;gap:8px;flex:1;min-width:0;margin:0;color:inherit;font:14px 'Crimson Pro',Georgia,serif;cursor:pointer}.trait-option .trait-edit-btn{flex:none;padding:3px 6px;font-size:12px;line-height:1.2}
-.trait-option:has(input:checked){border-color:#c5a36b;background:linear-gradient(180deg,#3b2c1b,#241a11);color:#f0d9aa;box-shadow:inset 0 0 0 1px #b8955933}.trait-option .trait-edit-btn{border-color:#655136;background:#211910;color:#d8bd87}
+.trait-option:has(input:checked){border-color:#c5a36b;background:linear-gradient(180deg,#3b2c1b,#241a11);color:#f0d9aa;box-shadow:inset 0 0 0 1px #b8955933}.trait-option .trait-edit-btn{border-color:#655136;background:#211910;color:#d8bd87}.trait-option .trait-delete-btn{border-color:#75443c;background:#261512;color:#e3a39a}
 .trait-option input{width:16px;height:16px;flex:0 0 16px;margin:0;padding:0;accent-color:#c5a36b}
 .trait-option span{min-width:0;overflow-wrap:anywhere}
 .trait-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
@@ -1578,7 +1578,7 @@ function renderTraitPicker(raw=$('trait')?.value||''){
  const options=[...traitCatalog];
  parseTraitNames(raw).forEach(name=>{if(!options.some(item=>item.name.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR')))options.push({name})});
  options.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
- host.innerHTML=options.length?options.map(item=>'<div class="trait-option"><label><input type="checkbox" value="'+escapeHtml(item.name)+'" '+(selected.has(item.name.toLocaleLowerCase('pt-BR'))?'checked':'')+'><span>'+escapeHtml(item.name)+'</span></label>'+(item.id?'<button type="button" class="trait-edit-btn" data-edit-trait="'+escapeHtml(item.id)+'" title="Editar característica" aria-label="Editar '+escapeHtml(item.name)+'">✎</button>':'')+'</div>').join(''):'<div class="hint">Nenhuma característica cadastrada. Adicione a primeira abaixo.</div>';
+ host.innerHTML=options.length?options.map(item=>'<div class="trait-option"><label><input type="checkbox" value="'+escapeHtml(item.name)+'" '+(selected.has(item.name.toLocaleLowerCase('pt-BR'))?'checked':'')+'><span>'+escapeHtml(item.name)+'</span></label>'+(item.id?'<button type="button" class="trait-edit-btn" data-edit-trait="'+escapeHtml(item.id)+'" title="Editar característica" aria-label="Editar '+escapeHtml(item.name)+'">✎</button><button type="button" class="trait-delete-btn" data-delete-trait="'+escapeHtml(item.id)+'" title="Excluir característica" aria-label="Excluir '+escapeHtml(item.name)+'">×</button>':'')+'</div>').join(''):'<div class="hint">Nenhuma característica cadastrada. Adicione a primeira abaixo.</div>';
 }
 function syncTraitSelection(){
  const selected=Array.from($('traitPicker').querySelectorAll('input[type="checkbox"]:checked')).map(el=>el.value);
@@ -1619,6 +1619,36 @@ async function editCreatureTrait(id){
   status.textContent='Característica renomeada. As cartas que a utilizavam também foram atualizadas.';
  }catch(error){status.textContent='Não foi possível editar a característica: '+error.message;await loadCreatureTraits().catch(()=>{})}
 }
+
+async function deleteCreatureTrait(id){
+ const item=traitCatalog.find(entry=>String(entry.id)===String(id));if(!item)return;
+ const oldKey=item.name.toLocaleLowerCase('pt-BR');
+ const used=cards.filter(card=>parseTraitNames(card.trait||'').some(value=>value.toLocaleLowerCase('pt-BR')===oldKey)).length;
+ const message=used?'Excluir "'+item.name+'" do catálogo e removê-la das características de '+used+' carta(s)?':'Excluir "'+item.name+'" do catálogo compartilhado?';
+ if(!confirm(message))return;
+ const status=$('traitStatus'),button=$('traitPicker').querySelector('[data-delete-trait="'+CSS.escape(String(id))+'"]');
+ if(button)button.disabled=true;
+ status.textContent='Removendo característica do catálogo e das cartas…';
+ try{
+  const {data:rows,error:cardsError}=await sb.from('cards').select('id,card_data');
+  if(cardsError)throw cardsError;
+  for(const row of rows||[]){
+   const data=row.card_data||{},names=parseTraitNames(data.trait||'');
+   if(!names.some(value=>value.toLocaleLowerCase('pt-BR')===oldKey))continue;
+   const remaining=names.filter(value=>value.toLocaleLowerCase('pt-BR')!==oldKey);
+   const {error:updateError}=await sb.from('cards').update({card_data:{...data,trait:remaining.join(', ')},updated_by:cloudUser.id,updated_at:new Date().toISOString()}).eq('id',row.id);
+   if(updateError)throw updateError;
+  }
+  const {error}=await sb.from('creature_traits').delete().eq('id',id);
+  if(error)throw error;
+  traitCatalog=traitCatalog.filter(entry=>String(entry.id)!==String(id));
+  cards=cards.map(card=>({...card,trait:parseTraitNames(card.trait||'').filter(value=>value.toLocaleLowerCase('pt-BR')!==oldKey).join(', ')}));
+  $('trait').value=parseTraitNames($('trait').value).filter(value=>value.toLocaleLowerCase('pt-BR')!==oldKey).join(', ');
+  renderTraitPicker();drawCard($('preview'),collect());render();
+  status.textContent='Característica excluída do catálogo e removida das cartas que a utilizavam.';
+ }catch(error){status.textContent='Não foi possível excluir a característica: '+error.message;await loadCreatureTraits().catch(()=>{})}
+}
+
 async function addCreatureTrait(){
  const input=$('newTraitInput'),status=$('traitStatus'),button=$('addTraitBtn');
  const name=input.value.trim().replace(/\s+/g,' ');
@@ -1673,7 +1703,7 @@ async function save(){
 async function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;if(c.creationMode==='ready'){const readyImg=new Image();readyImg.onload=()=>{const ctx=cv.getContext('2d');ctx.fillStyle='#09090c';ctx.fillRect(0,0,cv.width,cv.height);const scale=Math.min(cv.width/readyImg.width,cv.height/readyImg.height),dw=readyImg.width*scale,dh=readyImg.height*scale;ctx.drawImage(readyImg,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\\w\\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()};readyImg.src=c.image;return}const waitForImage=src=>new Promise(resolve=>{if(!src)return resolve();const img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;if(img.complete)resolve()});await Promise.all([waitForImage(c.image),waitForImage(c.type==='Magias'?'Molde%20Magias.png':c.type==='Criatura'?'Modelo%20Carta%20Ouro.png':'')]);drawCard(cv,c);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('creationMode').addEventListener('change',updateCreationMode);
 $('factionPicker').addEventListener('click',e=>{const pick=e.target.closest('[data-faction]');if(!pick)return;const current=$('faction').value;$('faction').value=current===pick.dataset.faction?'':pick.dataset.faction;updateFactionPicker();drawCard($('preview'),collect())});
-$('traitPicker').addEventListener('change',syncTraitSelection);$('traitPicker').addEventListener('click',e=>{const button=e.target.closest('[data-edit-trait]');if(button){e.preventDefault();e.stopPropagation();editCreatureTrait(button.dataset.editTrait)}});$('addTraitBtn').addEventListener('click',addCreatureTrait);$('newTraitInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCreatureTrait()}});
+$('traitPicker').addEventListener('change',syncTraitSelection);$('traitPicker').addEventListener('click',e=>{const edit=e.target.closest('[data-edit-trait]'),remove=e.target.closest('[data-delete-trait]');if(edit){e.preventDefault();e.stopPropagation();editCreatureTrait(edit.dataset.editTrait)}else if(remove){e.preventDefault();e.stopPropagation();deleteCreatureTrait(remove.dataset.deleteTrait)}});$('addTraitBtn').addEventListener('click',addCreatureTrait);$('newTraitInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCreatureTrait()}});
 $('faction').addEventListener('change',updateFactionPicker);$('type').addEventListener('change',updateEffectLabel);$('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtnBottom').onclick=save;$('saveBtnBottom').onclick=save;$('pngBtnBottom').onclick=exportPNG;
 
 $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))return;
