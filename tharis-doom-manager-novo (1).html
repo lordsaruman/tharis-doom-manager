@@ -1098,7 +1098,8 @@ function drawCreatureCard(canvas,c){
    const scale=Math.min(maxMarkWidth/moirasMarkImage.naturalWidth,maxMarkHeight/moirasMarkImage.naturalHeight);
    const markWidth=moirasMarkImage.naturalWidth*scale,markHeight=moirasMarkImage.naturalHeight*scale;
    ctx.save();ctx.globalAlpha=1;
-   ctx.drawImage(moirasMarkImage,w*.5-markWidth/2,(abilityTop+abilityBottom)/2-markHeight/2,markWidth,markHeight);
+   const markCenterY=(h*(.708+(+c.nameOffsetY||0))+h*.884)/2;
+   ctx.drawImage(moirasMarkImage,w*.5-markWidth/2,markCenterY-markHeight/2,markWidth,markHeight);
    ctx.restore();
   }
   if(c.effect)drawEffectRichText(
