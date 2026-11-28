@@ -245,6 +245,7 @@ footer:before{
 .tile-stats.magic-stats,.inspector-stats.magic-stats{grid-template-columns:minmax(0,1fr)}
 #modal.magic-type #traitField{display:none}
 #modal.magic-type #combatFields{display:none!important}
+#modal:not(.magic-type) #magicGradientField{display:none}
 .tile-stats.magic-stats span,.inspector-stats.magic-stats span{grid-column:1}
 .inspector-edit{width:100%;margin-top:5px}
 .cardtile.is-selected{border-color:#c5a36b;box-shadow:0 0 0 1px #b8955966,0 8px 24px #0008}
@@ -539,6 +540,7 @@ footer:before{
       <textarea id="effect" placeholder="Habilidades e efeitos da carta"></textarea>
       <div class="hint">A formatação aparece na prévia e na imagem exportada.</div>
      </div>
+     <div class="field span2" id="magicGradientField"><label for="magicTextGradient">Intensidade do degradê atrás dos textos <span id="magicTextGradientValue">100%</span></label><input id="magicTextGradient" type="range" min="0" max="200" step="5" value="100"><div class="hint">Ajusta a força do escurecimento na área de texto das cartas de magia. 0% remove o degradê; 100% mantém o padrão atual.</div></div>
      <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
      <div class="field span2"><label id="imageLabel">Ilustração específica desta carta (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">Esta imagem substitui a ilustração padrão somente nesta carta. Se não enviar uma imagem, será usada a imagem padrão definida em Aparência das cartas.</div><button type="button" id="clearCardImageBtn">Usar imagem padrão nesta carta</button></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
@@ -1126,11 +1128,12 @@ function drawMagicCard(canvas,c){
   // É pintado antes do molde para preservar os ornamentos dourados.
   const top=h*(.744+(+c.nameOffsetY||0)),bottom=h*.985;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
+  const gradientStrength=Math.max(0,Math.min(200,+c.magicTextGradient||0))/100;
   shade.addColorStop(0,'rgba(5,6,10,0)');
-  shade.addColorStop(.16,'rgba(5,6,10,.06)');
-  shade.addColorStop(.42,'rgba(5,6,10,.20)');
-  shade.addColorStop(.72,'rgba(5,6,10,.36)');
-  shade.addColorStop(1,'rgba(5,6,10,.50)');
+  shade.addColorStop(.16,'rgba(5,6,10,'+(.06*gradientStrength)+')');
+  shade.addColorStop(.42,'rgba(5,6,10,'+(.20*gradientStrength)+')');
+  shade.addColorStop(.72,'rgba(5,6,10,'+(.36*gradientStrength)+')');
+  shade.addColorStop(1,'rgba(5,6,10,'+(.50*gradientStrength)+')');
   ctx.fillStyle=shade;ctx.fillRect(w*.075,top,w*.85,bottom-top);
 
   // A bandeira começa atrás da esfera de custo; o molde original permanece intacto.
@@ -1374,11 +1377,11 @@ function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLab
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imageOriginalData=imageData;imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
- const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0,imageWidth:100,imageHeight:100,imageContrast:100,imageBrightness:100,imageSaturation:100,imageSharpness:0};
+ const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,magicTextGradient:100,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0,imageWidth:100,imageHeight:100,imageContrast:100,imageBrightness:100,imageSaturation:100,imageSharpness:0};
  $('isNew').checked=!!c?.isNew;
  Object.keys(vals).forEach(k=>{const el=$(k);let value=c?.[k]??vals[k];if(k==='rarity')value=rarityKey(value);if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
-function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),nameOffsetY:+$('nameOffsetY').value||0,effectOffsetY:+$('effectOffsetY').value||0,faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,imageWidth:+$('imageWidth').value,imageHeight:+$('imageHeight').value,imageContrast:+$('imageContrast').value,imageBrightness:+$('imageBrightness').value,imageSaturation:+$('imageSaturation').value,imageSharpness:+$('imageSharpness').value,updated:Date.now()}}
+function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),nameOffsetY:+$('nameOffsetY').value||0,effectOffsetY:+$('effectOffsetY').value||0,magicTextGradient:+$('magicTextGradient').value||0,faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,imageWidth:+$('imageWidth').value,imageHeight:+$('imageHeight').value,imageContrast:+$('imageContrast').value,imageBrightness:+$('imageBrightness').value,imageSaturation:+$('imageSaturation').value,imageSharpness:+$('imageSharpness').value,updated:Date.now()}}
 async function save(){
  const c=collect();
  const previousCard=cards.find(x=>x.id===c.id);
@@ -1464,11 +1467,12 @@ $('resetImageEditsBtn').onclick=()=>{
  updateCropLabels();drawCard($('preview'),collect());$('imageQualityStatus').textContent='Imagem original e ajustes restaurados.';
 };
 function updateCropLabels(){
+ $('magicTextGradientValue').textContent=$('magicTextGradient').value+'%';
  $('zoomValue').textContent=$('imageZoom').value+'%';$('imageXValue').textContent=$('imageX').value+' px';$('imageYValue').textContent=$('imageY').value+' px';
  ['imageWidth','imageHeight','imageContrast','imageBrightness','imageSaturation'].forEach(id=>$(id+'Value').textContent=$(id).value+'%');
  $('imageSharpnessValue').textContent=$('imageSharpness').value;
 }
-['name','faction','type','rarity','cost','alignment','trait','life','power','defense','description','effect','flavor','imageZoom','imageX','imageY','imageWidth','imageHeight','imageContrast','imageBrightness','imageSaturation','imageSharpness'].forEach(id=>$(id).addEventListener('input',()=>{updateCropLabels();drawCard($('preview'),collect())}));
+['name','faction','type','rarity','cost','alignment','trait','life','power','defense','description','effect','flavor','magicTextGradient','imageZoom','imageX','imageY','imageWidth','imageHeight','imageContrast','imageBrightness','imageSaturation','imageSharpness'].forEach(id=>$(id).addEventListener('input',()=>{updateCropLabels();drawCard($('preview'),collect())}));
 document.querySelectorAll('[data-position-adjust]').forEach(btn=>btn.addEventListener('click',()=>{const field=$(btn.dataset.positionAdjust);if(!field)return;const next=Math.max(-.08,Math.min(.08,(+field.value||0)+(+btn.dataset.direction||0)*.005));field.value=next.toFixed(3);drawCard($('preview'),collect())}));
 document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListener('click',()=>{
  const field=$('effect'),format=btn.dataset.effectFormat,marker=format==='bold'?'**':'__';
