@@ -374,6 +374,29 @@ footer:before{
 .inspector-card-stage canvas{backface-visibility:hidden;-webkit-backface-visibility:hidden}
 @media(prefers-reduced-motion:reduce){.inspector-tilt,.inspector-flip{transition:none}}
 
+
+/* ORBE CENTRAL · CONTADOR TOTAL DE CARTAS */
+.stats{align-items:center}
+.total-orb-wrap{min-height:112px;display:grid;place-items:center;position:relative}
+.total-orb{
+ width:104px;height:104px;border-radius:50%;display:flex;flex-direction:column;
+ align-items:center;justify-content:center;position:relative;isolation:isolate;
+ border:1px solid rgba(244,205,130,.92);
+ background:
+  radial-gradient(circle at 34% 27%,rgba(255,255,236,.98) 0,rgba(255,231,174,.78) 5%,rgba(224,177,95,.58) 17%,rgba(125,78,37,.72) 42%,rgba(39,24,23,.96) 72%),
+  radial-gradient(circle,rgba(255,213,130,.35),transparent 70%);
+ box-shadow:0 0 9px 2px rgba(255,209,125,.68),0 0 24px 8px rgba(220,159,75,.42),inset 0 0 18px rgba(255,225,163,.55),inset 0 0 34px rgba(0,0,0,.72);
+ animation:tharisOrbPulse 3.2s ease-in-out infinite;
+}
+.total-orb:before,.total-orb:after{content:"";position:absolute;inset:-7px;border-radius:50%;pointer-events:none;z-index:-1}
+.total-orb:before{border:1px solid rgba(235,190,112,.42);box-shadow:0 0 16px rgba(235,190,112,.48),inset 0 0 13px rgba(235,190,112,.18)}
+.total-orb:after{inset:-15px;background:radial-gradient(circle,rgba(224,168,88,.2),rgba(224,168,88,.08) 48%,transparent 72%);filter:blur(5px)}
+.total-orb strong{font:700 31px/1 'Cinzel',Georgia,serif;color:#fff0c9;text-shadow:0 0 5px #fff,0 0 13px #f5c879,0 1px 3px #21150b;letter-spacing:.02em}
+.total-orb span{margin-top:5px;font:600 9px/1 'Cinzel',Georgia,serif;letter-spacing:.22em;color:#ffe2a8;text-shadow:0 0 8px rgba(255,205,119,.9)}
+@keyframes tharisOrbPulse{0%,100%{transform:scale(.97);filter:brightness(.94);box-shadow:0 0 8px 2px rgba(255,209,125,.55),0 0 20px 6px rgba(220,159,75,.32),inset 0 0 18px rgba(255,225,163,.5),inset 0 0 34px rgba(0,0,0,.72)}50%{transform:scale(1.035);filter:brightness(1.16);box-shadow:0 0 13px 4px rgba(255,222,155,.86),0 0 31px 11px rgba(220,159,75,.55),inset 0 0 23px rgba(255,240,199,.7),inset 0 0 34px rgba(0,0,0,.65)}}
+@media(max-width:800px){.total-orb-wrap{min-height:104px}.total-orb{width:92px;height:92px}.total-orb strong{font-size:27px}}
+@media(prefers-reduced-motion:reduce){.total-orb{animation:none}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -388,9 +411,9 @@ footer:before{
 </header>
 <main>
  <section class="stats">
-  <div class="stat"><strong id="statCards">0</strong><span>Cartas cadastradas</span></div>
-  <div class="stat"><strong id="statFactions">0</strong><span>Facções representadas</span></div>
   <div class="stat"><strong id="statNewCards">0</strong><span>Cartas Novas</span></div>
+  <div class="total-orb-wrap"><div class="total-orb"><strong id="statCards">0</strong><span>CARTAS</span></div></div>
+  <div class="stat"><strong id="statFactions">0</strong><span>Facções representadas</span></div>
   <div class="stat"><strong id="statRarities">0</strong><span>Raridades utilizadas</span></div>
  </section>
  <div class="panel" style="padding:14px">
