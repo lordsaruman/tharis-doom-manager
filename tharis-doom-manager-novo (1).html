@@ -594,7 +594,7 @@ footer:before{
      </div>
      <div class="field span2"><label>Anotações internas (não aparecem na carta)</label><textarea id="description" placeholder="Anotações privadas sobre esta carta"></textarea></div>
      <div class="field span2"><label>Texto de ambientação</label><textarea id="flavor" placeholder="Frase de ambientação"></textarea></div>
-     <div class="field span2"><label id="imageLabel">Ilustração específica desta carta (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">Esta imagem substitui a ilustração padrão somente nesta carta. Se não enviar uma imagem, será usada a imagem padrão definida em Aparência das cartas.</div><button type="button" id="clearCardImageBtn">Usar imagem padrão nesta carta</button></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
+     <div class="field span2"><label id="imageLabel">Ilustração específica desta carta (PNG ou JPG)</label><input id="image" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"><div class="hint" id="imageHint">Escolha um arquivo ou informe um link público direto para uma imagem PNG/JPG. Links precisam permitir acesso externo (CORS).</div><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:9px"><input id="imageUrlInput" type="url" placeholder="https://exemplo.com/ilustracao.png" autocomplete="url"><button type="button" id="loadImageUrlBtn">Carregar link</button></div><div class="hint" id="imageUrlStatus" role="status" aria-live="polite"></div><button type="button" id="clearCardImageBtn">Usar imagem padrão nesta carta</button></div><div class="field span2" id="ocrPanel" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><label style="margin:0">Reconhecimento automático da carta</label><button type="button" id="ocrBtn">Ler imagem agora</button></div><div class="hint" id="ocrStatus">Envie uma imagem PNG ou JPG para identificar os dados da carta.</div><textarea id="ocrRaw" rows="5" readonly placeholder="O texto reconhecido aparecerá aqui para conferência."></textarea><div class="hint">Os campos identificados serão preenchidos para revisão. Confira especialmente habilidades, efeito e ambientação antes de salvar.</div></div>
     </div>
    </div>
    <div class="preview-wrap">
@@ -1477,7 +1477,30 @@ $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))
  else{cards=cards.filter(c=>c.id!==editingId);persist();$('modal').classList.remove('open')}
 };
 $('image').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!/^image\/(png|jpeg)$/.test(f.type)){alert('Envie somente uma imagem PNG ou JPG.');e.target.value='';return}imagePath='';const r=new FileReader();r.onload=async()=>{imageData=r.result;imageOriginalData=imageData;drawCard($('preview'),collect());$('imageQualityStatus').textContent='Imagem carregada. Verificando resolução…';await autoUpscaleIfLowResolution();drawCard($('preview'),collect());if($('creationMode').value==='ready')runCardOCR(f)};r.readAsDataURL(f)};
-$('clearCardImageBtn').onclick=()=>{imageData='';imageOriginalData='';imagePath='';$('image').value='';drawCard($('preview'),collect())};
+$('loadImageUrlBtn').onclick=async()=>{
+ const field=$('imageUrlInput'),status=$('imageUrlStatus'),raw=field.value.trim();
+ if(!raw){status.textContent='Cole primeiro o link direto da imagem.';field.focus();return}
+ let url;try{url=new URL(raw)}catch(error){status.textContent='Link inválido. Informe um endereço HTTPS ou HTTP.';return}
+ if(!['https:','http:'].includes(url.protocol)){status.textContent='Use um link HTTP ou HTTPS.';return}
+ const btn=$('loadImageUrlBtn');btn.disabled=true;status.textContent='Carregando imagem pelo link…';
+ try{
+  const response=await fetch(url.href,{mode:'cors',credentials:'omit'});
+  if(!response.ok)throw new Error('O servidor respondeu HTTP '+response.status+'.');
+  const blob=await response.blob();
+  if(!/^image\/(png|jpeg)$/.test(blob.type))throw new Error('O link precisa apontar diretamente para uma imagem PNG ou JPG.');
+  if(blob.size>8*1024*1024)throw new Error('A imagem ultrapassa o limite de 8 MB.');
+  const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Não foi possível ler a imagem recebida.'));reader.readAsDataURL(blob)});
+  imageData=dataUrl;imageOriginalData=dataUrl;imagePath='';$('image').value='';
+  drawCard($('preview'),collect());$('imageQualityStatus').textContent='Imagem carregada pelo link. Verificando resolução…';
+  await autoUpscaleIfLowResolution();drawCard($('preview'),collect());
+  status.textContent='Imagem carregada com sucesso. Ela será salva junto com a carta.';
+  if($('creationMode').value==='ready')runCardOCR(new File([blob],'imagem-da-carta.'+(blob.type==='image/jpeg'?'jpg':'png'),{type:blob.type}));
+ }catch(error){
+  console.error('Falha ao carregar ilustração por URL:',error);
+  status.textContent='Não foi possível carregar: '+(error.message||error)+' Verifique se o link é direto e permite CORS.';
+ }finally{btn.disabled=false}
+};
+$('clearCardImageBtn').onclick=()=>{imageData='';imageOriginalData='';imagePath='';$('image').value='';$('imageUrlInput').value='';$('imageUrlStatus').textContent='';drawCard($('preview'),collect())};
 async function autoUpscaleIfLowResolution(){
  if(!imageData)return;
  try{
