@@ -397,15 +397,15 @@ footer:before{
 .stats{align-items:center}
 .total-orb-wrap{min-height:112px;display:grid;place-items:center;position:relative}
 .total-orb{
- width:104px;height:104px;border-radius:50%;display:flex;flex-direction:column;
+ width:124px;height:124px;border-radius:50%;display:flex;flex-direction:column;
  align-items:center;justify-content:center;position:relative;isolation:isolate;
- border:1px solid rgba(244,205,130,.92);
- background:
-  radial-gradient(circle at 34% 27%,rgba(255,255,236,.98) 0,rgba(255,231,174,.78) 5%,rgba(224,177,95,.58) 17%,rgba(125,78,37,.72) 42%,rgba(39,24,23,.96) 72%),
-  radial-gradient(circle,rgba(255,213,130,.35),transparent 70%);
- box-shadow:0 0 9px 2px rgba(255,209,125,.68),0 0 24px 8px rgba(220,159,75,.42),inset 0 0 18px rgba(255,225,163,.55),inset 0 0 34px rgba(0,0,0,.72);
+ border:0;background:transparent;box-shadow:none;
  animation:tharisOrbPulse 3.2s ease-in-out infinite;
 }
+.total-orb .orb-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:0;pointer-events:none;filter:drop-shadow(0 0 8px rgba(70,255,190,.42)) drop-shadow(0 0 15px rgba(230,177,83,.58))}
+.total-orb strong,.total-orb span{position:relative;z-index:1}
+.total-orb strong{font-size:25px;text-shadow:0 1px 4px #001b14,0 0 8px #00d69a}
+.total-orb span{margin-top:3px;text-shadow:0 1px 4px #001b14,0 0 7px #00d69a}
 .total-orb:before,.total-orb:after{content:"";position:absolute;inset:-7px;border-radius:50%;pointer-events:none;z-index:-1}
 .total-orb:before{border:1px solid rgba(235,190,112,.42);box-shadow:0 0 16px rgba(235,190,112,.48),inset 0 0 13px rgba(235,190,112,.18)}
 .total-orb:after{inset:-15px;background:radial-gradient(circle,rgba(224,168,88,.2),rgba(224,168,88,.08) 48%,transparent 72%);filter:blur(5px)}
@@ -497,7 +497,7 @@ footer:before{
  <section class="stats">
   <div class="stat"><strong id="statNewCards">0</strong><span>Cartas Novas</span></div>
   <div class="stat"><strong id="statTypes">0</strong><span>Tipos de cartas</span></div>
-  <div class="total-orb-wrap"><div class="total-orb"><strong id="statCards">0</strong><span>CARTAS</span></div></div>
+  <div class="total-orb-wrap"><div class="total-orb"><img class="orb-art" id="totalOrbArt" src="assets/referencias/ORB.png" alt=""><strong id="statCards">0</strong><span>CARTAS</span></div></div>
   <div class="stat"><strong id="statFactions">0</strong><span>Facções representadas</span></div>
   <div class="stat"><strong id="statRarities">0</strong><span>Raridades utilizadas</span></div>
  </section>
@@ -1737,6 +1737,28 @@ if(sb){
   }else if(event==='TOKEN_REFRESHED'&&session?.user){cloudUser=session.user}
  });
 }else{load();cloudLibraryReady=true;render()}
+})();
+</script>
+<script>
+/* Remove o fundo branco da ORB em memória e gera PNG transparente para a exibição */
+(()=>{
+ const img=document.getElementById('totalOrbArt');if(!img)return;
+ const process=()=>{
+  try{
+   const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+   const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);
+   const frame=ctx.getImageData(0,0,canvas.width,canvas.height),p=frame.data;
+   for(let i=0;i<p.length;i+=4){
+    const neutral=Math.min(p[i],p[i+1],p[i+2]);
+    const whiteness=Math.max(0,Math.min(1,(neutral-168)/72));
+    const chroma=Math.max(p[i],p[i+1],p[i+2])-neutral;
+    const remove=whiteness*(1-Math.min(1,chroma/52));
+    p[i+3]=Math.round(p[i+3]*(1-remove));
+   }
+   ctx.putImageData(frame,0,0);img.src=canvas.toDataURL('image/png');
+  }catch(e){console.warn('Não foi possível processar a transparência da ORB:',e)}
+ };
+ if(img.complete&&img.naturalWidth)process();else img.addEventListener('load',process,{once:true});
 })();
 </script>
 </body></html>
