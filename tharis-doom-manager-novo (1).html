@@ -879,7 +879,7 @@ function render(){
   list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t)&&(!n||c.isNew));
   const sort=$('sort').value;if(sort==='new-first')list.sort((a,b)=>(Number(!!b.isNew)-Number(!!a.isNew))||(a.name||'').localeCompare(b.name||''));if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
  $('resultCount').textContent=`${list.length} de ${cards.length} cartas`;
- $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}<span class="creator-signature ${c.createdBy?'':'unknown'}" title="${escapeHtml(c.createdBy?(collaboratorDirectory[c.createdBy]?.display_name||'Criador identificado'):'Autoria não registrada')}">${escapeHtml(c.createdBy?(collaboratorDirectory[c.createdBy]?.signature||'✦'):'?')}</span></div>${c.isNew?`<div class="new-card-badge tile-new-flag">✦ Carta nova</div>`:''}<div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div>${c.type==='Magias'?`<div class="tile-stats magic-stats"><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span></div>`:`<div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div>`}<div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
+ $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}<span class="creator-signature ${c.createdBy?'':'unknown'}" title="${escapeHtml(creatorLabel(c.createdBy))}">${escapeHtml(creatorMark(c.createdBy))}</span></div>${c.isNew?`<div class="new-card-badge tile-new-flag">✦ Carta nova</div>`:''}<div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div>${c.type==='Magias'?`<div class="tile-stats magic-stats"><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span></div>`:`<div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div>`}<div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
  document.querySelectorAll('canvas[data-card]').forEach(cv=>{const c=cards.find(x=>x.id===cv.dataset.card);if(c)drawCard(cv,c)});
  if(!list.some(x=>x.id===selectedCardId))selectedCardId=list[0]?.id||null;
  document.querySelectorAll('.cardtile[data-id]').forEach(tile=>tile.classList.toggle('is-selected',tile.dataset.id===selectedCardId));
@@ -1709,6 +1709,28 @@ async function loadCollaboratorDirectory(){
  const {data,error}=await sb.from('collaborator_directory').select('id,display_name,signature');
  if(error)throw error;
  collaboratorDirectory=Object.fromEntries((data||[]).map(p=>[p.id,p]));
+ if(isAdmin){
+  const {data:profiles,error:profileError}=await sb.from('profiles').select('id').order('created_at');
+  if(profileError)throw profileError;
+  const missing=(profiles||[]).filter(p=>!collaboratorDirectory[p.id]);
+  for(let i=0;i<missing.length;i++){
+   const entry={id:missing[i].id,display_name:'Colaborador '+(Object.keys(collaboratorDirectory).length+1+i),signature:['✦','◈','✧','❖','✥','⬡'][i%6]};
+   const {error:insertError}=await sb.from('collaborator_directory').insert(entry);
+   if(insertError)throw insertError;
+   collaboratorDirectory[entry.id]=entry;
+  }
+ }
+}
+function creatorMark(id){
+ if(!id)return '?';
+ const entry=collaboratorDirectory[id];if(entry?.signature)return entry.signature;
+ const marks=['✦','◈','✧','❖','✥','⬡'];let hash=0;
+ for(let i=0;i<id.length;i++)hash=(hash*31+id.charCodeAt(i))>>>0;
+ return marks[hash%marks.length];
+}
+function creatorLabel(id){
+ if(!id)return 'Autoria não registrada';
+ return collaboratorDirectory[id]?.display_name||('Colaborador · '+id.slice(0,6).toUpperCase());
 }
 function startCardsRealtime(){
  if(!cloudUser||!sb)return;
@@ -1721,6 +1743,9 @@ function startCardsRealtime(){
     console.warn('Falha ao atualizar biblioteca em tempo real:',error);
     $('cloudStatus').textContent='Online · falha ao atualizar';
    }),350);
+  })
+  .on('postgres_changes',{event:'*',schema:'public',table:'manager_settings'},()=>{
+   if(cloudUser)loadVisualSettings().catch(error=>console.warn('Falha ao sincronizar configurações compartilhadas:',error));
   })
   .subscribe(status=>{if(status==='SUBSCRIBED')$('cloudStatus').textContent='Online · sincronização ativa'});
 }
