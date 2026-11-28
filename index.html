@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" spellcheck="false" autocorrect="off" autocapitalize="off">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2217,5 +2217,16 @@ if(sb){
  };
  if(img.complete&&img.naturalWidth)process();else img.addEventListener('load',process,{once:true});
 })();
+</script>
+<script>
+/* Desativa a correção ortográfica e o autocorrect do navegador em todos os campos de texto. */
+document.documentElement.setAttribute('spellcheck','false');
+document.documentElement.setAttribute('autocorrect','off');
+document.documentElement.setAttribute('autocapitalize','off');
+document.querySelectorAll('input,textarea,[contenteditable="true"]').forEach(field=>{
+ field.setAttribute('spellcheck','false');
+ field.setAttribute('autocorrect','off');
+ field.setAttribute('autocapitalize','off');
+});
 </script>
 </body></html>
