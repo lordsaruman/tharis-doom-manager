@@ -673,7 +673,7 @@ $('loginBtn').addEventListener('click',async()=>{
  finally{button.disabled=false}
 });
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
-const KEY='tharisDoomManagerV2';
+const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
 let cards=[],editingId=null,imageData='',imagePath='',imageOriginalData='',cloudUser=null,selectedCardId=null;
 let defaultCardArt='',cardBackArt='',defaultCardArtPath=null,cardBackArtPath=null;
 let collaboratorDirectory={},cardsRealtimeChannel=null;
@@ -768,8 +768,17 @@ async function loadVisualSettings(){
  if(error)throw error;
  const cfg=data?.settings||{};
  defaultCardArtPath=cfg.defaultCardArtPath||null;cardBackArtPath=cfg.cardBackArtPath||null;
- if(defaultCardArtPath)defaultCardArt=await signedImage(defaultCardArtPath);
- if(cardBackArtPath)cardBackArt=await signedImage(cardBackArtPath);
+ // Migração única das imagens de configuração antigas; após migrar, não voltamos a persistir nada no navegador.
+ if(!data){
+  try{
+   const legacy=JSON.parse(localStorage.getItem(VISUAL_KEY)||'{}');
+   defaultCardArt=legacy.defaultCardArt||'';cardBackArt=legacy.cardBackArt||'';
+   if(defaultCardArt||cardBackArt)await saveVisualSettings();
+   localStorage.removeItem(VISUAL_KEY);
+  }catch(migrationError){console.warn('Não foi possível migrar as configurações visuais locais:',migrationError)}
+ }
+ if(defaultCardArtPath&&!defaultCardArt)defaultCardArt=await signedImage(defaultCardArtPath);
+ if(cardBackArtPath&&!cardBackArt)cardBackArt=await signedImage(cardBackArtPath);
  if($('defaultCardArtPreview')){if(defaultCardArt)$('defaultCardArtPreview').src=defaultCardArt;else $('defaultCardArtPreview').removeAttribute('src')}
  if($('cardBackPreview')){if(cardBackArt)$('cardBackPreview').src=cardBackArt;else $('cardBackPreview').removeAttribute('src')}
 }
@@ -1656,7 +1665,7 @@ inspectorStage.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e
 $('exportGifBtn').onclick=exportInspectorGIF;
 $('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Tharis Doom Manager',version:2,exportedAt:new Date().toISOString(),cards},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tharis-doom-backup.json';a.click();URL.revokeObjectURL(a.href)};
 $('importBtn').onclick=()=>$('importFile').click();
-$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(!cloudUser)throw Error('Entre na conta antes de importar cartas.');const data=JSON.parse(r.result),incoming=Array.isArray(data)?data:data.cards;if(!Array.isArray(incoming))throw Error('Formato inválido');if(!confirm(`Importar ${incoming.length} cartas para a biblioteca compartilhada? Cartas com o mesmo ID serão atualizadas.`))return;for(const raw of incoming){const c={...raw,id:raw.id||crypto.randomUUID()};const path=await uploadCardImage(c);const payload={id:c.id,name:c.name,faction:c.faction||null,card_type:c.type||null,rarity:c.rarity||null,card_data:{...c,image:'',imagePath:path,createdBy:c.createdBy||cloudUser.id},image_path:path,created_by:c.createdBy||cloudUser.id,updated_by:cloudUser.id,updated_at:new Date().toISOString()};const {error}=await sb.from('cards').upsert(payload);if(error)throw error;}await loadCloudCards();alert('Importação concluída na biblioteca compartilhada.')}catch(err){alert('Não foi possível importar: '+err.message)}finally{e.target.value=''}};r.readAsText(f)};
+$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(!cloudUser)throw Error('Entre na conta antes de importar cartas.');const data=JSON.parse(r.result),incoming=Array.isArray(data)?data:data.cards;if(!Array.isArray(incoming))throw Error('Formato inválido');if(!confirm(`Importar ${incoming.length} cartas para a biblioteca compartilhada? Cartas com o mesmo ID serão atualizadas.`))return;for(const raw of incoming){const c={...raw,id:raw.id||crypto.randomUUID()};const {data:existing}=await sb.from('cards').select('created_by').eq('id',c.id).maybeSingle();const creatorId=existing?existing.created_by:(c.createdBy||cloudUser.id);const path=await uploadCardImage(c);const payload={id:c.id,name:c.name,faction:c.faction||null,card_type:c.type||null,rarity:c.rarity||null,card_data:{...c,image:'',imagePath:path,createdBy:creatorId},image_path:path,created_by:creatorId,updated_by:cloudUser.id,updated_at:new Date().toISOString()};const {error}=await sb.from('cards').upsert(payload);if(error)throw error;}await loadCloudCards();alert('Importação concluída na biblioteca compartilhada.')}catch(err){alert('Não foi possível importar: '+err.message)}finally{e.target.value=''}};r.readAsText(f)};
 
 async function uploadCardImage(c){
  if(!c.image)return c.imagePath||null;
