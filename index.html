@@ -496,6 +496,18 @@ footer:before{
 .preview-wrap #imageQualityStatus,.preview-wrap>.hint{width:min(100%,300px);text-align:left}
 #modal.magic-type .preview-wrap>.preview-actions-top{order:0}
 #modal.magic-type .preview-wrap>#preview{order:1}
+
+/* CATÁLOGO COMPARTILHADO DE CARACTERÍSTICAS */
+.trait-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0 10px}
+.trait-option{display:flex;align-items:center;gap:8px;min-width:0;margin:0;padding:8px 9px;border:1px solid #57452f;border-radius:4px;background:linear-gradient(180deg,#211910,#15110d);color:#c9b895;font:14px 'Crimson Pro',Georgia,serif;cursor:pointer}
+.trait-option:has(input:checked){border-color:#c5a36b;background:linear-gradient(180deg,#3b2c1b,#241a11);color:#f0d9aa;box-shadow:inset 0 0 0 1px #b8955933}
+.trait-option input{width:16px;height:16px;flex:0 0 16px;margin:0;padding:0;accent-color:#c5a36b}
+.trait-option span{min-width:0;overflow-wrap:anywhere}
+.trait-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+.trait-add-row button{white-space:nowrap}
+#traitStatus{min-height:18px;margin-top:6px}
+@media(max-width:700px){.trait-picker{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -589,7 +601,7 @@ footer:before{
      </div>
      <div class="field span2"><label>Facção</label><input id="faction" type="hidden" value=""><div class="faction-picker" id="factionPicker" aria-label="Selecionar facção"></div></div>
      <div class="field"><label>Alinhamento</label><select id="alignment"><option value="">Selecione um alinhamento</option><option>Luz</option><option>Neutro</option><option>Sombra</option></select></div>
-     <div class="field" id="traitField"><label>Características</label><input id="trait" placeholder="Ex.: Bastião, Celestial, Morto-vivo"></div>
+     <div class="field" id="traitField"><label>Características</label><input id="trait" type="hidden" value=""><div id="traitPicker" class="trait-picker" aria-label="Selecionar características"></div><div class="trait-add-row"><input id="newTraitInput" type="text" maxlength="48" placeholder="Nova característica…"><button type="button" id="addTraitBtn">Adicionar</button></div><div id="traitStatus" class="hint">Marque todas as características aplicáveis à criatura.</div></div>
      <div class="field span2 attributes-panel" id="attributesPanel">
       <div class="attributes-heading">ATRIBUTOS</div>
       <div class="attributes-grid">
@@ -679,7 +691,7 @@ const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon
 const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
 let cards=[],editingId=null,imageData='',imagePath='',imageOriginalData='',cloudUser=null,selectedCardId=null;
 let defaultCardArt='',cardBackArt='',defaultCardArtPath=null,cardBackArtPath=null;
-let collaboratorDirectory={},cardsRealtimeChannel=null;
+let collaboratorDirectory={},cardsRealtimeChannel=null,traitCatalog=[];
 let isAdmin=false,assetFileObject=null;
 const SUPABASE_URL='https://zzwabaaeexidmzyzuvdd.supabase.co';
 const SUPABASE_KEY='sb_publishable_hOAgiQUZtzOg0kolL606mQ_RGoootVu';
@@ -1488,13 +1500,61 @@ async function runCardOCR(file){
  }
 }
 $('ocrBtn').addEventListener('click',()=>{const file=$('image').files?.[0];if(file)runCardOCR(file);else $('ocrStatus').textContent='Selecione primeiro a imagem PNG ou JPG da carta.'});
+function parseTraitNames(raw){
+ const values=String(raw||'').split(/[,;|\n]+/).map(v=>v.trim()).filter(Boolean),seen=new Set(),result=[];
+ for(const value of values){const key=value.toLocaleLowerCase('pt-BR');if(!seen.has(key)){seen.add(key);result.push(value)}}
+ return result;
+}
+function canonicalTraitName(value){
+ const key=String(value||'').trim().toLocaleLowerCase('pt-BR');
+ return traitCatalog.find(item=>item.name.toLocaleLowerCase('pt-BR')===key)?.name||String(value||'').trim();
+}
+function renderTraitPicker(raw=$('trait')?.value||''){
+ const host=$('traitPicker');if(!host)return;
+ const selected=new Set(parseTraitNames(raw).map(v=>v.toLocaleLowerCase('pt-BR')));
+ const options=[...traitCatalog];
+ parseTraitNames(raw).forEach(name=>{if(!options.some(item=>item.name.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR')))options.push({name})});
+ options.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+ host.innerHTML=options.length?options.map(item=>'<label class="trait-option"><input type="checkbox" value="'+escapeHtml(item.name)+'" '+(selected.has(item.name.toLocaleLowerCase('pt-BR'))?'checked':'')+'><span>'+escapeHtml(item.name)+'</span></label>').join(''):'<div class="hint">Nenhuma característica cadastrada. Adicione a primeira abaixo.</div>';
+}
+function syncTraitSelection(){
+ const selected=Array.from($('traitPicker').querySelectorAll('input[type="checkbox"]:checked')).map(el=>el.value);
+ $('trait').value=selected.join(', ');
+ drawCard($('preview'),collect());
+}
+async function loadCreatureTraits(){
+ if(!cloudUser||!sb){traitCatalog=[];return}
+ const {data,error}=await sb.from('creature_traits').select('id,name,created_by,created_at').order('name');
+ if(error)throw error;
+ traitCatalog=data||[];
+ renderTraitPicker();
+}
+async function addCreatureTrait(){
+ const input=$('newTraitInput'),status=$('traitStatus'),button=$('addTraitBtn');
+ const name=input.value.trim().replace(/\s+/g,' ');
+ if(!name){status.textContent='Digite o nome da característica.';input.focus();return}
+ if(!cloudUser||!sb){status.textContent='Entre na conta para cadastrar uma característica compartilhada.';return}
+ if(traitCatalog.some(item=>item.name.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'))){status.textContent='Essa característica já está cadastrada.';input.focus();return}
+ button.disabled=true;status.textContent='Salvando no catálogo compartilhado…';
+ try{
+  const {data,error}=await sb.from('creature_traits').insert({name}).select('id,name,created_by,created_at').single();
+  if(error)throw error;
+  traitCatalog=[...traitCatalog,data].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  const selected=parseTraitNames($('trait').value);selected.push(data.name);$('trait').value=selected.join(', ');
+  input.value='';renderTraitPicker();drawCard($('preview'),collect());
+  status.textContent='Característica adicionada ao catálogo compartilhado.';
+ }catch(error){
+  if(error.code==='23505')status.textContent='Essa característica já existe no catálogo.';
+  else status.textContent='Não foi possível cadastrar: '+error.message;
+ }finally{button.disabled=false}
+}
 function updateEffectLabel(){const magic=$('type').value==='Magias';$('effectLabel').textContent=magic?'Efeito':'Habilidades';$('effect').placeholder=magic?'Descreva o efeito da magia':'Habilidades e efeitos da carta';$('modal').classList.toggle('magic-type',magic)}
 function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imageOriginalData=imageData;imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
  const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,magicTextGradient:180,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0,imageWidth:100,imageHeight:100,imageContrast:100,imageBrightness:100,imageSaturation:100,imageSharpness:0};
  $('isNew').checked=!!c?.isNew;
- Object.keys(vals).forEach(k=>{const el=$(k);let value=c?.[k]??vals[k];if(k==='rarity')value=rarityKey(value);if((k==='faction'||k==='alignment')&&value&&el.options&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';$('imageUrlInput').value='';$('imageUrlStatus').textContent='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
+ Object.keys(vals).forEach(k=>{const el=$(k);let value=c?.[k]??vals[k];if(k==='rarity')value=rarityKey(value);if((k==='faction'||k==='alignment')&&value&&el.options&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});renderTraitPicker(c?.trait||'');$('traitStatus').textContent='Marque todas as características aplicáveis à criatura.';$('newTraitInput').value='';$('image').value='';$('imageUrlInput').value='';$('imageUrlStatus').textContent='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
 function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),nameOffsetY:+$('nameOffsetY').value||0,effectOffsetY:+$('effectOffsetY').value||0,magicTextGradient:+$('magicTextGradient').value||0,faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,imageWidth:+$('imageWidth').value,imageHeight:+$('imageHeight').value,imageContrast:+$('imageContrast').value,imageBrightness:+$('imageBrightness').value,imageSaturation:+$('imageSaturation').value,imageSharpness:+$('imageSharpness').value,updated:Date.now()}}
 async function correctPortugueseSpelling(text){
@@ -1509,7 +1569,7 @@ async function correctPortugueseSpelling(text){
  return corrected;
 }
 async function reviewCardSpelling(){
- const ids=['name','trait','effect','flavor'];
+ const ids=['name','effect','flavor'];
  const results=await Promise.all(ids.map(async id=>{const el=$(id),original=el.value;try{return {id,value:await correctPortugueseSpelling(original),original,failed:false}}catch(error){console.warn('Revisão ortográfica falhou no campo '+id,error);return {id,value:original,original,failed:true}}}));
  let changed=false,failed=false;
  for(const item of results){$(item.id).value=item.value;if(item.value!==item.original)changed=true;failed=failed||item.failed}
@@ -1547,6 +1607,7 @@ async function save(){
 async function exportPNG(){const c=collect();if(!c.name){alert('Informe o nome da carta antes de exportar.');return}if(c.creationMode==='ready'&&!c.image){alert('Envie a imagem completa da carta.');return}const cv=document.createElement('canvas');cv.width=816;cv.height=1542;if(c.creationMode==='ready'){const readyImg=new Image();readyImg.onload=()=>{const ctx=cv.getContext('2d');ctx.fillStyle='#09090c';ctx.fillRect(0,0,cv.width,cv.height);const scale=Math.min(cv.width/readyImg.width,cv.height/readyImg.height),dw=readyImg.width*scale,dh=readyImg.height*scale;ctx.drawImage(readyImg,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh);const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\\w\\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()};readyImg.src=c.image;return}const waitForImage=src=>new Promise(resolve=>{if(!src)return resolve();const img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;if(img.complete)resolve()});await Promise.all([waitForImage(c.image),waitForImage(c.type==='Magias'?'Molde%20Magias.png':c.type==='Criatura'?'Modelo%20Carta%20Ouro.png':'')]);drawCard(cv,c);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const a=document.createElement('a');a.download=(c.name||'carta').replace(/[^\w\-]+/g,'_')+'.png';a.href=cv.toDataURL('image/png');a.click()}
 $('creationMode').addEventListener('change',updateCreationMode);
 $('factionPicker').addEventListener('click',e=>{const pick=e.target.closest('[data-faction]');if(!pick)return;const current=$('faction').value;$('faction').value=current===pick.dataset.faction?'':pick.dataset.faction;updateFactionPicker();drawCard($('preview'),collect())});
+$('traitPicker').addEventListener('change',syncTraitSelection);$('addTraitBtn').addEventListener('click',addCreatureTrait);$('newTraitInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCreatureTrait()}});
 $('faction').addEventListener('change',updateFactionPicker);$('type').addEventListener('change',updateEffectLabel);$('newBtn').onclick=()=>openEditor();$('closeBtn').onclick=()=>$('modal').classList.remove('open');$('saveBtnBottom').onclick=save;$('saveBtnBottom').onclick=save;$('pngBtnBottom').onclick=exportPNG;
 
 $('deleteBtn').onclick=async()=>{if(!editingId||!confirm('Excluir esta carta?'))return;
@@ -1743,7 +1804,7 @@ async function renderCodex(){
  const factionRows=codexCount(cards,c=>c.faction||'Sem facção');
  const rarityRows=codexCount(cards,c=>c.rarity||'Sem raridade');
  const traits=new Map();
- cards.forEach(c=>{const raw=String(c.trait||'').trim();if(!raw)return;raw.split(/[,;|\n]+/).map(v=>v.trim()).filter(Boolean).forEach(v=>traits.set(v,(traits.get(v)||0)+1))});
+ creatures.forEach(c=>parseTraitNames(c.trait).map(canonicalTraitName).forEach(v=>traits.set(v,(traits.get(v)||0)+1)));
  const traitRows=[...traits.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pt-BR')).slice(0,15);
  const content='<div class="codex-metrics">'+
   '<div class="codex-metric"><strong>'+total+'</strong><span>Total de cartas</span></div>'+
@@ -1821,6 +1882,9 @@ function startCardsRealtime(){
   .on('postgres_changes',{event:'*',schema:'public',table:'manager_settings'},()=>{
    if(cloudUser)loadVisualSettings().catch(error=>console.warn('Falha ao sincronizar configurações compartilhadas:',error));
   })
+  .on('postgres_changes',{event:'*',schema:'public',table:'creature_traits'},()=>{
+   if(cloudUser)loadCreatureTraits().catch(error=>console.warn('Falha ao sincronizar catálogo de características:',error));
+  })
   .subscribe(status=>{if(status==='SUBSCRIBED')$('cloudStatus').textContent='Online · sincronização ativa'});
 }
 function stopCardsRealtime(){if(cardsRealtimeChannel&&sb)sb.removeChannel(cardsRealtimeChannel);cardsRealtimeChannel=null;}
@@ -1836,6 +1900,7 @@ async function handleSession(session){
  if(cloudUser){
   try{
    await loadCollaboratorDirectory();
+   await loadCreatureTraits();
    await loadVisualSettings();
    await loadCloudCards();
    startCardsRealtime();
