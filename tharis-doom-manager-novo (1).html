@@ -628,9 +628,10 @@ function drawCreatureCard(canvas,c){
   ctx.restore();
  };
  const paint=()=>{
-  // Calcula a bandeira antes da moldura: a esfera de custo é desenhada por cima dela.
+  // A haste da bandeira passa por trás da moldura e da esfera de custo.
+  drawInsigniaFlag(ctx,c,w,h,'background');
   if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
-  drawInsigniaFlag(ctx,c,w,h);
+  drawInsigniaFlag(ctx,c,w,h,'emblems');
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';
   ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
   const stat=(value,x,y,size)=>{if(value!==undefined&&value!==null&&value!==''){ctx.font='normal '+(w*size)+'px Georgia';ctx.fillText(String(value),w*x,h*y)}};
@@ -684,7 +685,7 @@ function drawTypeInsignia(ctx,type,cx,cy,size){
  ctx.drawImage(img,cx-size*.43,cy-size*.43,size*.86,size*.86);
  ctx.restore();
 }
-function drawInsigniaFlag(ctx,c,w,h){
+function drawInsigniaFlag(ctx,c,w,h,layer='all'){
  const typeKey=c.type==='Magias'?'Magias':c.type==='Construcao'?'Construção':c.type;
  const items=[];
  const typeImg=INSIGNIA_DRAW_IMAGES[typeKey];
@@ -696,12 +697,17 @@ function drawInsigniaFlag(ctx,c,w,h){
  if(!items.length)return;
  const size=w*.088,gap=w*.012,pad=w*.012,flagWidth=w*.112;
  const flagHeight=pad*2+items.length*size+(items.length-1)*gap+w*.025;
- const flagX=w*.95-flagWidth/2,flagY=h*.052;
- ctx.save();ctx.beginPath();
- ctx.moveTo(flagX,flagY);ctx.lineTo(flagX+flagWidth,flagY);ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.84);
- ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);ctx.lineTo(flagX,flagY+flagHeight*.84);ctx.closePath();
- ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();
- items.forEach((img,index)=>ctx.drawImage(img,flagX+(flagWidth-size)/2,flagY+pad+index*(size+gap),size,size));
+ const flagX=w*.95-flagWidth/2,flagY=-h*.012;
+ ctx.save();
+ if(layer==='all'||layer==='background'){
+  ctx.beginPath();
+  ctx.moveTo(flagX,flagY);ctx.lineTo(flagX+flagWidth,flagY);ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.84);
+  ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);ctx.lineTo(flagX,flagY+flagHeight*.84);ctx.closePath();
+  ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();
+ }
+ if(layer==='all'||layer==='emblems'){
+  items.forEach((img,index)=>ctx.drawImage(img,flagX+(flagWidth-size)/2,flagY+pad+index*(size+gap),size,size));
+ }
  ctx.restore();
 }
 function drawMagicCard(canvas,c){
@@ -736,13 +742,12 @@ function drawMagicCard(canvas,c){
   shade.addColorStop(1,'rgba(5,6,10,.82)');
   ctx.fillStyle=shade;ctx.fillRect(w*.075,top,w*.85,bottom-top);
 
-  // Usa o arquivo Molde Magias.png integralmente, sem recortar,
-  // remover pixels pretos, alterar transparência ou redesenhar ornamentos.
+  // A bandeira começa atrás da esfera de custo; o molde original permanece intacto.
+  drawInsigniaFlag(ctx,c,w,h,'background');
   if(magicFrame.complete&&magicFrame.naturalWidth){
    ctx.drawImage(magicFrame,0,0,w,h);
   }
-  // A bandeira reúne tipo, alinhamento e facção, nessa ordem.
-  drawInsigniaFlag(ctx,c,w,h);
+  drawInsigniaFlag(ctx,c,w,h,'emblems');
 
   const drawRichText=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color,fitToBox=false)=>{
   const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
@@ -834,7 +839,9 @@ function drawCard(canvas,c){
  ctx.fillStyle='#f1d58c';ctx.textAlign='right';ctx.font='bold '+(w*.04)+'px sans-serif';ctx.fillText(String(c.cost??0),w*.87,h*.955);
  ctx.textAlign='left';ctx.font=(w*.025)+'px sans-serif';ctx.fillStyle='#ddd';ctx.fillText([c.life?'V '+c.life:'',c.power?'A '+c.power:'',c.defense?'D '+c.defense:''].filter(Boolean).join('  '),w*.11,h*.955);
  if(c.faction==='Monte Celéstia'||c.faction==='Baator'){ctx.beginPath();ctx.arc(w*.88,h*.075,w*.035,0,Math.PI*2);ctx.fillStyle='#15151b';ctx.fill();ctx.strokeStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.stroke();ctx.fillStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.font='bold '+(w*.045)+'px Georgia';ctx.textAlign='center';ctx.fillText(c.faction==='Baator'?'⌁':'✧',w*.88,h*.091)}
- drawInsigniaFlag(ctx,c,w,h);
+ drawInsigniaFlag(ctx,c,w,h,'background');
+ // A moldura e a esfera de custo ficam à frente da bandeira.
+ drawInsigniaFlag(ctx,c,w,h,'emblems');
 }
 function updateCreationMode(){const ready=$('creationMode').value==='ready';$('cropControls').style.display=ready?'none':'grid';$('ocrPanel').style.display=ready?'block':'none';$('imageLabel').textContent=ready?'Imagem completa da carta (PNG ou JPG)':'Ilustração (PNG ou JPG)';$('imageHint').textContent=ready?'Envie a imagem final da carta. O reconhecimento preencherá os dados sem modificar a imagem.':(cloudUser?'A imagem será armazenada no Supabase Storage.':'A imagem fica incorporada ao registro local até conectar sua conta.');drawCard($('preview'),collect())}
 let ocrBusy=false;
