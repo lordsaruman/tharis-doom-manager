@@ -620,7 +620,7 @@ function refreshSelects(){
  const all=[...new Set([...FACTIONS,...cards.map(c=>c.faction).filter(Boolean)])];
  const factionOptions=$('factionOptions');if(factionOptions)factionOptions.innerHTML=all.map(x=>`<option value="${escapeHtml(x)}">`).join('');
  const fill=(id,values,label)=>{const old=$(id).value;$(id).innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option>${escapeHtml(v)}</option>`).join('');$(id).value=old};
- fill('filterFaction',all,'Todas as facções');fill('filterRarity',[...new Set(cards.map(c=>c.rarity).filter(Boolean))].sort(),'Todas as raridades');fill('filterType',[...new Set(cards.map(c=>c.type).filter(Boolean))].sort(),'Todos os tipos');
+ fill('filterFaction',all,'Todas as facções');fill('filterRarity',[...new Set(cards.map(c=>c.rarity).filter(Boolean))].sort(),'Todas as raridades');if($('filterType'))fill('filterType',[...new Set(cards.map(c=>c.type).filter(Boolean))].sort(),'Todos os tipos');
  $('factionLegend').innerHTML=all.map(f=>`<span class="faction-chip">${sigil(f,22)}${escapeHtml(f)}</span>`).join('');
  updateFactionPicker();
 }
@@ -649,7 +649,7 @@ function render(){
  $('statFactions').textContent=new Set(cards.map(c=>c.faction).filter(Boolean)).size;
    $('statNewCards').textContent=cards.filter(c=>c.isNew).length;
  $('statRarities').textContent=new Set(cards.map(c=>c.rarity).filter(Boolean)).size;
-   let list=cards.slice(),q=$('search').value.toLowerCase(),f=$('filterFaction').value,r=$('filterRarity').value,t=$('filterType').value,n=$('filterNew').value;
+   let list=cards.slice(),q=$('search').value.toLowerCase(),f=$('filterFaction').value,r=$('filterRarity').value,t=$('filterType')?.value||'',n=$('filterNew').value;
   list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t)&&(!n||c.isNew));
   const sort=$('sort').value;if(sort==='new-first')list.sort((a,b)=>(Number(!!b.isNew)-Number(!!a.isNew))||(a.name||'').localeCompare(b.name||''));if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
  $('resultCount').textContent=`${list.length} de ${cards.length} cartas`;
