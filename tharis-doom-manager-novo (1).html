@@ -658,7 +658,9 @@ footer:before{
 /* Perfis e economia dos jogadores */
 .player-mode .sector-nav,.player-mode header .actions>button:not(#authBtn):not(#logoutBtn),.player-mode header .actions #cloudStatus,.player-mode .notes-edge-toggle,.player-mode .notes-drawer{display:none!important}
 .player-mode .sector-view{display:none!important}
+.player-mode .sector-nav{display:none!important}
 .player-mode #playerPortal{display:block!important}
+.player-mode header .actions :not(#authBtn):not(#logoutBtn):not(#gameAreaBtn):not(#cloudStatus){display:none!important}
 .player-portal{display:none;max-width:1050px;margin:34px auto;padding:0 18px 50px}
 .player-hero{background:linear-gradient(135deg,#28202c,#17191f 70%);border:1px solid #665039;border-radius:14px;padding:26px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
 .player-hero h2{font-family:Georgia,serif;font-size:clamp(24px,4vw,36px);margin:0 0 5px;color:#e5c58b}
@@ -693,7 +695,7 @@ footer:before{
 <header>
  <div class="brand"><div class="brand-mark">✦</div><div><h1>THARIS DOOM</h1><small>CARD MANAGER · NOVA EDIÇÃO</small></div></div>
  <div class="actions">
-  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="cardVisualsBtn">Aparência das cartas</button><button id="codexBtn">Códice da coleção</button><button id="glossaryBtn">Glossário do jogo</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="teamBtn" style="display:none">Gerenciar colaboradores</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
+  <span id="cloudStatus" style="font-size:12px;color:#aaa">Modo local · não conectado</span><button id="authBtn">Entrar</button><button id="gameAreaBtn" style="display:none">Minha área de jogo</button><button id="cardVisualsBtn">Aparência das cartas</button><button id="codexBtn">Códice da coleção</button><button id="glossaryBtn">Glossário do jogo</button><button id="assetsBtn" style="display:none">Gerenciar imagens</button><button id="teamBtn" style="display:none">Gerenciar colaboradores</button><button id="importBtn">Importar JSON</button><button id="exportBtn">Backup JSON</button><button class="primary" id="newBtn">＋ Nova carta</button>
   <input type="file" id="importFile" accept=".json,application/json" hidden>
  </div>
 </header>
@@ -783,7 +785,7 @@ footer:before{
  <section id="playerPortal" class="player-portal">
   <div class="player-hero">
    <div><h2 id="playerWelcome">Bem-vindo a Tharis Doom</h2><p id="playerEmailLabel">Seu perfil de jogador</p></div>
-   <div class="player-wallet"><strong id="playerBalance">0</strong><span>MOEDAS</span></div>
+   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div class="player-wallet"><strong id="playerBalance">0</strong><span>MOEDAS</span></div><button id="returnManagerBtn" type="button" style="display:none">Voltar ao gerenciador</button></div>
   </div>
   <div class="player-metrics">
    <div class="player-metric"><strong id="playerEarned">0</strong><span>Total recebido</span></div>
@@ -796,6 +798,17 @@ footer:before{
   <div class="player-panel" style="margin-top:16px">
    <h3>LOJA DE PACOTES</h3>
    <div class="player-empty">A loja está sendo preparada. Em breve você poderá trocar suas moedas por pacotes com cinco cartas e chances de raridade diferentes.</div>
+  </div>
+  <div class="player-panel" id="playerDecksPanel" style="margin-top:16px">
+   <h3>MEUS DECKS</h3>
+   <p class="hint">Monte e salve seus baralhos. Seus decks são privados e ficam vinculados à sua conta.</p>
+   <form id="playerDeckCreateForm" class="players-form" style="grid-template-columns:1fr auto">
+    <div class="field"><label for="playerDeckName">Nome do deck</label><input id="playerDeckName" maxlength="60" required placeholder="Ex.: Legião das Moiras"></div>
+    <button class="primary" id="playerDeckCreateBtn" type="submit">＋ Criar deck</button>
+   </form>
+   <div id="playerDecksList" class="players-list"><div class="player-empty">Carregando decks…</div></div>
+   <div id="playerDeckEditor" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)"></div>
+   <p class="hint" style="margin-top:10px">Por enquanto, a montagem utiliza o catálogo de cartas do jogo. Quando a coleção individual estiver pronta, conectaremos o editor às cartas efetivamente adquiridas e às regras oficiais de construção.</p>
   </div>
  </section>
 </main>
@@ -957,6 +970,11 @@ function initSectorNavigation(){
  ['cardVisualsBtn','assetsBtn','importBtn','exportBtn'].forEach(id=>move(id,'adminTools'));
  const openGlossary=$('openGlossarySector');if(openGlossary)openGlossary.addEventListener('click',()=>openGlossaryModal());
  $('playerForm').addEventListener('submit',createPlayer);
+ $('playerDeckCreateForm').addEventListener('submit',createPlayerDeck);
+ $('playerDecksList').addEventListener('click',handlePlayerDeckListClick);
+ $('playerDeckEditor').addEventListener('click',handlePlayerDeckEditorClick);
+ $('returnManagerBtn').addEventListener('click',()=>{document.body.classList.remove('player-mode');render();});
+ $('gameAreaBtn').addEventListener('click',async()=>{document.body.classList.add('player-mode');try{await loadPlayerPortal()}catch(error){console.error(error);$('playerDecksList').innerHTML='<div class="player-empty">Não foi possível carregar seus decks: '+escapeHtml(error.message)+'</div>'}});
  $('playersList').addEventListener('click',e=>{const button=e.target.closest('[data-player-adjust]');if(button)adjustPlayerWallet(button.dataset.playerAdjust)});
  $('activitySearch').addEventListener('input',renderActivityLog);
  $('activityTableFilter').addEventListener('change',renderActivityLog);
@@ -1057,13 +1075,77 @@ async function adjustPlayerWallet(id){
  $('playerAdminStatus').textContent='Carteira atualizada para '+(player.display_name||player.email)+'.';await loadPlayers();
 }
 async function loadPlayerPortal(){
- if(!cloudUser||!isPlayer)return;
+ if(!cloudUser)return;
  const [profile,wallet,transactions]=await Promise.all([sb.from('player_profiles').select('display_name').eq('user_id',cloudUser.id).maybeSingle(),sb.from('player_wallets').select('balance,lifetime_earned,lifetime_spent').eq('user_id',cloudUser.id).maybeSingle(),sb.from('wallet_transactions').select('amount,balance_after,reason,transaction_type,created_at').eq('player_id',cloudUser.id).order('created_at',{ascending:false}).limit(30)]);
  if(profile.error)throw profile.error;if(wallet.error)throw wallet.error;if(transactions.error)throw transactions.error;
- $('playerWelcome').textContent='Olá, '+(profile.data?.display_name||'jogador')+'!';$('playerEmailLabel').textContent=cloudUser.email||'Perfil de jogador';
+ $('playerWelcome').textContent='Olá, '+(profile.data?.display_name||'jogador')+'!';$('playerEmailLabel').textContent=(isStaff?'Área de jogo da equipe · ':'')+(cloudUser.email||'Perfil de jogador');
+ $('returnManagerBtn').style.display=isStaff?'inline-block':'none';
  $('playerBalance').textContent=coinFormat(wallet.data?.balance);$('playerEarned').textContent=coinFormat(wallet.data?.lifetime_earned);$('playerSpent').textContent=coinFormat(wallet.data?.lifetime_spent);
  const rows=transactions.data||[];
  $('playerTransactions').innerHTML=rows.length?rows.map(tx=>'<div class="player-transaction"><div><strong>'+escapeHtml(tx.reason)+'</strong><small>'+new Date(tx.created_at).toLocaleString('pt-BR')+'</small></div><div style="text-align:right"><span class="'+(tx.amount>0?'positive':'negative')+'">'+(tx.amount>0?'+':'')+coinFormat(tx.amount)+'</span><small>Saldo: '+coinFormat(tx.balance_after)+'</small></div></div>').join(''):'<div class="player-empty">Sua carteira ainda não possui movimentações.</div>';
+ await loadPlayerDecks();
+}
+let cachedPlayerDecks=[],activePlayerDeckId=null;
+function deckCardById(id){return cards.find(card=>String(card.id)===String(id))}
+function renderPlayerDecks(){
+ const list=$('playerDecksList'),editor=$('playerDeckEditor');
+ if(!cachedPlayerDecks.length){list.innerHTML='<div class="player-empty">Você ainda não criou nenhum deck.</div>';editor.style.display='none';return}
+ list.innerHTML=cachedPlayerDecks.map(deck=>'<div class="player-admin-row" style="grid-template-columns:1fr auto auto"><div><strong>'+escapeHtml(deck.name)+'</strong><small>'+((deck.cards||[]).reduce((sum,item)=>sum+(Number(item.quantity)||0),0))+' carta(s)</small></div><button type="button" data-deck-open="'+deck.id+'">Abrir</button><button type="button" class="danger" data-deck-delete="'+deck.id+'">Excluir</button></div>').join('');
+ const active=cachedPlayerDecks.find(deck=>deck.id===activePlayerDeckId);
+ if(!active){editor.style.display='none';return}
+ editor.style.display='block';
+ const options=cards.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR')).map(card=>'<option value="'+escapeHtml(card.id)+'">'+escapeHtml(card.name||'Carta sem nome')+' · '+escapeHtml(card.faction||'Sem facção')+' · '+escapeHtml(card.rarity||'')+'</option>').join('');
+ const entries=(active.cards||[]).map(item=>{const card=deckCardById(item.card_id);return '<div class="player-transaction"><div><strong>'+escapeHtml(card?.name||'Carta indisponível')+'</strong><small>'+escapeHtml(card?.type||'')+' · '+escapeHtml(card?.faction||'')+' · '+escapeHtml(card?.rarity||'')+'</small></div><div style="display:flex;align-items:center;gap:10px"><b>×'+Number(item.quantity||0)+'</b><button type="button" class="danger" data-deck-remove="'+escapeHtml(item.card_id)+'">Retirar</button></div></div>'}).join('');
+ editor.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h3 style="margin:0">'+escapeHtml(active.name)+'</h3><span class="hint">'+(active.cards||[]).reduce((sum,item)=>sum+(Number(item.quantity)||0),0)+' carta(s) no deck</span></div><form id="playerDeckAddForm" class="players-form" style="grid-template-columns:minmax(0,1fr) 90px auto;margin-top:14px"><div class="field"><label for="playerDeckCardSelect">Adicionar carta do catálogo</label><select id="playerDeckCardSelect" required>'+options+'</select></div><div class="field"><label for="playerDeckCardQty">Quantidade</label><input id="playerDeckCardQty" type="number" min="1" max="99" value="1" required></div><button class="primary" type="submit">Adicionar</button></form><div class="player-transactions">'+(entries||'<div class="player-empty">Este deck ainda não possui cartas.</div>')+'</div>';
+ $('playerDeckAddForm').addEventListener('submit',addCardToPlayerDeck);
+}
+async function loadPlayerDecks(){
+ if(!cloudUser||!sb)return;
+ const {data,error}=await sb.from('player_decks').select('id,owner_id,name,format,cards,created_at,updated_at').order('updated_at',{ascending:false});
+ if(error)throw error;
+ cachedPlayerDecks=data||[];
+ if(!activePlayerDeckId||!cachedPlayerDecks.some(deck=>deck.id===activePlayerDeckId))activePlayerDeckId=cachedPlayerDecks[0]?.id||null;
+ renderPlayerDecks();
+}
+async function createPlayerDeck(event){
+ event.preventDefault();if(!cloudUser)return;
+ const name=$('playerDeckName').value.trim();if(!name)return;
+ const button=$('playerDeckCreateBtn');button.disabled=true;
+ try{
+  const {data,error}=await sb.from('player_decks').insert({owner_id:cloudUser.id,name,cards:[]}).select('id').single();
+  if(error)throw error;
+  activePlayerDeckId=data.id;$('playerDeckName').value='';await loadPlayerDecks();
+ }catch(error){alert('Não foi possível criar o deck: '+error.message)}finally{button.disabled=false}
+}
+async function saveActivePlayerDeck(nextCards){
+ const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;
+ const {error}=await sb.from('player_decks').update({cards:nextCards,updated_at:new Date().toISOString()}).eq('id',deck.id);
+ if(error)throw error;
+ deck.cards=nextCards;deck.updated_at=new Date().toISOString();renderPlayerDecks();
+}
+async function addCardToPlayerDeck(event){
+ event.preventDefault();const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;
+ const cardId=$('playerDeckCardSelect').value,quantity=Number($('playerDeckCardQty').value);
+ if(!cardId||!Number.isInteger(quantity)||quantity<1||quantity>99)return;
+ const next=(deck.cards||[]).map(item=>({...item}));
+ const existing=next.find(item=>String(item.card_id)===String(cardId));
+ if(existing)existing.quantity=Number(existing.quantity||0)+quantity;else next.push({card_id:cardId,quantity});
+ try{await saveActivePlayerDeck(next)}catch(error){alert('Não foi possível atualizar o deck: '+error.message)}
+}
+async function handlePlayerDeckListClick(event){
+ const open=event.target.closest('[data-deck-open]'),remove=event.target.closest('[data-deck-delete]');
+ if(open){activePlayerDeckId=open.dataset.deckOpen;renderPlayerDecks();return}
+ if(remove){
+  const deck=cachedPlayerDecks.find(item=>item.id===remove.dataset.deckDelete);if(!deck||!confirm('Excluir o deck "'+deck.name+'"?'))return;
+  const {error}=await sb.from('player_decks').delete().eq('id',deck.id);if(error){alert('Não foi possível excluir: '+error.message);return}
+  if(activePlayerDeckId===deck.id)activePlayerDeckId=null;await loadPlayerDecks();
+ }
+}
+async function handlePlayerDeckEditorClick(event){
+ const remove=event.target.closest('[data-deck-remove]');if(!remove)return;
+ const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;
+ const next=(deck.cards||[]).filter(item=>String(item.card_id)!==String(remove.dataset.deckRemove));
+ try{await saveActivePlayerDeck(next)}catch(error){alert('Não foi possível retirar a carta: '+error.message)}
 }
 async function loadActivityLog(){
  if(!cloudUser||!sb){$('activityList').innerHTML='<div class="activity-empty">Entre para consultar o registro compartilhado.</div>';return}
@@ -1135,7 +1217,7 @@ const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
 let cards=[],editingId=null,imageData='',imagePath='',imageOriginalData='',cloudUser=null,selectedCardId=null,glossaryEntries=[];
 let defaultCardArt='',cardBackArt='',defaultCardArtPath=null,cardBackArtPath=null;
 let collaboratorDirectory={},cardsRealtimeChannel=null,traitCatalog=[];
-let isAdmin=false,isPlayer=false,profileRole=null,assetFileObject=null;
+let isAdmin=false,isPlayer=false,isStaff=false,profileRole=null,assetFileObject=null;
 const SUPABASE_URL='https://zzwabaaeexidmzyzuvdd.supabase.co';
 const SUPABASE_KEY='sb_publishable_hOAgiQUZtzOg0kolL606mQ_RGoootVu';
 const sb=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
@@ -2607,20 +2689,20 @@ function startCardsRealtime(){
 function stopCardsRealtime(){if(cardsRealtimeChannel&&sb)sb.removeChannel(cardsRealtimeChannel);cardsRealtimeChannel=null;}
 async function handleSession(session){
  cloudLibraryReady=false;if(cloudUser?.id!==session?.user?.id)stopCardsRealtime();
- cloudUser=session?.user||null;isAdmin=false;isPlayer=false;profileRole=null;document.body.classList.remove('player-mode');
+ cloudUser=session?.user||null;isAdmin=false;isPlayer=false;isStaff=false;profileRole=null;document.body.classList.remove('player-mode');
  if(cloudUser){
   $('authModal').classList.remove('open');$('cloudStatus').textContent='Online · verificando acesso…';
-  try{const {data:profile,error}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();if(error)throw error;profileRole=profile?.role||null;isAdmin=profileRole==='admin';isPlayer=profileRole==='player'}
+  try{const {data:profile,error}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();if(error)throw error;profileRole=profile?.role||null;isAdmin=profileRole==='admin';isPlayer=profileRole==='player';isStaff=isAdmin||profileRole==='collaborator'}
   catch(error){console.warn('Não foi possível validar o perfil:',error);$('cloudStatus').textContent='Falha ao validar perfil'}
  }
- $('assetsBtn').style.display=isAdmin?'inline-block':'none';$('teamBtn').style.display=isAdmin?'inline-block':'none';
+ $('assetsBtn').style.display=isAdmin?'inline-block':'none';$('teamBtn').style.display=isAdmin?'inline-block':'none';$('gameAreaBtn').style.display=isStaff?'inline-block':'none';
  $('authBtn').textContent=cloudUser?(isPlayer?'Perfil do jogador':'Conta · '+(cloudUser.email||'conectada')):'Entrar';$('logoutBtn').style.display=cloudUser?'inline-block':'none';
  if(isPlayer)document.body.classList.add('player-mode');
  if(cloudUser&&isPlayer){
-  try{await loadPlayerPortal();$('cloudStatus').textContent='Perfil de jogador'}
+  try{await loadCloudCards();await loadPlayerPortal();$('cloudStatus').textContent='Área de jogo'}
   catch(error){$('playerTransactions').innerHTML='<div class="player-empty">Não foi possível carregar o perfil: '+escapeHtml(error.message)+'</div>';console.error(error)}
  }else if(cloudUser){
-  try{await loadCollaboratorDirectory();fillTaskAssignees();await loadSharedNotes();await loadCreatureTraits();await loadVisualSettings();await loadCloudCards();startCardsRealtime();$('authModal').classList.remove('open')}
+  try{await loadCollaboratorDirectory();fillTaskAssignees();await loadSharedNotes();await loadCreatureTraits();await loadVisualSettings();await loadCloudCards();startCardsRealtime();await loadPlayerPortal();$('authModal').classList.remove('open')}
   catch(error){cards=[];$('cloudStatus').textContent='Erro na sincronização';$('authMessage').textContent='Falha ao carregar biblioteca: '+error.message;console.error(error)}
  }else{
   stopCardsRealtime();cards=[];collaboratorDirectory={};await loadPersonalNotes();defaultCardArt='';cardBackArt='';$('cloudStatus').textContent='Entre para acessar a biblioteca compartilhada';
