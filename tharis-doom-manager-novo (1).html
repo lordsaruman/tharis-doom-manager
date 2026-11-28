@@ -1822,7 +1822,7 @@ function codexBars(rows,filterType){
  }).join('')+'</div>';
 }
 function codexAverage(items,key){
- const values=items.map(c=>Number(c[key])).filter(Number.isFinite);
+ const values=items.map(c=>c[key]).filter(v=>v!==null&&v!==undefined&&String(v).trim()!=='').map(Number).filter(Number.isFinite);
  return values.length?(values.reduce((a,b)=>a+b,0)/values.length).toFixed(1):'—';
 }
 
@@ -1838,8 +1838,8 @@ function codexChart(rows,labelMode='day'){
  if(!rows.length)return '<div class="codex-empty">Ainda não há registros para este gráfico.</div>';
  const max=Math.max(1,...rows.map(r=>r.value));
  return '<div class="codex-chart">'+rows.map(row=>{
-  const h=row.value?Math.max(3,Math.round(row.value/max*100)):2;
-  return '<div class="codex-chart-col" title="'+escapeHtml(row.label+' · '+row.value)+'"><span class="codex-chart-value">'+row.value+'</span><div class="codex-chart-bar" style="height:'+h+'%"></div><span class="codex-chart-label">'+escapeHtml(row.short||row.label)+'</span></div>';
+  const h=row.value?Math.max(3,Math.round(row.value/max*96)):2;
+  return '<div class="codex-chart-col" title="'+escapeHtml(row.label+' · '+row.value)+'"><span class="codex-chart-value">'+row.value+'</span><div class="codex-chart-bar" style="height:'+h+'px"></div><span class="codex-chart-label">'+escapeHtml(row.short||row.label)+'</span></div>';
  }).join('')+'</div>';
 }
 function codexTabs(){
