@@ -569,6 +569,21 @@ footer:before{
 .glossary-empty{padding:28px 14px;text-align:center;border:1px dashed #6b5435;color:#aa9b83;border-radius:5px}
 .glossary-count{color:#aa9b83;font-size:12px}
 @media(max-width:760px){.glossary-layout{grid-template-columns:1fr}.glossary-editor{position:static}.glossary-list{max-height:42vh}.glossary-toolbar{grid-template-columns:1fr}.glossary-entry{grid-template-columns:1fr auto;gap:5px}.glossary-entry-definition{grid-column:1/-1;grid-row:2}.glossary-entry-actions{grid-column:2;grid-row:1}}
+
+/* ANOTAÇÕES PESSOAIS DA BIBLIOTECA */
+.notes-edge-toggle{position:fixed;z-index:1200;right:0;top:46%;width:29px;height:76px;border:1px solid #8b6d42;border-right:0;border-radius:8px 0 0 8px;background:linear-gradient(180deg,#392a19,#17110b);color:#d9bc83;box-shadow:-4px 3px 14px #0008;cursor:pointer;font:20px Georgia,serif;transition:right .28s ease,background .2s ease}
+.notes-edge-toggle:hover{background:linear-gradient(180deg,#594126,#24180e)}
+.notes-drawer{position:fixed;z-index:1199;top:0;right:0;width:min(390px,calc(100vw - 34px));height:100dvh;padding:22px 18px 18px;display:flex;flex-direction:column;gap:12px;background:radial-gradient(ellipse at 50% 0,rgba(176,131,67,.16),transparent 48%),linear-gradient(145deg,#282017,#17120e);border-left:1px solid #806541;box-shadow:-14px 0 38px #0009;transform:translateX(105%);transition:transform .28s ease;visibility:hidden}
+.notes-drawer.open{transform:translateX(0);visibility:visible}
+.notes-drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid #5b472e}
+.notes-drawer-head h2{margin:0;color:#d6b77d;font:600 15px 'Cinzel',Georgia,serif;letter-spacing:.08em}
+.notes-owner{color:#bca47c;font:13px 'Crimson Pro',Georgia,serif}
+.notes-drawer textarea{flex:1;min-height:180px;resize:none;width:100%;padding:14px;border:1px solid #665137;border-radius:5px;background:#100d0a;color:#e5d5b7;font:16px/1.55 'Crimson Pro',Georgia,serif;outline:none}
+.notes-drawer textarea:focus{border-color:#b28b50;box-shadow:0 0 0 2px #b28b5022}
+.notes-drawer textarea::placeholder{color:#85765f}
+.notes-save-state{min-height:18px;color:#a99573;font:12px 'Crimson Pro',Georgia,serif}
+.notes-close{padding:5px 9px!important}
+@media(max-width:600px){.notes-drawer{padding:16px 13px 13px}.notes-edge-toggle{top:42%}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -619,6 +634,14 @@ footer:before{
  </div>
  </div>
 </main>
+<button class="notes-edge-toggle" id="notesToggle" type="button" aria-label="Abrir minhas anotações" aria-expanded="false" title="Minhas anotações">‹</button>
+<aside class="notes-drawer" id="notesDrawer" aria-label="Minhas anotações" aria-hidden="true">
+ <div class="notes-drawer-head"><div><h2>ANOTAÇÕES</h2><div class="notes-owner" id="notesOwner">Anotações pessoais</div></div><button class="notes-close" id="notesClose" type="button" aria-label="Fechar anotações">✕</button></div>
+ <div class="hint">Suas ideias rápidas, lembretes e planos. Só você pode visualizar e editar este conteúdo.</div>
+ <textarea id="personalNotes" spellcheck="false" placeholder="Anote uma ideia para Tharis Doom…&#10;&#10;Suas anotações são salvas automaticamente."></textarea>
+ <div class="notes-save-state" id="notesSaveState" role="status">Salvo na sua conta</div>
+</aside>
+
 <footer>Tharis Doom · Biblioteca compartilhada no Supabase · alterações sincronizadas entre colaboradores.</footer>
 
 
@@ -2135,6 +2158,31 @@ function creatorLabel(id){
  if(!id)return 'Autoria não registrada';
  return collaboratorDirectory[id]?.display_name||('Colaborador · '+id.slice(0,6).toUpperCase());
 }
+
+let personalNotesTimer=null,personalNotesLoadedFor=null;
+function setNotesDrawer(open){
+ const drawer=$('notesDrawer'),toggle=$('notesToggle');if(!drawer||!toggle)return;
+ drawer.classList.toggle('open',open);drawer.setAttribute('aria-hidden',String(!open));toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'›':'‹';toggle.setAttribute('aria-label',open?'Fechar minhas anotações':'Abrir minhas anotações');
+ if(open&&cloudUser)$('personalNotes').focus();
+}
+async function loadPersonalNotes(){
+ const field=$('personalNotes'),state=$('notesSaveState'),owner=$('notesOwner');if(!field||!state||!owner)return;
+ if(!cloudUser){field.value='';field.disabled=true;owner.textContent='Entre para usar suas anotações';state.textContent='Faça login para salvar suas anotações';personalNotesLoadedFor=null;return}
+ field.disabled=true;state.textContent='Carregando suas anotações…';owner.textContent=creatorLabel(cloudUser.id);personalNotesLoadedFor=cloudUser.id;
+ const {data,error}=await sb.from('collaborator_notes').select('content').eq('user_id',cloudUser.id).maybeSingle();
+ if(error){state.textContent='Não foi possível carregar: '+error.message;return}
+ if(personalNotesLoadedFor!==cloudUser.id)return;
+ field.value=data?.content||'';field.disabled=false;state.textContent='Salvo na sua conta';
+}
+async function savePersonalNotes(){
+ if(!cloudUser||personalNotesLoadedFor!==cloudUser.id)return;
+ const field=$('personalNotes'),state=$('notesSaveState'),userId=cloudUser.id;
+ state.textContent='Salvando…';
+ const {error}=await sb.from('collaborator_notes').upsert({user_id:userId,content:field.value,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+ if(error){state.textContent='Erro ao salvar: '+error.message;console.error('Falha ao salvar anotações pessoais:',error);return}
+ if(cloudUser?.id===userId)state.textContent='Salvo automaticamente · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
 function startCardsRealtime(){
  if(!cloudUser||!sb)return;
  if(cardsRealtimeChannel)sb.removeChannel(cardsRealtimeChannel);
@@ -2171,6 +2219,7 @@ async function handleSession(session){
  if(cloudUser){
   try{
    await loadCollaboratorDirectory();
+   await loadPersonalNotes();
    await loadCreatureTraits();
    await loadVisualSettings();
    await loadCloudCards();
@@ -2182,13 +2231,21 @@ async function handleSession(session){
    console.error(error);
   }
  }else{
-  stopCardsRealtime();cards=[];collaboratorDirectory={};defaultCardArt='';cardBackArt='';$('cloudStatus').textContent='Entre para acessar a biblioteca compartilhada';
+  stopCardsRealtime();cards=[];collaboratorDirectory={};await loadPersonalNotes();defaultCardArt='';cardBackArt='';$('cloudStatus').textContent='Entre para acessar a biblioteca compartilhada';
  }
  cloudLibraryReady=true;render();
  if(cloudUser&&$('cloudStatus').textContent==='Erro na sincronização')$('library').innerHTML='<div class="empty" style="grid-column:1/-1">Não foi possível sincronizar a biblioteca: '+escapeHtml($('authMessage').textContent.replace('Falha ao carregar biblioteca: ',''))+'</div>';
 }
 
 
+
+$('notesToggle').addEventListener('click',()=>setNotesDrawer(!$('notesDrawer').classList.contains('open')));
+$('notesClose').addEventListener('click',()=>setNotesDrawer(false));
+$('personalNotes').addEventListener('input',()=>{
+ if(personalNotesTimer)clearTimeout(personalNotesTimer);
+ $('notesSaveState').textContent='Alterações pendentes…';
+ personalNotesTimer=setTimeout(()=>savePersonalNotes().catch(error=>{$('notesSaveState').textContent='Erro ao salvar: '+error.message}),700);
+});
 $('codexBtn').onclick=openCodex;$('codexCloseBtn').onclick=()=>$('codexModal').classList.remove('open');
 $('glossaryBtn').onclick=openGlossary;$('glossaryCloseBtn').onclick=()=>$('glossaryModal').classList.remove('open');
 $('glossarySearch').addEventListener('input',renderGlossary);$('glossaryFilter').addEventListener('change',renderGlossary);
