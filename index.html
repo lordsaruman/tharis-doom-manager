@@ -448,7 +448,7 @@ footer:before{
 /* BIBLIOTECA · ACABAMENTO BORDA-SOL */
 .library-frame{
  position:relative;
- padding:clamp(30px,7.7vw,78px) 0;
+ padding:0;
  margin-top:2px;
 }
 .library-frame:before,.library-frame:after{
@@ -456,24 +456,22 @@ footer:before{
  position:absolute;
  z-index:2;
  left:0;right:0;
- height:clamp(30px,7.7vw,78px);
+ height:auto;
+ aspect-ratio:1362 / 105;
  background-image:url("assets/referencias/BORDA-SOL.png");
  background-repeat:no-repeat;
  background-position:center;
  background-size:100% 100%;
+ image-rendering:auto;
  mix-blend-mode:screen;
  pointer-events:none;
 }
 .library-frame:before{top:0;transform:scaleY(-1)}
-.library-frame:after{bottom:0;transform:scaleY(-1)}
+.library-frame:after{bottom:0;transform:none}
 .library-frame>.library-panel{
  position:relative;
  z-index:1;
  margin:0;
-}
-@media(max-width:700px){
- .library-frame{padding:30px 0}
- .library-frame:before,.library-frame:after{height:30px}
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
