@@ -507,6 +507,20 @@ $('authBtn').addEventListener('click',()=>{
  message.textContent=cloudUser?'Você está conectado ao Tharis Doom online.':'Entre com seu usuário do Supabase.';
  modal.classList.add('open');
 });
+$('authCloseBtn').addEventListener('click',()=>{$('authModal').classList.remove('open')});
+$('loginBtn').addEventListener('click',async()=>{
+ const button=$('loginBtn');
+ if(!sb){$('authMessage').textContent='Não foi possível iniciar o cliente Supabase.';return}
+ const email=$('authEmail').value.trim(),password=$('authPassword').value;
+ if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}
+ button.disabled=true;$('authMessage').textContent='Conectando…';
+ try{
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error)throw error;
+  await handleSession(data.session);
+ }catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}
+ finally{button.disabled=false}
+});
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
 const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
 let cards=[],editingId=null,imageData='',imagePath='',cloudUser=null,selectedCardId=null;
@@ -1423,8 +1437,8 @@ $('setPasswordBtn').onclick=async()=>{
  }catch(error){$('authMessage').textContent='Não foi possível definir a senha: '+error.message}
  finally{$('setPasswordBtn').disabled=false}
 };
-$('authCloseBtn').onclick=()=>$('authModal').classList.remove('open');
-$('loginBtn').onclick=async()=>{if(!sb){alert('Não foi possível iniciar o cliente Supabase.');return}const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}$('loginBtn').disabled=true;$('authMessage').textContent='Conectando…';try{const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await handleSession(data.session)}catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}finally{$('loginBtn').disabled=false}};
+
+
 $('logoutBtn').onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signOut();if(error){alert(error.message);return}cloudUser=null;await handleSession(null);$('authModal').classList.remove('open')};
 if(sb){
  // Não lê nem renderiza localStorage: a biblioteca online é a única fonte exibida neste modo.
