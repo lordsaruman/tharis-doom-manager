@@ -546,7 +546,7 @@ footer:before{
  </div>
  </div>
 </main>
-<footer>Tharis Doom · Biblioteca online compartilhada com backup local e exportação JSON.</footer>
+<footer>Tharis Doom · Biblioteca compartilhada no Supabase · alterações sincronizadas entre colaboradores.</footer>
 
 
 <div class="modal" id="codexModal"><div class="dialog codex-dialog"><div class="dialog-head"><div><h2>Códice da Coleção</h2><div class="hint">Indicadores da coleção para análise e balanceamento</div></div><button id="codexCloseBtn">✕ Fechar</button></div><div id="codexContent"><div class="empty">Carregando indicadores…</div></div></div></div>
@@ -1736,9 +1736,10 @@ function codexAverage(items,key){
 }
 async function renderCodex(){
  const total=cards.length,creatures=cards.filter(c=>c.type==='Criatura'),magics=cards.filter(c=>c.type==='Magias');
- const costRows=codexCount(cards,c=>String(Number.isFinite(Number(c.cost))?Number(c.cost):'—'));
- const creatureCost=codexCount(creatures,c=>String(Number.isFinite(Number(c.cost))?Number(c.cost):'—'));
- const magicCost=codexCount(magics,c=>String(Number.isFinite(Number(c.cost))?Number(c.cost):'—'));
+ const byCost=items=>codexCount(items,c=>String(Number.isFinite(Number(c.cost))?Number(c.cost):'—')).sort((a,b)=>{const an=Number(a[0]),bn=Number(b[0]);if(!Number.isFinite(an))return 1;if(!Number.isFinite(bn))return -1;return an-bn});
+ const costRows=byCost(cards);
+ const creatureCost=byCost(creatures);
+ const magicCost=byCost(magics);
  const factionRows=codexCount(cards,c=>c.faction||'Sem facção');
  const rarityRows=codexCount(cards,c=>c.rarity||'Sem raridade');
  const traits=new Map();
