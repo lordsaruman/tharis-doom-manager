@@ -596,23 +596,50 @@ function render(){
  updateCardInspector();
 }
 let inspectorGlintRaf=0;
-function paintMetallicGlint(ctx,w,h,phase){
+let inspectorGoldMask=null,inspectorGoldMaskSource=null,inspectorGoldMaskAt=0;
+function buildGoldFrameMask(source){
+ const mask=document.createElement('canvas');mask.width=source.width;mask.height=source.height;
+ const mctx=mask.getContext('2d'),read=document.createElement('canvas');read.width=source.width;read.height=source.height;
+ const rctx=read.getContext('2d');rctx.drawImage(source,0,0);
+ try{
+  const image=rctx.getImageData(0,0,source.width,source.height),data=image.data,w=source.width,h=source.height;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const i=(y*w+x)*4,R=data[i],G=data[i+1],B=data[i+2];
+   const edge=x<w*.095||x>w*.905||y<h*.055||y>h*.945;
+   const gold=R>75&&G>42&&R>G*1.10&&G>B*1.12&&R-B>35;
+   data[i+3]=edge&&gold?Math.min(255,Math.max(0,(R-B-25)*5)):0;
+  }
+  mctx.putImageData(image,0,0);
+ }catch(error){
+  console.warn('Não foi possível ler as cores da carta para limitar o brilho metálico.',error);
+ }
+ return mask;
+}
+function paintMetallicGlint(ctx,w,h,phase,sourceCanvas){
  ctx.clearRect(0,0,w,h);
- const x=(-w*.65)+(w*2.3*phase),band=w*.22;
+ if(sourceCanvas&&(sourceCanvas!==inspectorGoldMaskSource||!inspectorGoldMask||performance.now()-inspectorGoldMaskAt>400)){
+  inspectorGoldMask=buildGoldFrameMask(sourceCanvas);inspectorGoldMaskSource=sourceCanvas;inspectorGoldMaskAt=performance.now();
+ }
+ if(!inspectorGoldMask)return;
+ const x=(-w*.75)+(w*2.5*phase),band=w*.28;
  ctx.save();ctx.globalCompositeOperation='screen';
- ctx.lineWidth=Math.max(5,w*.018);ctx.shadowColor='rgba(255,211,125,.9)';ctx.shadowBlur=w*.035;
- const g=ctx.createLinearGradient(x-band,0,x+band,h);
- g.addColorStop(0,'rgba(255,210,120,0)');g.addColorStop(.38,'rgba(255,218,145,.06)');
- g.addColorStop(.5,'rgba(255,239,190,.95)');g.addColorStop(.62,'rgba(255,198,91,.12)');g.addColorStop(1,'rgba(255,210,120,0)');
- ctx.strokeStyle=g;ctx.strokeRect(w*.025,h*.012,w*.95,h*.976);
- ctx.lineWidth=Math.max(2,w*.006);ctx.shadowBlur=w*.018;ctx.strokeStyle='rgba(255,230,174,.58)';
- ctx.strokeRect(w*.04,h*.022,w*.92,h*.956);ctx.restore();
+ const shine=ctx.createLinearGradient(x-band,0,x+band,h);
+ shine.addColorStop(0,'rgba(255,177,65,0)');
+ shine.addColorStop(.34,'rgba(255,195,92,.10)');
+ shine.addColorStop(.46,'rgba(255,221,151,.78)');
+ shine.addColorStop(.50,'rgba(255,250,222,1)');
+ shine.addColorStop(.54,'rgba(255,214,137,.76)');
+ shine.addColorStop(.68,'rgba(255,172,55,.12)');
+ shine.addColorStop(1,'rgba(255,177,65,0)');
+ ctx.fillStyle=shine;ctx.fillRect(0,0,w,h);
+ ctx.globalCompositeOperation='destination-in';ctx.drawImage(inspectorGoldMask,0,0,w,h);
+ ctx.restore();
 }
 function startInspectorGlint(){
  const overlay=$('inspectorGlint');if(!overlay)return;
  if(inspectorGlintRaf)cancelAnimationFrame(inspectorGlintRaf);
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,started=performance.now();
- const tick=now=>{const phase=((now-started)%5200)/5200;paintMetallicGlint(overlay.getContext('2d'),overlay.width,overlay.height,phase);if(!reduced)inspectorGlintRaf=requestAnimationFrame(tick)};
+ const tick=now=>{const phase=((now-started)%5200)/5200;paintMetallicGlint(overlay.getContext('2d'),overlay.width,overlay.height,phase,$('selectedCardCanvas'));if(!reduced)inspectorGlintRaf=requestAnimationFrame(tick)};
  tick(started);
 }
 async function exportInspectorGIF(){
@@ -624,7 +651,7 @@ async function exportInspectorGIF(){
   const gif=new GIF({workers:2,quality:10,width:base.width,height:base.height,workerScript:'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js'});
   const frame=document.createElement('canvas');frame.width=base.width;frame.height=base.height;
   const ctx=frame.getContext('2d'),frames=24;
-  for(let i=0;i<frames;i++){ctx.clearRect(0,0,frame.width,frame.height);ctx.drawImage(base,0,0);paintMetallicGlint(ctx,frame.width,frame.height,i/frames);gif.addFrame(frame,{copy:true,delay:100})}
+  for(let i=0;i<frames;i++){ctx.clearRect(0,0,frame.width,frame.height);ctx.drawImage(base,0,0);paintMetallicGlint(ctx,frame.width,frame.height,i/frames,base);gif.addFrame(frame,{copy:true,delay:100})}
   gif.on('progress',p=>{button.textContent='Gerando GIF · '+Math.round(p*100)+'%'});
   const blob=await new Promise((resolve,reject)=>{gif.on('finished',resolve);gif.on('abort',()=>reject(Error('Exportação cancelada')));gif.render()});
   const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;
