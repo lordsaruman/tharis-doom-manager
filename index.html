@@ -340,12 +340,21 @@ footer:before{
 
 
 /* CRIAÇÃO DE CARTAS · SELETOR VISUAL DE FACÇÕES */
-.faction-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
-.faction-pick{display:flex;align-items:center;gap:8px;min-width:0;padding:6px 8px;border:1px solid #57452f;border-radius:4px;background:linear-gradient(180deg,#211910,#15110d);color:#c9b895;font:13px 'Crimson Pro',Georgia,serif;text-align:left;cursor:pointer}
+.faction-picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:8px}
+.attributes-panel{padding:12px;border:1px solid rgba(184,149,89,.42);border-radius:5px;background:linear-gradient(145deg,#211a13,#15110d)}
+.attributes-heading{margin:0 0 10px;color:#c5a36b;font:600 12px 'Cinzel',Georgia,serif;letter-spacing:.18em;text-align:center}
+.attributes-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.attributes-grid .field{min-width:0;margin:0}
+#modal.magic-type .attributes-grid{grid-template-columns:1fr}
+#modal.magic-type .combat-stat{display:none!important}
+#modal .faction-picker{width:100%}
+
+.faction-pick{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;padding:7px 5px;border:1px solid #57452f;border-radius:4px;background:linear-gradient(180deg,#211910,#15110d);color:#c9b895;font:13px 'Crimson Pro',Georgia,serif;text-align:center;cursor:pointer}
 .faction-pick:hover{border-color:#a9864e;background:#302418}
 .faction-pick.is-selected{border-color:#c5a36b;background:linear-gradient(180deg,#3b2c1b,#241a11);color:#f0d9aa;box-shadow:inset 0 0 0 1px #b8955933}
 .faction-pick img,.faction-pick .sigil{width:25px!important;height:25px!important;flex:0 0 25px}
 .faction-pick span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:700px){.faction-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.attributes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.faction-picker{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #ocrPanel{padding:13px;border:1px solid #8d713f;border-radius:10px;background:linear-gradient(145deg,#29231a,#19191d);gap:9px}#ocrPanel textarea{width:100%;margin-top:8px;background:#111216;color:#e8dfce;border:1px solid #51452f;border-radius:7px;padding:9px;font:12px/1.45 ui-monospace,monospace}#ocrBtn{border:1px solid #a98a4d;color:#f0d9aa;background:#302719;border-radius:7px;padding:8px 12px;cursor:pointer}#ocrBtn:disabled{opacity:.55;cursor:wait}
 .effect-toolbar{display:flex;align-items:center;gap:6px;margin:0 0 7px}
@@ -485,21 +494,24 @@ footer:before{
    <div>
     <div class="formgrid">
      <div class="field span2"><label>Modelo de criação</label><select id="creationMode"><option value="normal">Criar Carta</option><option value="ready">CARTA PRONTA</option></select><div class="hint">Selecione CARTA PRONTA para identificar cartas cujo visual já está definido.</div></div>
+     <div class="field"><label>Tipo de carta</label><select id="type"><option>Criatura</option><option>Construção</option><option>Magias</option><option>Itens</option></select></div>
+     <div class="field"><label>Raridade</label><select id="rarity"><option value="Cobre">Cobre</option><option value="Bronze">Bronze</option><option value="Prata">Prata</option><option value="Ouro">Ouro</option><option value="Platina">Platina</option></select></div>
      <div class="field span2"><label class="position-label" for="name"><span>Nome da carta *</span><span class="text-position-controls"><button type="button" data-position-adjust="nameOffsetY" data-direction="-1" aria-label="Mover nome para cima" title="Mover para cima">▲</button><button type="button" data-position-adjust="nameOffsetY" data-direction="1" aria-label="Mover nome para baixo" title="Mover para baixo">▼</button></span></label><input id="name" maxlength="60" placeholder="Nome da carta"><input id="nameOffsetY" type="hidden" value="0"></div>
      <div class="field span2 new-card-option">
       <label class="new-card-check"><input id="isNew" type="checkbox"><span>Marcar como carta nova</span></label>
       <div class="hint">Use esta marcação para distinguir as cartas inéditas do acervo que já existia.</div>
      </div>
-     <div class="field"><label>Facção</label><select id="faction"><option value="">Selecione uma facção</option><option>Kalassiria</option><option>Monte Celéstia</option><option>Baator</option><option>Moiras</option><option>Caras Galadhon</option><option>Yalugoth</option><option>Thay</option><option>Baldur's Gate</option></select><div class="faction-picker" id="factionPicker" aria-label="Selecionar facção"></div></div>
-     <div class="field"><label>Tipo</label><select id="type"><option>Criatura</option><option>Construção</option><option>Magias</option><option>Itens</option></select></div>
-     <div class="field"><label>Raridade / moldura</label><select id="rarity"><option value="Bronze">Bronze</option><option value="Prata">Prata</option><option value="Ouro">Ouro</option><option value="Dark">Dark</option><option value="Esmeralda">Esmeralda</option><option value="Rubi">Rubi</option><option value="Topázio">Topázio</option></select></div>
-     <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
+     <div class="field span2"><label>Facção</label><select id="faction"><option value="">Selecione uma facção</option><option>Kalassiria</option><option>Monte Celéstia</option><option>Baator</option><option>Moiras</option><option>Caras Galadhon</option><option>Yalugoth</option><option>Thay</option><option>Baldur's Gate</option></select><div class="faction-picker" id="factionPicker" aria-label="Selecionar facção"></div></div>
      <div class="field"><label>Alinhamento</label><select id="alignment"><option value="">Selecione um alinhamento</option><option>Luz</option><option>Neutro</option><option>Sombra</option></select></div>
      <div class="field" id="traitField"><label>Características</label><input id="trait" placeholder="Ex.: Bastião, Celestial, Morto-vivo"></div>
-     <div id="combatFields" style="display:contents">
-      <div class="field"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
-      <div class="field"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
-      <div class="field"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
+     <div class="field span2 attributes-panel" id="attributesPanel">
+      <div class="attributes-heading">ATRIBUTOS</div>
+      <div class="attributes-grid">
+       <div class="field combat-stat"><label>Vida</label><input id="life" type="number" min="0" step="1" placeholder="—"></div>
+       <div class="field combat-stat"><label>Ataque</label><input id="power" type="number" min="0" step="1" placeholder="—"></div>
+       <div class="field combat-stat"><label>Defesa</label><input id="defense" type="number" min="0" step="1" placeholder="—"></div>
+       <div class="field"><label>Custo</label><input id="cost" type="number" min="0" step="1" value="0"></div>
+      </div>
      </div>
      <div class="field span2"><label class="position-label"><span id="effectLabel">Habilidades</span><span class="text-position-controls"><button type="button" data-position-adjust="effectOffsetY" data-direction="-1" aria-label="Mover habilidades/efeito para cima" title="Mover para cima">▲</button><button type="button" data-position-adjust="effectOffsetY" data-direction="1" aria-label="Mover habilidades/efeito para baixo" title="Mover para baixo">▼</button></span></label><input id="effectOffsetY" type="hidden" value="0">
       <div class="effect-toolbar" role="toolbar" aria-label="Formatação das habilidades">
@@ -565,6 +577,52 @@ const sb=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistS
 
 const creatureFrame=new Image();creatureFrame.crossOrigin='anonymous';creatureFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};creatureFrame.src='Modelo%20Carta%20Ouro.png';
 const magicFrame=new Image();magicFrame.onload=()=>{render();if($('modal').classList.contains('open'))drawCard($('preview'),collect())};magicFrame.src='Molde%20Magias.png';
+const rarityFrameCache=new WeakMap();
+const RARITY_METALS={
+ Cobre:{dark:[75,39,24],mid:[166,83,47],light:[239,174,126]},
+ Bronze:{dark:[65,43,27],mid:[142,103,62],light:[211,174,119]},
+ Prata:{dark:[65,73,83],mid:[158,169,183],light:[239,243,248]},
+ Ouro:null,
+ Platina:{dark:[65,70,83],mid:[174,185,201],light:[250,252,255]}
+};
+function rarityKey(value){return ({Dark:'Platina',Esmeralda:'Platina',Rubi:'Cobre',Topázio:'Bronze'})[value]||(['Cobre','Bronze','Prata','Ouro','Platina'].includes(value)?value:'Bronze')}
+function getRarityFrame(source,rarity){
+ if(!source?.complete||!source.naturalWidth)return source;
+ const key=rarityKey(rarity);if(key==='Ouro')return source;
+ let cache=rarityFrameCache.get(source);if(!cache){cache={};rarityFrameCache.set(source,cache)}
+ if(cache[key])return cache[key];
+ try{
+  const cv=document.createElement('canvas');cv.width=source.naturalWidth;cv.height=source.naturalHeight;
+  const cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(source,0,0);
+  const image=cx.getImageData(0,0,cv.width,cv.height),px=image.data,pal=RARITY_METALS[key];
+  for(let i=0;i<px.length;i+=4){
+   if(px[i+3]<8)continue;
+   const r=px[i],g=px[i+1],b=px[i+2],max=Math.max(r,g,b),min=Math.min(r,g,b);
+   const gold=r>g*1.12&&g>b*1.12&&r-b>28&&max-min>24;
+   if(!gold)continue;
+   const lum=(.2126*r+.7152*g+.0722*b)/255;
+   const t=lum<.48?0:lum<.78?(lum-.48)/.30:1;
+   const low=pal.dark,high=pal.mid,bright=pal.light;
+   const blend=(a,b,t)=>Math.round(a+(b-a)*Math.max(0,Math.min(1,t)));
+   const c1=t<.58?low:high,c2=t<.58?high:bright,tt=t<.58?t/.58:(t-.58)/.42;
+   const rr=blend(c1[0],c2[0],tt),gg=blend(c1[1],c2[1],tt),bb=blend(c1[2],c2[2],tt);
+   const originalLum=Math.max(1,.2126*rr+.7152*gg+.0722*bb),factor=Math.min(1.28,Math.max(.72,(.2126*r+.7152*g+.0722*b)/originalLum));
+   px[i]=Math.min(255,Math.round(rr*factor));px[i+1]=Math.min(255,Math.round(gg*factor));px[i+2]=Math.min(255,Math.round(bb*factor));
+  }
+  cx.putImageData(image,0,0);
+  const out=new Image();out.src=cv.toDataURL('image/png');cache[key]=out;return out;
+ }catch(error){console.warn('Não foi possível aplicar a moldura metálica:',error);return source}
+}
+function drawPlatinumSparkles(ctx,w,h){
+ const stars=[[.075,.035,.010],[.925,.075,.012],[.055,.43,.008],[.945,.57,.010],[.16,.965,.009],[.84,.965,.012],[.50,.018,.008]];
+ ctx.save();stars.forEach(([x,y,size],i)=>{
+  const cx=w*x,cy=h*y,r=w*size;
+  ctx.globalAlpha=[.88,.65,.78,.9,.72,.86,.62][i];
+  ctx.shadowColor='#f4f7ff';ctx.shadowBlur=r*2.8;ctx.fillStyle='#f8fbff';
+  ctx.beginPath();ctx.moveTo(cx,cy-r*2.2);ctx.quadraticCurveTo(cx+r*.22,cy-r*.22,cx+r*2.2,cy);ctx.quadraticCurveTo(cx+r*.22,cy+r*.22,cx,cy+r*2.2);ctx.quadraticCurveTo(cx-r*.22,cy+r*.22,cx-r*2.2,cy);ctx.quadraticCurveTo(cx-r*.22,cy-r*.22,cx,cy-r*2.2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,r*.34,0,Math.PI*2);ctx.fill();
+ });ctx.restore();
+}
 const alignmentInsignias={
  Luz:new Image(),
  Neutro:new Image(),
@@ -651,7 +709,7 @@ function refreshSelects(){
  const all=[...new Set([...FACTIONS,...cards.map(c=>c.faction).filter(Boolean)])];
  const factionOptions=$('factionOptions');if(factionOptions)factionOptions.innerHTML=all.map(x=>`<option value="${escapeHtml(x)}">`).join('');
  const fill=(id,values,label)=>{const el=$(id);if(!el)return;const old=el.value;el.innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option>${escapeHtml(v)}</option>`).join('');el.value=old};
- fill('filterFaction',all,'Todas as facções');fill('filterRarity',[...new Set(cards.map(c=>c.rarity).filter(Boolean))].sort(),'Todas as raridades');if($('filterType'))fill('filterType',[...new Set(cards.map(c=>c.type).filter(Boolean))].sort(),'Todos os tipos');
+ fill('filterFaction',all,'Todas as facções');fill('filterRarity',['Cobre','Bronze','Prata','Ouro','Platina'],'Todas as raridades');if($('filterType'))fill('filterType',[...new Set(cards.map(c=>c.type).filter(Boolean))].sort(),'Todos os tipos');
  $('factionLegend').innerHTML=all.map(f=>`<span class="faction-chip">${sigil(f,22)}${escapeHtml(f)}</span>`).join('');
  updateFactionPicker();
 }
@@ -897,7 +955,8 @@ function drawCreatureCard(canvas,c){
  const paint=()=>{
   // A haste da bandeira passa por trás da moldura e da esfera de custo.
   drawInsigniaFlag(ctx,c,w,h,'background');
-  if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
+  if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(getRarityFrame(creatureFrame,c.rarity),0,0,w,h);
+  if(rarityKey(c.rarity)==='Platina')drawPlatinumSparkles(ctx,w,h);
   drawInsigniaFlag(ctx,c,w,h,'emblems');
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';
   ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
@@ -1023,7 +1082,8 @@ function drawMagicCard(canvas,c){
   // A bandeira começa atrás da esfera de custo; o molde original permanece intacto.
   drawInsigniaFlag(ctx,c,w,h,'background');
   if(magicFrame.complete&&magicFrame.naturalWidth){
-   ctx.drawImage(magicFrame,0,0,w,h);
+   ctx.drawImage(getRarityFrame(magicFrame,c.rarity),0,0,w,h);
+   if(rarityKey(c.rarity)==='Platina')drawPlatinumSparkles(ctx,w,h);
   }
   drawInsigniaFlag(ctx,c,w,h,'emblems');
 
@@ -1261,7 +1321,7 @@ function openEditor(c=null){
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
  const vals={creationMode:'normal',name:'',nameOffsetY:0,effectOffsetY:0,faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
  $('isNew').checked=!!c?.isNew;
- Object.keys(vals).forEach(k=>{const el=$(k),value=c?.[k]??vals[k];if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
+ Object.keys(vals).forEach(k=>{const el=$(k);let value=c?.[k]??vals[k];if(k==='rarity')value=rarityKey(value);if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
 function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),nameOffsetY:+$('nameOffsetY').value||0,effectOffsetY:+$('effectOffsetY').value||0,faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 async function save(){
