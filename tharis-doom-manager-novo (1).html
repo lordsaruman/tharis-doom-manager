@@ -350,7 +350,7 @@ footer:before{
 #modal.magic-type .combat-stat{display:none!important}
 #modal .faction-picker{width:100%}
 
-.faction-pick{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;padding:7px 5px;border:1px solid #57452f;border-radius:4px;background:linear-gradient(180deg,#211910,#15110d);color:#c9b895;font:13px 'Crimson Pro',Georgia,serif;text-align:center;cursor:pointer}
+.faction-pick{display:flex;align-items:center;justify-content:flex-start;gap:7px;min-width:0;padding:7px 8px;border:1px solid #57452f;border-radius:4px;background:linear-gradient(180deg,#211910,#15110d);color:#c9b895;font:13px 'Crimson Pro',Georgia,serif;text-align:left;cursor:pointer}
 .faction-pick:hover{border-color:#a9864e;background:#302418}
 .faction-pick.is-selected{border-color:#c5a36b;background:linear-gradient(180deg,#3b2c1b,#241a11);color:#f0d9aa;box-shadow:inset 0 0 0 1px #b8955933}
 .faction-pick img,.faction-pick .sigil{width:25px!important;height:25px!important;flex:0 0 25px}
@@ -531,7 +531,7 @@ footer:before{
       <label class="new-card-check"><input id="isNew" type="checkbox"><span>Marcar como carta nova</span></label>
       <div class="hint">Use esta marcação para distinguir as cartas inéditas do acervo que já existia.</div>
      </div>
-     <div class="field span2"><label>Facção</label><select id="faction"><option value="">Selecione uma facção</option><option>Kalassiria</option><option>Monte Celéstia</option><option>Baator</option><option>Moiras</option><option>Caras Galadhon</option><option>Yalugoth</option><option>Thay</option><option>Baldur's Gate</option></select><div class="faction-picker" id="factionPicker" aria-label="Selecionar facção"></div></div>
+     <div class="field span2"><label>Facção</label><input id="faction" type="hidden" value=""><div class="faction-picker" id="factionPicker" aria-label="Selecionar facção"></div></div>
      <div class="field"><label>Alinhamento</label><select id="alignment"><option value="">Selecione um alinhamento</option><option>Luz</option><option>Neutro</option><option>Sombra</option></select></div>
      <div class="field" id="traitField"><label>Características</label><input id="trait" placeholder="Ex.: Bastião, Celestial, Morto-vivo"></div>
      <div class="field span2 attributes-panel" id="attributesPanel">
