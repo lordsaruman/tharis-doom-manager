@@ -1197,7 +1197,7 @@ function openDeckBuilder(){
  activePlayerDeckId=deck.id;
  $('playerDeckBuilder').style.display='flex';
  syncDeckBuilderSelect();$('deckBuilderTitle').textContent=deck.name;
- populateDeckFilters();renderDeckCatalog();renderDeckBuilder();
+ populateDeckFilters();renderDeckBuilder();
 }
 async function openMyDecks(){
  if(!cloudUser||!sb){alert('Entre na sua conta para acessar seus decks.');return}
@@ -1286,6 +1286,7 @@ function renderDeckBuilder(){
  $('deckTypeStats').innerHTML=rows('type');$('deckFactionStats').innerHTML=rows('faction');$('deckRarityStats').innerHTML=rows('rarity');
  $('deckCurrentCards').innerHTML=entries.map(({card,quantity})=>'<div class="deck-current-row"><canvas class="deck-current-thumb" width="92" height="174" data-deck-thumb="'+escapeHtml(card.id)+'"></canvas><div class="deck-current-info"><strong>'+escapeHtml(card.name||'Carta')+'</strong><br><small>'+escapeHtml(card.type||'')+' · custo '+escapeHtml(card.cost??0)+'</small></div><div class="deck-current-actions"><button type="button" data-deck-quantity="'+escapeHtml(card.id)+'" data-change="-1">−</button><b>'+quantity+'</b><button type="button" data-deck-quantity="'+escapeHtml(card.id)+'" data-change="1">＋</button></div><button type="button" data-deck-remove="'+escapeHtml(card.id)+'">✕</button></div>').join('')||'<div class="deck-empty">Deck vazio. Clique ou arraste cartas da biblioteca para começar.</div>';
  $('deckCurrentCards').querySelectorAll('canvas[data-deck-thumb]').forEach(canvas=>{const card=deckCardById(canvas.dataset.deckThumb);if(card)drawCard(canvas,card)});
+ renderDeckCatalog();
 }
 async function changeActiveDeckCard(id,delta){
  const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;
