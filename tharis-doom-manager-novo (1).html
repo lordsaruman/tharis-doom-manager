@@ -444,6 +444,36 @@ footer:before{
 #magicGradientField{width:min(100%,330px);margin:12px auto 2px}
 #magicGradientField input[type=range]{padding:0;accent-color:var(--gold)}
 #modal:not(.magic-type) #magicGradientField{display:none}
+
+/* BIBLIOTECA · ACABAMENTO BORDA-SOL */
+.library-frame{
+ position:relative;
+ padding:clamp(22px,3.2vw,38px) 0;
+ margin-top:2px;
+}
+.library-frame:before,.library-frame:after{
+ content:"";
+ position:absolute;
+ z-index:2;
+ left:0;right:0;
+ height:clamp(22px,3.2vw,38px);
+ background-image:url("assets/referencias/BORDA-SOL.png");
+ background-repeat:no-repeat;
+ background-position:center;
+ background-size:100% 100%;
+ pointer-events:none;
+}
+.library-frame:before{top:0}
+.library-frame:after{bottom:0;transform:scaleY(-1)}
+.library-frame>.library-panel{
+ position:relative;
+ z-index:1;
+ margin:0;
+}
+@media(max-width:700px){
+ .library-frame{padding:22px 0}
+ .library-frame:before,.library-frame:after{height:22px}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -464,7 +494,8 @@ footer:before{
   <div class="stat"><strong id="statFactions">0</strong><span>Facções representadas</span></div>
   <div class="stat"><strong id="statRarities">0</strong><span>Raridades utilizadas</span></div>
  </section>
- <div class="panel" style="padding:14px">
+ <div class="library-frame">
+ <div class="panel library-panel" style="padding:14px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><strong>Biblioteca de cartas</strong><span id="resultCount" class="hint"></span></div>
   <div class="toolbar">
    <input id="search" placeholder="Buscar por nome, efeito ou descrição…">
@@ -490,6 +521,7 @@ footer:before{
     </div>
    </aside>
   </div>
+ </div>
  </div>
 </main>
 <footer>Tharis Doom · Biblioteca online compartilhada com backup local e exportação JSON.</footer>
