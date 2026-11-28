@@ -1289,7 +1289,7 @@ function drawMagicCard(canvas,c){
   // e aumentando de cima para baixo até 50% de opacidade na base.
   // É pintado antes do molde para preservar os ornamentos dourados.
   // Aumenta em 30% a extensão vertical do degradê, preservando sua base.
-  const bottom=h*.985,originalTop=.70+(+c.nameOffsetY||0),top=h*(.985-(.985-originalTop)*1.3);
+  const bottom=h*.985,originalTop=.70+(+c.nameOffsetY||0),top=h*(.985-(.985-originalTop)*1.5);
   const shade=ctx.createLinearGradient(0,top,0,bottom);
   const gradientStrength=Math.max(0,Math.min(200,c.magicTextGradient==null?180:+c.magicTextGradient))/100;
   shade.addColorStop(0,'rgba(5,6,10,0)');
