@@ -347,6 +347,11 @@ footer:before{
 .effect-toolbar button{min-width:34px;padding:5px 10px;border:1px solid rgba(201,164,92,.55);border-radius:6px;background:linear-gradient(180deg,#30271e,#191613);color:#ead5aa;cursor:pointer}
 .effect-toolbar button:hover{border-color:#d8b66e;background:#403222}
 .effect-toolbar span{font-size:11px;color:var(--muted,#a99b85);margin-left:4px}
+.new-card-option{padding:10px 12px;border:1px solid rgba(201,164,92,.35);border-radius:8px;background:rgba(201,164,92,.055)}
+.new-card-check{display:flex;align-items:center;gap:9px;margin:0;color:#ead5aa;font-size:13px;cursor:pointer}
+.new-card-check input{width:17px;height:17px;accent-color:#c9a45c;margin:0;flex:none}
+.new-card-badge{display:inline-flex;align-items:center;gap:4px;width:max-content;padding:3px 7px;border:1px solid #c9a45c;border-radius:5px;background:rgba(111,78,31,.22);color:#f0d28d;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.tile-new-flag{margin-top:6px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -426,6 +431,10 @@ footer:before{
     <div class="formgrid">
      <div class="field span2"><label>Modelo de criação</label><select id="creationMode"><option value="normal">Criar Carta</option><option value="ready">CARTA PRONTA</option></select><div class="hint">Selecione CARTA PRONTA para identificar cartas cujo visual já está definido.</div></div>
      <div class="field span2"><label>Nome da carta *</label><input id="name" maxlength="60" placeholder="Nome da carta"></div>
+     <div class="field span2 new-card-option">
+      <label class="new-card-check"><input id="isNew" type="checkbox"><span>Marcar como carta nova</span></label>
+      <div class="hint">Use esta marcação para distinguir as cartas inéditas do acervo que já existia.</div>
+     </div>
      <div class="field"><label>Facção</label><select id="faction"><option value="">Selecione uma facção</option><option>Kalassiria</option><option>Monte Celéstia</option><option>Baator</option><option>Moiras</option><option>Caras Galadhon</option><option>Yalugoth</option><option>Thay</option><option>Baldur's Gate</option></select><div class="faction-picker" id="factionPicker" aria-label="Selecionar facção"></div></div>
      <div class="field"><label>Tipo</label><select id="type"><option>Criatura</option><option>Construção</option><option>Magias</option><option>Itens</option></select></div>
      <div class="field"><label>Raridade / moldura</label><select id="rarity"><option value="Bronze">Bronze</option><option value="Prata">Prata</option><option value="Ouro">Ouro</option><option value="Dark">Dark</option><option value="Esmeralda">Esmeralda</option><option value="Rubi">Rubi</option><option value="Topázio">Topázio</option></select></div>
@@ -574,7 +583,7 @@ function render(){
  list=list.filter(c=>(!q||[c.name,c.description,c.effect,c.flavor,c.faction].join(' ').toLowerCase().includes(q))&&(!f||c.faction===f)&&(!r||c.rarity===r)&&(!t||c.type===t));
  const sort=$('sort').value;if(sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));if(sort==='newest')list.sort((a,b)=>(b.updated||0)-(a.updated||0));if(sort==='cost')list.sort((a,b)=>(+a.cost||0)-(+b.cost||0));
  $('resultCount').textContent=`${list.length} de ${cards.length} cartas`;
- $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div><div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div>${c.type==='Magias'?`<div class="tile-stats magic-stats"><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span></div>`:`<div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div>`}<div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
+ $('library').innerHTML=list.length?list.map(c=>`<article class="cardtile" data-id="${c.id}"><div class="thumb"><canvas width="408" height="771" data-card="${c.id}"></canvas></div><div class="tile-title">${escapeHtml(c.name||'Sem nome')}</div>${c.isNew?`<div class="new-card-badge tile-new-flag">✦ Carta nova</div>`:''}<div class="tile-meta"><span>${escapeHtml(c.type||'')}</span><span>${escapeHtml(c.rarity||'')}</span></div>${c.type==='Magias'?`<div class="tile-stats magic-stats"><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span></div>`:`<div class="tile-stats"><span><small>VIDA</small><b>${escapeHtml(c.life??'—')}</b></span><span><small>CUSTO</small><b>${escapeHtml(c.cost??0)}</b></span><span><small>ATAQUE</small><b>${escapeHtml(c.power??'—')}</b></span><span><small>DEFESA</small><b>${escapeHtml(c.defense??'—')}</b></span></div>`}<div class="faction-line">${sigil(c.faction,20,c.type)}<span>${escapeHtml(c.faction||c.type||'Sem facção')}</span></div></article>`).join(''):`<div class="empty" style="grid-column:1/-1">Nenhuma carta encontrada.<br><br><button class="primary" onclick="document.getElementById('newBtn').click()">Criar primeira carta</button></div>`;
  document.querySelectorAll('canvas[data-card]').forEach(cv=>{const c=cards.find(x=>x.id===cv.dataset.card);if(c)drawCard(cv,c)});
  if(!list.some(x=>x.id===selectedCardId))selectedCardId=list[0]?.id||null;
  document.querySelectorAll('.cardtile[data-id]').forEach(tile=>tile.classList.toggle('is-selected',tile.dataset.id===selectedCardId));
@@ -586,7 +595,7 @@ function updateCardInspector(){
  $('inspectorContent').style.display=c?'block':'none';
  if(!c)return;
  $('selectedCardName').textContent=c.name||'Sem nome';
- $('selectedCardMeta').textContent=[c.type||'Carta',c.rarity||'Sem raridade'].join(' · ');
+ $('selectedCardMeta').textContent=[c.type||'Carta',c.rarity||'Sem raridade',c.isNew?'CARTA NOVA':null].filter(Boolean).join(' · ');
  $('selectedCardFaction').innerHTML=sigil(c.faction,20,c.type)+'<span>'+escapeHtml(c.faction||c.type||'Sem facção')+'</span>';
  $('selectedCardStats').innerHTML=(c.type==='Magias'?[['CUSTO',c.cost??0]]:[['VIDA',c.life??'—'],['CUSTO',c.cost??0],['ATAQUE',c.power??'—'],['DEFESA',c.defense??'—']]).map(([label,value])=>'<span><small>'+label+'</small><b>'+escapeHtml(value)+'</b></span>').join('');$('selectedCardStats').classList.toggle('magic-stats',c.type==='Magias');
  drawCard($('selectedCardCanvas'),c);
@@ -1060,9 +1069,10 @@ function openEditor(c=null){
  editingId=c?.id||null;imageData=c?.image||'';imagePath=c?.imagePath||'';
  $('modalTitle').textContent=c?'Editar carta':'Nova carta';$('deleteBtn').style.display=c?'inline-block':'none';
  const vals={creationMode:'normal',name:'',faction:'',type:'Criatura',rarity:'Bronze',cost:0,alignment:'',trait:'',life:'',power:'',defense:'',description:'',effect:'',flavor:'',imageZoom:100,imageX:0,imageY:0};
+ $('isNew').checked=!!c?.isNew;
  Object.keys(vals).forEach(k=>{const el=$(k),value=c?.[k]??vals[k];if((k==='faction'||k==='alignment')&&value&&!Array.from(el.options).some(o=>o.value===value)){const opt=document.createElement('option');opt.value=value;opt.textContent=value;el.appendChild(opt)}el.value=value});$('image').value='';updateEffectLabel();updateCropLabels();$('modal').classList.add('open');updateCreationMode();drawCard($('preview'),{...vals,...(c||{}),image:imageData});
 }
-function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
+function collect(){return {id:editingId||crypto.randomUUID(),creationMode:$('creationMode').value,isNew:$('isNew').checked,name:$('name').value.trim(),faction:$('faction').value.trim(),type:$('type').value,rarity:$('rarity').value,cost:$('cost').value,alignment:$('alignment').value,trait:$('trait').value,life:$('life').value,power:$('power').value,defense:$('defense').value,description:$('description').value,effect:$('effect').value,flavor:$('flavor').value,image:imageData,imagePath,imageZoom:+$('imageZoom').value,imageX:+$('imageX').value,imageY:+$('imageY').value,updated:Date.now()}}
 async function save(){
  const c=collect();
  if(!c.name){alert('Informe o nome da carta.');$('name').focus();return}
