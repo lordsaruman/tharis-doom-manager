@@ -820,7 +820,7 @@ function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lin
  while(true){
   makeLines();
   if(lines.length*lineHeight<=maxHeight||size<=minSize)break;
-  size=Math.max(minSize,size-.25);
+  size=Math.max(minSize,size-.15);
  }
  const lh=Math.min(lineHeight,maxHeight/Math.max(1,lines.length));
  ctx.save();ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
@@ -915,7 +915,7 @@ function drawCreatureCard(canvas,c){
   if(c.effect)drawEffectRichText(
    ctx,c.effect,w*.5,(abilityTop+abilityBottom)/2,
    w*.72,abilityBottom-abilityTop,
-   w*.037,w*.018,h*.027,creatureTextColor
+   w*.037,w*.028,h*.027,creatureTextColor
   );
   // Linha divisória dentro da área branca e afastada da moldura.
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
@@ -1072,7 +1072,7 @@ function drawMagicCard(canvas,c){
  };
  // Efeito e ambientação usam a mesma lógica de quebra, fonte e ajuste
  // empregada nas habilidades e no flavor das cartas de criatura.
- if(c.effect)drawEffectRichText(ctx,c.effect,w*.5,h*(.809+(+c.effectOffsetY||0)),w*.70,h*.087,w*.037,w*.018,h*.027,'#f1d18a');
+ if(c.effect)drawEffectRichText(ctx,c.effect,w*.5,h*(.809+(+c.effectOffsetY||0)),w*.70,h*.087,w*.037,w*.028,h*.027,'#f1d18a');
  // Divisória dourada entre o efeito e o texto de ambientação.
  ctx.save();ctx.strokeStyle='rgba(201,164,92,.95)';ctx.lineWidth=Math.max(1.5,w*.0025);
  ctx.shadowColor='rgba(201,164,92,.45)';ctx.shadowBlur=3;
