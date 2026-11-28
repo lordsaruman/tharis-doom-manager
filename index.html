@@ -629,21 +629,7 @@ function drawCreatureCard(canvas,c){
  };
  const paint=()=>{
   // Calcula a bandeira antes da moldura: a esfera de custo é desenhada por cima dela.
-  const insigniaItems=[];
-  const alignmentEmblem=alignmentInsignias[c.alignment];
-  if(alignmentEmblem&&alignmentEmblem.complete&&alignmentEmblem.naturalWidth)insigniaItems.push({img:alignmentEmblem});
-  const factionEmblem=INSIGNIA_DRAW_IMAGES[c.faction];
-  if(factionEmblem&&factionEmblem.complete&&factionEmblem.naturalWidth)insigniaItems.push({img:factionEmblem});
-  let flagX=0,flagY=0,emblemSize=0,pad=0,gap=0;
-  if(insigniaItems.length){
-   emblemSize=w*.088;gap=w*.012;pad=w*.012;
-   const flagWidth=w*.112,flagHeight=pad*2+insigniaItems.length*emblemSize+(insigniaItems.length-1)*gap;
-   flagX=w*.95-flagWidth/2;flagY=h*.052;
-   ctx.save();ctx.beginPath();
-   ctx.moveTo(flagX,flagY);ctx.lineTo(flagX+flagWidth,flagY);ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.82);
-   ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);ctx.lineTo(flagX,flagY+flagHeight*.82);ctx.closePath();
-   ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();ctx.restore();
-  }
+  drawInsigniaFlag(ctx,c,w,h);
   if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';
   ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
@@ -654,12 +640,6 @@ function drawCreatureCard(canvas,c){
   stat(c.power,.105,.945,.105);
   stat(c.defense,.895,.945,.105);
   ctx.shadowBlur=0;
-  // Insígnias são aplicadas sobre a bandeira, mas a esfera de custo permanece à frente.
-  insigniaItems.forEach((item,index)=>{
-   const x=w*.95-emblemSize/2,y=flagY+pad+index*(emblemSize+gap);
-   if(item.index===undefined)ctx.drawImage(item.img,x,y,emblemSize,emblemSize);
-   else ctx.drawImage(item.img,item.index*100,0,100,100,x,y,emblemSize,emblemSize);
-  });
   ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
@@ -704,6 +684,26 @@ function drawTypeInsignia(ctx,type,cx,cy,size){
  ctx.drawImage(img,cx-size*.43,cy-size*.43,size*.86,size*.86);
  ctx.restore();
 }
+function drawInsigniaFlag(ctx,c,w,h){
+ const typeKey=c.type==='Magias'?'Magias':c.type==='Construcao'?'Construção':c.type;
+ const items=[];
+ const typeImg=INSIGNIA_DRAW_IMAGES[typeKey];
+ const alignImg=alignmentInsignias[c.alignment];
+ const factionImg=INSIGNIA_DRAW_IMAGES[c.faction];
+ if(typeImg?.complete&&typeImg.naturalWidth)items.push(typeImg);
+ if(alignImg?.complete&&alignImg.naturalWidth)items.push(alignImg);
+ if(factionImg?.complete&&factionImg.naturalWidth)items.push(factionImg);
+ if(!items.length)return;
+ const size=w*.088,gap=w*.012,pad=w*.012,flagWidth=w*.112;
+ const flagHeight=pad*2+items.length*size+(items.length-1)*gap+w*.025;
+ const flagX=w*.95-flagWidth/2,flagY=h*.052;
+ ctx.save();ctx.beginPath();
+ ctx.moveTo(flagX,flagY);ctx.lineTo(flagX+flagWidth,flagY);ctx.lineTo(flagX+flagWidth,flagY+flagHeight*.84);
+ ctx.lineTo(flagX+flagWidth/2,flagY+flagHeight);ctx.lineTo(flagX,flagY+flagHeight*.84);ctx.closePath();
+ ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();
+ items.forEach((img,index)=>ctx.drawImage(img,flagX+(flagWidth-size)/2,flagY+pad+index*(size+gap),size,size));
+ ctx.restore();
+}
 function drawMagicCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
  const drawLayout=img=>{
@@ -741,8 +741,8 @@ function drawMagicCard(canvas,c){
   if(magicFrame.complete&&magicFrame.naturalWidth){
    ctx.drawImage(magicFrame,0,0,w,h);
   }
-  // Insígnia de tipo fixa para todas as cartas de Magias.
-  drawTypeInsignia(ctx,'Magias',w*.053,h*.115,w*.072);
+  // A bandeira reúne tipo, alinhamento e facção, nessa ordem.
+  drawInsigniaFlag(ctx,c,w,h);
 
   const drawRichText=(text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color,fitToBox=false)=>{
   const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
@@ -805,11 +805,6 @@ function drawMagicCard(canvas,c){
   ctx.fillStyle='#29231b';ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
   ctx.font='normal '+(w*.090)+'px Georgia';
   ctx.fillText(String(c.cost??0),w*.95,h*.024);ctx.shadowBlur=0;
-  const alignImg=alignmentInsignias[c.alignment];
-  if(alignImg&&alignImg.complete&&alignImg.naturalWidth){
-   ctx.save();ctx.beginPath();ctx.arc(w*.947,h*.115,w*.032,0,Math.PI*2);ctx.clip();
-   ctx.drawImage(alignImg,w*.915,h*.083,w*.064,h*.064);ctx.restore();
-  }
  };
  if(c.image){
   const img=new Image();img.onload=()=>drawLayout(img);img.onerror=()=>drawLayout(null);img.src=c.image;
@@ -824,7 +819,6 @@ function drawCard(canvas,c){
  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
  const palettes={Bronze:['#6d482d','#c18b55'],Prata:['#555d68','#c8d0d8'],Ouro:['#72551e','#e8c66d'],Dark:['#191923','#8e6ba8'],Esmeralda:['#164b3d','#70c49c'],Rubi:['#5b2029','#d66a73'],Topázio:['#674c1c','#e5b84e']};
  const [base,edge]=palettes[c.rarity]||palettes.Bronze;
- if(c.type==='Construção')drawTypeInsignia(ctx,'Construção',w*.12,h*.19,w*.075);
  const grad=ctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,base);grad.addColorStop(1,'#111219');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
  ctx.strokeStyle=edge;ctx.lineWidth=Math.max(5,w*.014);ctx.strokeRect(9,9,w-18,h-18);ctx.strokeStyle='#ffffff33';ctx.lineWidth=2;ctx.strokeRect(20,20,w-40,h-40);
  ctx.fillStyle='#100f14';ctx.fillRect(w*.07,h*.09,w*.86,h*.07);ctx.fillStyle='#f4e9d5';ctx.font='bold '+(w*.055)+'px Georgia';ctx.textAlign='center';ctx.fillText((c.name||'NOVA CARTA').toUpperCase().slice(0,30),w/2,h*.137);
@@ -840,6 +834,7 @@ function drawCard(canvas,c){
  ctx.fillStyle='#f1d58c';ctx.textAlign='right';ctx.font='bold '+(w*.04)+'px sans-serif';ctx.fillText(String(c.cost??0),w*.87,h*.955);
  ctx.textAlign='left';ctx.font=(w*.025)+'px sans-serif';ctx.fillStyle='#ddd';ctx.fillText([c.life?'V '+c.life:'',c.power?'A '+c.power:'',c.defense?'D '+c.defense:''].filter(Boolean).join('  '),w*.11,h*.955);
  if(c.faction==='Monte Celéstia'||c.faction==='Baator'){ctx.beginPath();ctx.arc(w*.88,h*.075,w*.035,0,Math.PI*2);ctx.fillStyle='#15151b';ctx.fill();ctx.strokeStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.stroke();ctx.fillStyle=c.faction==='Baator'?'#c64b50':'#e5c77b';ctx.font='bold '+(w*.045)+'px Georgia';ctx.textAlign='center';ctx.fillText(c.faction==='Baator'?'⌁':'✧',w*.88,h*.091)}
+ drawInsigniaFlag(ctx,c,w,h);
 }
 function updateCreationMode(){const ready=$('creationMode').value==='ready';$('cropControls').style.display=ready?'none':'grid';$('ocrPanel').style.display=ready?'block':'none';$('imageLabel').textContent=ready?'Imagem completa da carta (PNG ou JPG)':'Ilustração (PNG ou JPG)';$('imageHint').textContent=ready?'Envie a imagem final da carta. O reconhecimento preencherá os dados sem modificar a imagem.':(cloudUser?'A imagem será armazenada no Supabase Storage.':'A imagem fica incorporada ao registro local até conectar sua conta.');drawCard($('preview'),collect())}
 let ocrBusy=false;
