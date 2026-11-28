@@ -1007,16 +1007,16 @@ function drawMagicCard(canvas,c){
    ctx.font=(w*.05)+'px Georgia';ctx.fillText('ILUSTRAÇÃO',w*.5,h*.43);
   }
 
-  // Degradê escuro e translúcido em toda a largura da ilustração,
-  // começando na altura do nome e aumentando suavemente até a base.
-  // É pintado antes do molde para manter todos os ornamentos dourados intactos.
-  const top=h*.655,bottom=h*.985;
+  // Degradê escuro na área textual, iniciando suavemente junto ao nome
+  // e aumentando de cima para baixo até 50% de opacidade na base.
+  // É pintado antes do molde para preservar os ornamentos dourados.
+  const top=h*(.744+(+c.nameOffsetY||0)),bottom=h*.985;
   const shade=ctx.createLinearGradient(0,top,0,bottom);
-  shade.addColorStop(0,'rgba(5,6,10,.10)');
-  shade.addColorStop(.12,'rgba(5,6,10,.30)');
-  shade.addColorStop(.38,'rgba(5,6,10,.52)');
-  shade.addColorStop(.70,'rgba(5,6,10,.70)');
-  shade.addColorStop(1,'rgba(5,6,10,.82)');
+  shade.addColorStop(0,'rgba(5,6,10,0)');
+  shade.addColorStop(.16,'rgba(5,6,10,.06)');
+  shade.addColorStop(.42,'rgba(5,6,10,.20)');
+  shade.addColorStop(.72,'rgba(5,6,10,.36)');
+  shade.addColorStop(1,'rgba(5,6,10,.50)');
   ctx.fillStyle=shade;ctx.fillRect(w*.075,top,w*.85,bottom-top);
 
   // A bandeira começa atrás da esfera de custo; o molde original permanece intacto.
