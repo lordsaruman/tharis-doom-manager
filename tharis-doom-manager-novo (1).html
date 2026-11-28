@@ -610,6 +610,43 @@ footer:before{
 .shared-note.is-completed .shared-note-content{text-decoration:line-through;text-decoration-color:#8b9a79;color:#b6b9a9}
 .shared-note-actions button:first-child{color:#c6d3a9;border-color:#596b4a}
 .shared-note.is-completed .shared-note-actions button:first-child{color:#d7bd88;border-color:#79613d}
+
+.sector-nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #57452f;background:linear-gradient(180deg,#1b1510,#120e0b);position:sticky;top:0;z-index:6}
+.sector-nav button{min-width:150px;font-family:'Cinzel',Georgia,serif;font-size:12px;letter-spacing:.08em}
+.sector-nav button.active{background:linear-gradient(180deg,#c5a66c,#987342);color:#1b140b;border-color:#d2b47c}
+.sector-view{display:none}.sector-view.active{display:block}
+.sector-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin:8px 0 18px;padding:0 0 12px;border-bottom:1px solid #5b472e}
+.sector-heading h2{margin:0;color:#e5d2ae;font:600 21px 'Cinzel',Georgia,serif}
+.sector-heading p{margin:4px 0 0;color:#aa9b83}
+.sector-tools{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
+.sector-panel{padding:18px;border:1px solid #57452f;border-radius:7px;background:linear-gradient(145deg,#282017,#17120e);box-shadow:0 7px 20px #0003}
+.sector-panel h3{margin:0 0 12px;color:#d8c39a;font:600 14px 'Cinzel',Georgia,serif}
+.task-form{display:grid;grid-template-columns:2fr 2fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin:12px 0 18px}
+.task-form .field{margin:0}
+.task-board{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px}
+.task-column{min-width:220px;border:1px solid #57452f;border-radius:6px;background:#130f0c;padding:10px}
+.task-column h3{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:.08em}
+.task-column h3 span{color:#b89559}
+.task-card{padding:11px;margin:8px 0;border:1px solid #5b472e;border-radius:5px;background:linear-gradient(145deg,#292117,#19130e)}
+.task-card strong{display:block;color:#e6d4b2;font:600 13px 'Cinzel',Georgia,serif}
+.task-card p{margin:6px 0;color:#c0b39d;white-space:pre-wrap;font-size:14px}
+.task-meta{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0;color:#a99470;font-size:12px}
+.task-card-actions{display:flex;gap:6px;align-items:center;margin-top:8px}
+.task-card-actions select{flex:1;font-size:13px;padding:6px}
+.task-card-actions button{padding:6px 9px}
+.task-priority{color:#d9bf87;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.activity-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 190px 190px;gap:9px;margin:12px 0}
+.activity-list{display:flex;flex-direction:column;gap:8px}
+.activity-entry{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px;border:1px solid #57452f;border-radius:5px;background:#17120e}
+.activity-entry time{font-size:12px;color:#a99470}
+.activity-entry strong{color:#e4d2ae}
+.activity-entry p{margin:4px 0 0;color:#b9aa90;font-size:13px}
+.activity-op{font:600 10px 'Cinzel',Georgia,serif;letter-spacing:.08em;color:#d8bc82}
+.activity-details{grid-column:2/-1;color:#9f927c;font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere}
+.activity-empty{padding:24px;text-align:center;color:#a99470;border:1px dashed #57452f}
+@media(max-width:950px){.task-form{grid-template-columns:repeat(2,minmax(0,1fr))}.activity-toolbar{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.sector-nav{position:relative}.sector-nav button{flex:1 1 44%;min-width:0}.activity-entry{grid-template-columns:1fr}.activity-details{grid-column:1}.activity-toolbar{grid-template-columns:1fr}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
@@ -622,7 +659,9 @@ footer:before{
   <input type="file" id="importFile" accept=".json,application/json" hidden>
  </div>
 </header>
+<nav class="sector-nav" aria-label="Setores do gerenciador"><button type="button" data-sector="library" class="active">Biblioteca</button><button type="button" data-sector="development">Desenvolvimento</button><button type="button" data-sector="rules">Regras e Glossário</button><button type="button" data-sector="admin">Administração</button></nav>
 <main>
+ <section id="sector-library" class="sector-view active">
  <section class="stats">
   <div class="stat"><strong id="statNewCards">0</strong><span>Cartas Novas</span></div>
   <div class="stat"><strong id="statTypes">0</strong><span>Tipos de cartas</span></div>
@@ -660,6 +699,37 @@ footer:before{
   </div>
  </div>
  </div>
+
+ </section>
+ <section id="sector-development" class="sector-view">
+  <div class="sector-heading"><div><h2>Desenvolvimento</h2><p>Ferramentas de análise, equipe e acompanhamento da produção.</p></div></div>
+  <div class="sector-panel"><h3>FERRAMENTAS DE DESENVOLVIMENTO</h3><div class="sector-tools" id="developmentTools"></div></div>
+  <div class="sector-panel" style="margin-top:14px"><h3>PIPELINE DE TAREFAS</h3>
+   <p class="hint">Transforme anotações da equipe em tarefas, atribua responsáveis e acompanhe cada etapa.</p>
+   <form id="taskForm" class="task-form">
+    <div class="field"><label for="taskTitle">Título</label><input id="taskTitle" maxlength="120" placeholder="Ex.: Revisar custo de criaturas" required></div>
+    <div class="field"><label for="taskDescription">Descrição</label><input id="taskDescription" maxlength="600" placeholder="Detalhes da tarefa"></div>
+    <div class="field"><label for="taskPriority">Prioridade</label><select id="taskPriority"><option value="low">Baixa</option><option value="medium" selected>Média</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></div>
+    <div class="field"><label for="taskAssignee">Responsável</label><select id="taskAssignee"><option value="">Não atribuído</option></select></div>
+    <div class="field"><label for="taskDueDate">Prazo</label><input id="taskDueDate" type="date"></div>
+    <button class="primary" type="submit" id="taskCreateBtn">＋ Criar tarefa</button>
+   </form>
+   <div class="task-board" id="taskBoard"><div class="activity-empty">Entre para carregar o pipeline.</div></div>
+  </div>
+ </section>
+ <section id="sector-rules" class="sector-view">
+  <div class="sector-heading"><div><h2>Regras e Glossário</h2><p>Consulte e mantenha os conceitos oficiais do jogo organizados.</p></div></div>
+  <div class="sector-panel"><h3>GLOSSÁRIO DO JOGO</h3><p class="hint">Características, palavras-chave, combate, regras e tipos de carta.</p><button class="primary" type="button" id="openGlossarySector">Abrir glossário completo</button></div>
+ </section>
+ <section id="sector-admin" class="sector-view">
+  <div class="sector-heading"><div><h2>Administração</h2><p>Configurações gerais e rastreabilidade das alterações feitas pela equipe.</p></div></div>
+  <div class="sector-panel"><h3>FERRAMENTAS ADMINISTRATIVAS</h3><div class="sector-tools" id="adminTools"></div></div>
+  <div class="sector-panel" style="margin-top:14px"><h3>REGISTRO DE ATIVIDADES</h3>
+   <p class="hint">Histórico compartilhado e automático de inclusões, edições e exclusões feitas no gerenciador.</p>
+   <div class="activity-toolbar"><input id="activitySearch" placeholder="Buscar por registro, pessoa ou conteúdo…"><select id="activityTableFilter"><option value="">Todas as áreas</option><option value="cards">Cartas</option><option value="creature_traits">Características</option><option value="game_glossary">Glossário</option><option value="shared_library_notes">Anotações</option><option value="development_tasks">Tarefas</option><option value="manager_settings">Configurações</option><option value="collaborator_directory">Colaboradores</option></select><select id="activityOperationFilter"><option value="">Todas as ações</option><option value="INSERT">Criações</option><option value="UPDATE">Edições</option><option value="DELETE">Exclusões</option></select></div>
+   <div class="hint" id="activityCount">Entre para consultar o histórico.</div><div class="activity-list" id="activityList"><div class="activity-empty">O registro será exibido aqui.</div></div>
+  </div>
+ </section>
 </main>
 <button class="notes-edge-toggle" id="notesToggle" type="button" aria-label="Abrir minhas anotações" aria-expanded="false" title="Minhas anotações">‹</button>
 <aside class="notes-drawer" id="notesDrawer" aria-label="Anotações compartilhadas" aria-hidden="true">
@@ -801,6 +871,105 @@ $('loginBtn').addEventListener('click',async()=>{
  }catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}
  finally{button.disabled=false}
 });
+
+const sectorNames={library:'Biblioteca',development:'Desenvolvimento',rules:'Regras e Glossário',admin:'Administração'};
+let developmentTasks=[],activityRows=[];
+function setSector(name){
+ document.querySelectorAll('.sector-view').forEach(el=>el.classList.toggle('active',el.id==='sector-'+name));
+ document.querySelectorAll('[data-sector]').forEach(el=>el.classList.toggle('active',el.dataset.sector===name));
+ if(name==='development')loadDevelopmentTasks().catch(e=>console.warn('Pipeline:',e));
+ if(name==='admin')loadActivityLog().catch(e=>console.warn('Atividades:',e));
+}
+function initSectorNavigation(){
+ document.querySelectorAll('[data-sector]').forEach(btn=>btn.addEventListener('click',()=>setSector(btn.dataset.sector)));
+ const move=(id,target)=>{const el=$(id),dest=$(target);if(el&&dest)dest.appendChild(el)};
+ ['codexBtn','teamBtn'].forEach(id=>move(id,'developmentTools'));
+ ['glossaryBtn'].forEach(id=>move(id,'sector-rules'));
+ ['cardVisualsBtn','assetsBtn','importBtn','exportBtn'].forEach(id=>move(id,'adminTools'));
+ const openGlossary=$('openGlossarySector');if(openGlossary)openGlossary.addEventListener('click',()=>openGlossaryModal());
+ const glossaryButton=$('glossaryBtn');if(glossaryButton)glossaryButton.addEventListener('click',()=>openGlossaryModal());
+ $('activitySearch').addEventListener('input',renderActivityLog);
+ $('activityTableFilter').addEventListener('change',renderActivityLog);
+ $('activityOperationFilter').addEventListener('change',renderActivityLog);
+ $('taskForm').addEventListener('submit',createDevelopmentTask);
+ $('taskBoard').addEventListener('change',e=>{const select=e.target.closest('[data-task-status]');if(select)updateTaskStatus(select.dataset.taskStatus,select.value)});
+ $('taskBoard').addEventListener('click',e=>{const del=e.target.closest('[data-task-delete]');if(del)deleteDevelopmentTask(del.dataset.taskDelete)});
+}
+async function openGlossaryModal(){ $('glossaryModal').classList.add('open');$('glossaryStatus').textContent='';try{await loadGlossary()}catch(e){$('glossaryList').innerHTML='<div class="glossary-empty">Falha: '+escapeHtml(e.message)+'</div>'} }
+function fillTaskAssignees(){
+ const select=$('taskAssignee');if(!select)return;
+ const current=select.value;
+ select.innerHTML='<option value="">Não atribuído</option>'+Object.keys(collaboratorDirectory).map(id=>'<option value="'+escapeHtml(id)+'">'+escapeHtml(collaboratorDirectory[id].display_name||'Colaborador')+'</option>').join('');
+ select.value=current;
+}
+function taskStatusLabel(s){return ({todo:'A fazer',doing:'Em andamento',review:'Em revisão',done:'Concluído'})[s]||s}
+function taskPriorityLabel(s){return ({low:'Baixa',medium:'Média',high:'Alta',urgent:'Urgente'})[s]||s}
+function renderDevelopmentTasks(){
+ const board=$('taskBoard');if(!board)return;
+ const cols=[['todo','A FAZER'],['doing','EM ANDAMENTO'],['review','EM REVISÃO'],['done','CONCLUÍDO']];
+ board.innerHTML=cols.map(([status,label])=>{
+  const rows=developmentTasks.filter(t=>t.status===status);
+  return '<section class="task-column"><h3>'+label+' <span>'+rows.length+'</span></h3>'+ (rows.length?rows.map(t=>{
+   const assignee=t.assigned_to?(collaboratorDirectory[t.assigned_to]?.display_name||'Colaborador'):'Sem responsável';
+   const due=t.due_date?new Date(t.due_date+'T12:00:00').toLocaleDateString('pt-BR'):'Sem prazo';
+   return '<article class="task-card"><strong>'+escapeHtml(t.title)+'</strong><p>'+escapeHtml(t.description||'')+'</p><div class="task-meta"><span class="task-priority">'+taskPriorityLabel(t.priority)+'</span><span>'+escapeHtml(assignee)+'</span><span>'+due+'</span></div><div class="task-card-actions"><select data-task-status="'+escapeHtml(t.id)+'" aria-label="Etapa da tarefa">'+cols.map(c=>'<option value="'+c[0]+'" '+(t.status===c[0]?'selected':'')+'>'+taskStatusLabel(c[0])+'</option>').join('')+'</select><button type="button" class="danger" data-task-delete="'+escapeHtml(t.id)+'" title="Excluir tarefa">×</button></div></article>';
+  }).join(''):'<div class="activity-empty">Nenhuma tarefa nesta etapa.</div>')+'</section>';
+ }).join('');
+}
+async function loadDevelopmentTasks(){
+ if(!cloudUser||!sb){$('taskBoard').innerHTML='<div class="activity-empty">Entre para acessar o pipeline compartilhado.</div>';return}
+ fillTaskAssignees();
+ const {data,error}=await sb.from('development_tasks').select('id,title,description,status,priority,assigned_to,due_date,source_note_id,created_by,created_at,updated_at').order('created_at',{ascending:false});
+ if(error)throw error;developmentTasks=data||[];renderDevelopmentTasks();
+}
+async function createDevelopmentTask(e){
+ e.preventDefault();if(!cloudUser)return;
+ const title=$('taskTitle').value.trim();if(!title)return;
+ const btn=$('taskCreateBtn');btn.disabled=true;
+ const payload={title,description:$('taskDescription').value.trim(),priority:$('taskPriority').value,assigned_to:$('taskAssignee').value||null,due_date:$('taskDueDate').value||null,created_by:cloudUser.id};
+ const {error}=await sb.from('development_tasks').insert(payload);
+ btn.disabled=false;if(error){alert('Não foi possível criar a tarefa: '+error.message);return}
+ $('taskForm').reset();$('taskPriority').value='medium';await loadDevelopmentTasks();
+}
+async function updateTaskStatus(id,status){
+ const {error}=await sb.from('development_tasks').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+ if(error){alert('Não foi possível mover a tarefa: '+error.message);await loadDevelopmentTasks();return}
+ await loadDevelopmentTasks();
+}
+async function deleteDevelopmentTask(id){
+ if(!confirm('Excluir esta tarefa do pipeline?'))return;
+ const {error}=await sb.from('development_tasks').delete().eq('id',id);
+ if(error){alert('Não foi possível excluir: '+error.message);return}await loadDevelopmentTasks();
+}
+async function convertNoteToTask(id){
+ const note=sharedNotes.find(n=>n.id===id);if(!note)return;
+ const lines=note.content.trim().split(/\r?\n/),title=(lines.shift()||'Tarefa da equipe').slice(0,120),description=lines.join('\n').trim();
+ const {error}=await sb.from('development_tasks').insert({title,description,source_note_id:id,created_by:cloudUser.id,priority:'medium',status:'todo'});
+ if(error){alert('Não foi possível transformar em tarefa: '+error.message);return}
+ setSector('development');await loadDevelopmentTasks();
+}
+async function loadActivityLog(){
+ if(!cloudUser||!sb){$('activityList').innerHTML='<div class="activity-empty">Entre para consultar o registro compartilhado.</div>';return}
+ $('activityList').innerHTML='<div class="activity-empty">Carregando atividades…</div>';
+ const {data,error}=await sb.from('activity_log').select('id,table_name,operation,record_id,actor_id,entity_label,occurred_at,before_data,after_data').order('occurred_at',{ascending:false}).limit(300);
+ if(error){$('activityList').innerHTML='<div class="activity-empty">Não foi possível carregar: '+escapeHtml(error.message)+'</div>';return}
+ activityRows=data||[];renderActivityLog();
+}
+function renderActivityLog(){
+ const list=$('activityList');if(!list)return;
+ const search=($('activitySearch')?.value||'').toLocaleLowerCase('pt-BR'),table=$('activityTableFilter')?.value||'',op=$('activityOperationFilter')?.value||'';
+ const rows=activityRows.filter(r=>(!table||r.table_name===table)&&(!op||r.operation===op)&&(!search||[r.entity_label,r.table_name,r.operation,creatorLabel(r.actor_id),JSON.stringify(r.after_data||r.before_data||{})].join(' ').toLocaleLowerCase('pt-BR').includes(search)));
+ $('activityCount').textContent=rows.length+' atividade(s) exibida(s) · até 300 registros mais recentes';
+ if(!rows.length){list.innerHTML='<div class="activity-empty">Nenhuma atividade corresponde aos filtros.</div>';return}
+ const names={cards:'Carta',creature_traits:'Característica',game_glossary:'Glossário',shared_library_notes:'Anotação',development_tasks:'Tarefa',manager_settings:'Configuração',collaborator_directory:'Colaborador'};
+ const actions={INSERT:'CRIADO',UPDATE:'EDITADO',DELETE:'EXCLUÍDO'};
+ list.innerHTML=rows.map(r=>{
+  const date=new Date(r.occurred_at).toLocaleString('pt-BR'),actor=r.actor_id?creatorLabel(r.actor_id):'Sistema';
+  const detail= r.operation==='UPDATE'?{antes:r.before_data,depois:r.after_data}:r.operation==='DELETE'?r.before_data:r.after_data;
+  return '<article class="activity-entry"><time>'+date+'</time><div><strong>'+escapeHtml(r.entity_label||names[r.table_name]||r.table_name)+'</strong><p>'+escapeHtml(actor)+' · '+escapeHtml(names[r.table_name]||r.table_name)+'</p></div><span class="activity-op">'+(actions[r.operation]||r.operation)+'</span><div class="activity-details">Registro: '+escapeHtml(r.record_id||'—')+' · '+escapeHtml(JSON.stringify(detail||{}).slice(0,850))+'</div></article>';
+ }).join('');
+}
+
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
 const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
 let cards=[],editingId=null,imageData='',imagePath='',imageOriginalData='',cloudUser=null,selectedCardId=null,glossaryEntries=[];
@@ -2200,7 +2369,7 @@ function renderSharedNotes(){
  count.textContent=pending.length+' pendentes · '+done.length+' feitas';
  if(!sharedNotes.length){list.innerHTML='<div class="empty">Ainda não há anotações. Registre a primeira ideia da equipe!</div>';return}
  const ordered=[...pending,...done];
- list.innerHTML=ordered.map(note=>{const author=creatorLabel(note.created_by),date=new Date(note.updated_at||note.created_at),completed=!!note.completed;return `<article class="shared-note ${completed?'is-completed':''}" data-note-id="${escapeHtml(note.id)}"><div class="shared-note-meta"><span class="shared-note-author"><span class="shared-note-mark">${escapeHtml(creatorMark(note.created_by))}</span>${escapeHtml(author)}</span><time>${date.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</time></div><div class="shared-note-status"><span class="shared-note-status-dot"></span>${completed?'FEITA':'PENDENTE'}</div><div class="shared-note-content">${escapeHtml(note.content).replace(/\n/g,'<br>')}</div><div class="shared-note-actions"><button type="button" data-note-toggle="${escapeHtml(note.id)}">${completed?'↶ Reabrir':'✓ Marcar como feita'}</button><button type="button" data-note-edit="${escapeHtml(note.id)}">✎ Editar</button><button type="button" data-note-delete="${escapeHtml(note.id)}">× Excluir</button></div></article>`}).join('');
+ list.innerHTML=ordered.map(note=>{const author=creatorLabel(note.created_by),date=new Date(note.updated_at||note.created_at),completed=!!note.completed;return `<article class="shared-note ${completed?'is-completed':''}" data-note-id="${escapeHtml(note.id)}"><div class="shared-note-meta"><span class="shared-note-author"><span class="shared-note-mark">${escapeHtml(creatorMark(note.created_by))}</span>${escapeHtml(author)}</span><time>${date.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</time></div><div class="shared-note-status"><span class="shared-note-status-dot"></span>${completed?'FEITA':'PENDENTE'}</div><div class="shared-note-content">${escapeHtml(note.content).replace(/\n/g,'<br>')}</div><div class="shared-note-actions"><button type="button" data-note-toggle="${escapeHtml(note.id)}">${completed?'↶ Reabrir':'✓ Marcar como feita'}</button><button type="button" data-note-task="${escapeHtml(note.id)}">＋ Criar tarefa</button><button type="button" data-note-edit="${escapeHtml(note.id)}">✎ Editar</button><button type="button" data-note-delete="${escapeHtml(note.id)}">× Excluir</button></div></article>`}).join('');
 }
 async function loadSharedNotes(){
  const state=$('notesSaveState');if(!cloudUser){sharedNotes=[];renderSharedNotes();state.textContent='Entre para acessar o quadro compartilhado';return}
@@ -2267,6 +2436,12 @@ function startCardsRealtime(){
   .on('postgres_changes',{event:'*',schema:'public',table:'shared_library_notes'},()=>{
    if(cloudUser)loadSharedNotes().catch(error=>console.warn('Falha ao sincronizar anotações compartilhadas:',error));
   })
+  .on('postgres_changes',{event:'*',schema:'public',table:'development_tasks'},()=>{
+   if(cloudUser&&$('sector-development').classList.contains('active'))loadDevelopmentTasks().catch(error=>console.warn('Falha ao sincronizar tarefas:',error));
+  })
+  .on('postgres_changes',{event:'*',schema:'public',table:'activity_log'},()=>{
+   if(cloudUser&&$('sector-admin').classList.contains('active'))loadActivityLog().catch(error=>console.warn('Falha ao sincronizar atividades:',error));
+  })
   .subscribe(status=>{if(status==='SUBSCRIBED')$('cloudStatus').textContent='Online · sincronização ativa'});
 }
 function stopCardsRealtime(){if(cardsRealtimeChannel&&sb)sb.removeChannel(cardsRealtimeChannel);cardsRealtimeChannel=null;}
@@ -2276,6 +2451,7 @@ async function handleSession(session){
  cloudUser=session?.user||null;isAdmin=false;
  if(cloudUser){$('authModal').classList.remove('open');$('cloudStatus').textContent='Online · verificando acesso…';try{const {data:profile}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();isAdmin=profile?.role==='admin'}catch(error){console.warn('Não foi possível validar o perfil administrativo:',error)}}
  $('assetsBtn').style.display=isAdmin?'inline-block':'none';
+ if(cloudUser)fillTaskAssignees();
  $('teamBtn').style.display=isAdmin?'inline-block':'none';
  $('authBtn').textContent=cloudUser?'Conta · '+(cloudUser.email||'conectada'):'Entrar';
  $('logoutBtn').style.display=cloudUser?'inline-block':'none';
@@ -2307,8 +2483,9 @@ $('notesClose').addEventListener('click',()=>setNotesDrawer(false));
 $('addSharedNoteBtn').addEventListener('click',addSharedNote);
 $('sharedNoteInput').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')addSharedNote()});
 $('sharedNotesList').addEventListener('click',e=>{
- const toggle=e.target.closest('[data-note-toggle]'),edit=e.target.closest('[data-note-edit]'),remove=e.target.closest('[data-note-delete]');
+ const toggle=e.target.closest('[data-note-toggle]'),edit=e.target.closest('[data-note-edit]'),remove=e.target.closest('[data-note-delete]'),task=e.target.closest('[data-note-task]');
  if(toggle)toggleSharedNote(toggle.dataset.noteToggle);
+ if(task)convertNoteToTask(task.dataset.noteTask);
  if(edit)editSharedNote(edit.dataset.noteEdit);
  if(remove)deleteSharedNote(remove.dataset.noteDelete);
 });
@@ -2424,6 +2601,7 @@ if(sb){
   }else if(event==='TOKEN_REFRESHED'&&session?.user){cloudUser=session.user}
  });
 }else{load();cloudLibraryReady=true;render()}
+initSectorNavigation();
 })();
 </script>
 <script>
