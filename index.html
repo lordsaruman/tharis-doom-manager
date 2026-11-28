@@ -756,6 +756,7 @@ function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lin
  const lh=Math.min(lineHeight,maxHeight/Math.max(1,lines.length));
  ctx.save();ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
  ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle=metallicGoldText(ctx,y,size);
+ ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
  const total=Math.min(lines.length*lh,maxHeight),top=y-total/2+lh/2;
  lines.forEach((ln,i)=>{
   let cursor=x-ln.width/2;
@@ -816,6 +817,7 @@ function drawCreatureCard(canvas,c){
   ctx.save();
   ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
   ctx.font='italic '+size+'px Georgia';ctx.fillStyle=metallicGoldText(ctx,y,size);
+  ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
   ctx.textAlign='center';ctx.textBaseline='middle';
   const total=Math.min(lines.length*actualLineHeight,maxHeight),first=y-total/2+actualLineHeight/2;
   lines.forEach((line,i)=>{if(line&&i*actualLineHeight<maxHeight)ctx.fillText(line,x,first+i*actualLineHeight,maxWidth)});
@@ -827,14 +829,14 @@ function drawCreatureCard(canvas,c){
   if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
   drawInsigniaFlag(ctx,c,w,h,'emblems');
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';
-  ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
   const stat=(value,x,y,size)=>{if(value!==undefined&&value!==null&&value!==''){ctx.font='normal '+(w*size)+'px Georgia';ctx.fillText(String(value),w*x,h*y)}};
   // Números maiores; custo ligeiramente elevado para o centro vertical da esfera.
   stat(c.life,.50,.041,.105);
   stat(c.cost??0,.95,.024,.090);
   stat(c.power,.105,.945,.105);
   stat(c.defense,.895,.945,.105);
-  ctx.shadowBlur=0;
+  ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
   ctx.fillStyle=metallicGoldText(ctx,h*.708,w*.050);ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
@@ -992,6 +994,7 @@ function drawMagicCard(canvas,c){
   ctx.save();
   ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
   ctx.font='italic '+size+'px Georgia';ctx.fillStyle=metallicGoldText(ctx,y,size);
+  ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
   ctx.textAlign='center';ctx.textBaseline='middle';
   const total=Math.min(lines.length*actualLineHeight,maxHeight),first=y-total/2+actualLineHeight/2;
   lines.forEach((line,i)=>{if(line&&i*actualLineHeight<maxHeight)ctx.fillText(line,x,first+i*actualLineHeight,maxWidth)});
