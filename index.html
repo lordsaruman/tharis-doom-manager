@@ -658,6 +658,7 @@ footer:before{
 /* Perfis e economia dos jogadores */
 .player-mode .sector-nav,.player-mode header .actions>button:not(#authBtn):not(#logoutBtn),.player-mode header .actions #cloudStatus,.player-mode .notes-edge-toggle,.player-mode .notes-drawer{display:none!important}
 
+.player-decks-entry{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;margin:18px 0;padding:22px 24px;border:1px solid #b89559;border-radius:10px;background:radial-gradient(ellipse at 0 0,rgba(184,149,89,.22),transparent 55%),linear-gradient(120deg,#302417,#17130f 72%);box-shadow:inset 0 0 0 3px #100d0a,0 8px 24px #0006}.player-decks-entry strong{display:block;font:700 20px Cinzel,Georgia,serif;letter-spacing:.12em;color:#e8c98e}.player-decks-entry span{display:block;margin-top:5px;color:#b9a98d}.player-decks-entry button{font:700 15px Cinzel,Georgia,serif;letter-spacing:.06em;padding:13px 20px}.deck-builder-switch{display:flex;gap:8px;align-items:center;margin-top:9px;max-width:520px}.deck-builder-switch select{min-width:190px;padding:7px;font-size:13px}.deck-builder-switch button{white-space:nowrap;padding:7px 11px;font-size:13px}@media(max-width:600px){.player-decks-entry{padding:18px}.player-decks-entry button{width:100%}.deck-builder-switch{flex-wrap:wrap}.deck-builder-switch select{flex:1;min-width:0}}
 .deck-builder{position:fixed;inset:0;z-index:1200;background:#0b0c10;color:var(--text);display:flex;flex-direction:column;padding:16px;overflow:hidden}.deck-builder-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 4px 14px;border-bottom:1px solid var(--line);flex:none}.deck-builder-head h2{margin:3px 0;color:#e8d2a2}.deck-builder-head-actions{display:flex;align-items:center;gap:12px}.deck-builder-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,.8fr);gap:14px;min-height:0;flex:1;padding-top:14px}.deck-catalog-panel,.deck-analysis-panel{min-height:0;min-width:0;background:#111319;border:1px solid #3d3a42;border-radius:10px;padding:12px;display:flex;flex-direction:column}.deck-catalog-title,.deck-analysis-top,.deck-current-title{display:flex;justify-content:space-between;align-items:center;gap:8px}.deck-catalog-filters{display:grid;grid-template-columns:2fr repeat(4,minmax(90px,1fr));gap:7px;margin:12px 0}.deck-catalog-filters input,.deck-catalog-filters select{min-width:0;width:100%;font-size:12px;padding:8px}.deck-catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:10px;overflow:auto;align-content:start;padding:3px}.deck-card{position:relative;border:1px solid #48434d;border-radius:8px;background:#191a20;padding:7px;cursor:grab;min-width:0}.deck-card:hover{border-color:var(--gold);transform:translateY(-2px)}.deck-card canvas{display:block;width:min(100%,145px);height:auto;aspect-ratio:408/771;margin:auto;border-radius:4px}.deck-card-name{font-size:12px;font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.deck-card-meta{font-size:10px;color:var(--muted);display:flex;justify-content:space-between}.deck-card-add{position:absolute;right:10px;top:10px;background:#17130de8;border:1px solid #c4a66b;border-radius:50%;width:25px;height:25px;padding:0;color:#f0d49b}.deck-analysis-top{padding-bottom:10px;border-bottom:1px solid var(--line)}.deck-analysis-top h3{margin:3px 0;color:#ead4a6}.deck-count{display:flex;flex-direction:column;align-items:center;border:1px solid #8d7045;border-radius:8px;padding:5px 12px;color:#e6c98d}.deck-count strong{font-size:24px}.deck-count span{font-size:9px;letter-spacing:.1em}.deck-analysis-scroll{overflow:auto;min-height:0;flex:1}.deck-stat-block{padding:12px 0;border-bottom:1px solid #34323a}.deck-stat-block h4{font-size:11px;letter-spacing:.09em;color:#d9bd87;margin:0 0 9px}.deck-cost-chart{height:118px;display:flex;align-items:flex-end;gap:6px;padding:6px 3px 0}.deck-cost-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}.deck-cost-bar-wrap{height:82px;width:100%;display:flex;align-items:flex-end;justify-content:center}.deck-cost-bar{width:min(100%,28px);min-height:2px;background:linear-gradient(180deg,#d8bd83,#72552d);border-radius:3px 3px 0 0}.deck-cost-col b,.deck-cost-col small{font-size:10px}.deck-cost-col small{color:var(--muted)}.deck-average-cost{text-align:right;color:var(--muted);font-size:11px;margin-top:5px}.deck-stat-rows{display:grid;gap:7px}.deck-stat-row{display:grid;grid-template-columns:minmax(65px,1fr) 2fr 25px;align-items:center;gap:8px;font-size:11px}.deck-stat-track{height:7px;background:#282830;border-radius:8px;overflow:hidden}.deck-stat-fill{height:100%;background:#a98a54}.deck-stat-row strong{text-align:right}.deck-current-cards{display:grid;gap:5px}.deck-current-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 7px;background:#191a20;border:1px solid #38353d;border-radius:5px;font-size:11px}.deck-current-row small{color:var(--muted)}.deck-current-actions{display:flex;align-items:center;gap:4px}.deck-current-actions button,.deck-current-title button{padding:3px 7px;font-size:10px}.deck-drop-hint{border:1px dashed #90764c;background:#1a1814;color:#cbb991;border-radius:6px;padding:9px;text-align:center;font-size:11px;margin-top:10px}.deck-analysis-panel.drag-over{outline:2px dashed #d5b879;outline-offset:-5px;background:#201d17}.deck-empty{padding:20px 8px;text-align:center;color:var(--muted);font-size:12px}
 @media(max-width:760px){.deck-builder{padding:8px}.deck-builder-layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(260px,.9fr);overflow:auto}.deck-catalog-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.deck-catalog-filters input{grid-column:1/-1}.deck-catalog-grid{grid-template-columns:repeat(auto-fill,minmax(105px,1fr))}.deck-card canvas{width:min(100%,110px)}.deck-analysis-panel{min-height:260px}.deck-builder-head-actions .hint{display:none}}
 
@@ -791,6 +792,7 @@ footer:before{
    <div><h2 id="playerWelcome">Bem-vindo a Tharis Doom</h2><p id="playerEmailLabel">Seu perfil de jogador</p></div>
    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div class="player-wallet"><strong id="playerBalance">0</strong><span>MOEDAS</span></div><button id="returnManagerBtn" type="button" style="display:none">Voltar ao gerenciador</button></div>
   </div>
+  <div class="player-decks-entry"><div><strong>MEUS DECKS</strong><span>Monte, organize e acompanhe seus baralhos em um só lugar.</span></div><button type="button" class="primary" id="openMyDecksBtn">⚔ ABRIR MEUS DECKS</button></div>
   <div class="player-metrics">
    <div class="player-metric"><strong id="playerEarned">0</strong><span>Total recebido</span></div>
    <div class="player-metric"><strong id="playerSpent">0</strong><span>Total gasto</span></div>
@@ -813,7 +815,7 @@ footer:before{
    <div id="playerDecksList" class="players-list"><div class="player-empty">Carregando decks…</div></div>
    <div id="playerDeckEditor" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)"></div>
    <div id="playerDeckBuilder" class="deck-builder" style="display:none" role="dialog" aria-modal="true" aria-label="Construtor de decks">
-    <div class="deck-builder-head"><div><div class="hint">THARIS DOOM · CONSTRUTOR DE DECKS</div><h2 id="deckBuilderTitle">Novo deck</h2></div><div class="deck-builder-head-actions"><span class="hint">Salvamento automático</span><button type="button" id="deckBuilderClose">Concluir</button></div></div>
+    <div class="deck-builder-head"><div><div class="hint">THARIS DOOM · MEUS DECKS</div><h2 id="deckBuilderTitle">Construtor de decks</h2><div class="deck-builder-switch"><select id="deckBuilderSelect" aria-label="Selecionar deck"></select><button type="button" id="deckBuilderNew">＋ Novo deck</button></div></div><div class="deck-builder-head-actions"><span class="hint">Salvamento automático</span><button type="button" id="deckBuilderClose">Concluir</button></div></div>
     <div class="deck-builder-layout"><section class="deck-catalog-panel"><div class="deck-catalog-title"><strong>BIBLIOTECA DE CARTAS</strong><span id="deckCatalogCount" class="hint"></span></div>
      <div class="deck-catalog-filters"><input id="deckSearch" placeholder="Buscar cartas…"><select id="deckFilterFaction"><option value="">Todas as facções</option></select><select id="deckFilterType"><option value="">Todos os tipos</option><option>Criatura</option><option>Magias</option><option>Itens</option><option>Construção</option></select><select id="deckFilterRarity"><option value="">Todas as raridades</option></select><select id="deckFilterCost"><option value="">Todos os custos</option></select></div><div id="deckCatalogGrid" class="deck-catalog-grid"></div>
     </section><aside class="deck-analysis-panel"><div class="deck-analysis-top"><div><div class="hint">BARALHO EM EDIÇÃO</div><h3 id="deckAnalysisName"></h3></div><div class="deck-count"><strong id="deckTotalCount">0</strong><span>CARTAS</span></div></div>
@@ -986,6 +988,9 @@ function initSectorNavigation(){
  $('playerDecksList').addEventListener('click',handlePlayerDeckListClick);
  $('playerDeckEditor').addEventListener('click',handlePlayerDeckEditorClick);
  $('deckBuilderClose').addEventListener('click',closeDeckBuilder);
+ $('openMyDecksBtn').addEventListener('click',openMyDecks);
+ $('deckBuilderNew').addEventListener('click',createDeckFromBuilder);
+ $('deckBuilderSelect').addEventListener('change',event=>{activePlayerDeckId=event.target.value;openDeckBuilder()});
  $('deckSearch').addEventListener('input',renderDeckCatalog);
  ['deckFilterFaction','deckFilterType','deckFilterRarity','deckFilterCost'].forEach(id=>$(id).addEventListener('change',renderDeckCatalog));
  $('deckCatalogGrid').addEventListener('click',handleDeckCatalogClick);
@@ -1157,7 +1162,7 @@ async function addCardToPlayerDeck(event){
 async function handlePlayerDeckListClick(event){
  const open=event.target.closest('[data-deck-open]'),remove=event.target.closest('[data-deck-delete]');
  if(open){activePlayerDeckId=open.dataset.deckOpen;renderPlayerDecks();return}
- const build=event.target.closest('[data-deck-build]');if(build){activePlayerDeckId=build.dataset.deckBuild;renderPlayerDecks();openDeckBuilder();return}
+ const build=event.target.closest('[data-deck-build]');if(build){activePlayerDeckId=build.dataset.deckBuild;openDeckBuilder();return}
  if(remove){
   const deck=cachedPlayerDecks.find(item=>item.id===remove.dataset.deckDelete);if(!deck||!confirm('Excluir o deck "'+deck.name+'"?'))return;
   const {error}=await sb.from('player_decks').delete().eq('id',deck.id);if(error){alert('Não foi possível excluir: '+error.message);return}
@@ -1170,7 +1175,43 @@ async function handlePlayerDeckEditorClick(event){
  const next=(deck.cards||[]).filter(item=>String(item.card_id)!==String(remove.dataset.deckRemove));
  try{await saveActivePlayerDeck(next)}catch(error){alert('Não foi possível retirar a carta: '+error.message)}
 }
-function openDeckBuilder(){const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;$('playerDeckBuilder').style.display='flex';$('deckBuilderTitle').textContent=deck.name;populateDeckFilters();renderDeckCatalog();renderDeckBuilder()}
+function syncDeckBuilderSelect(){
+ const select=$('deckBuilderSelect');if(!select)return;
+ select.innerHTML=cachedPlayerDecks.map(deck=>'<option value="'+escapeHtml(deck.id)+'">'+escapeHtml(deck.name)+'</option>').join('');
+ if(activePlayerDeckId)select.value=activePlayerDeckId;
+}
+function openDeckBuilder(){
+ const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId)||cachedPlayerDecks[0];
+ if(!deck){alert('Crie seu primeiro deck para começar.');return}
+ activePlayerDeckId=deck.id;
+ $('playerDeckBuilder').style.display='flex';
+ syncDeckBuilderSelect();$('deckBuilderTitle').textContent=deck.name;
+ populateDeckFilters();renderDeckCatalog();renderDeckBuilder();
+}
+async function openMyDecks(){
+ if(!cloudUser||!sb){alert('Entre na sua conta para acessar seus decks.');return}
+ const button=$('openMyDecksBtn');if(button)button.disabled=true;
+ try{
+  await loadPlayerDecks();
+  if(!cachedPlayerDecks.length){
+   const {data,error}=await sb.from('player_decks').insert({owner_id:cloudUser.id,name:'Meu primeiro deck',cards:[]}).select('id').single();
+   if(error)throw error;
+   activePlayerDeckId=data.id;await loadPlayerDecks();
+  }
+  openDeckBuilder();
+ }catch(error){alert('Não foi possível abrir seus decks: '+error.message);console.error(error)}
+ finally{if(button)button.disabled=false}
+}
+async function createDeckFromBuilder(){
+ if(!cloudUser||!sb)return;
+ const name=prompt('Nome do novo deck:','Novo deck');if(name===null)return;
+ if(!name.trim()){alert('Informe um nome para o deck.');return}
+ try{
+  const {data,error}=await sb.from('player_decks').insert({owner_id:cloudUser.id,name:name.trim().slice(0,60),cards:[]}).select('id').single();
+  if(error)throw error;
+  activePlayerDeckId=data.id;await loadPlayerDecks();openDeckBuilder();
+ }catch(error){alert('Não foi possível criar o deck: '+error.message)}
+}
 function closeDeckBuilder(){$('playerDeckBuilder').style.display='none';$('playerDeckBuilder').querySelector('.deck-analysis-panel').classList.remove('drag-over')}
 function populateDeckFilters(){
  const set=(id,values,label)=>{const el=$(id),old=el.value;el.innerHTML='<option value="">'+label+'</option>'+values.map(v=>'<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+'</option>').join('');if(values.includes(old))el.value=old};
