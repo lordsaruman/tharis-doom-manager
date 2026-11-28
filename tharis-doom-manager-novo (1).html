@@ -1094,7 +1094,7 @@ function drawCreatureCard(canvas,c){
   // Habilidades: painel central claro, com margens internas e parágrafos preservados.
   const abilityTop=h*(.765+(+c.effectOffsetY||0)),abilityBottom=h*(.872+(+c.effectOffsetY||0));
   if(c.faction==='Moiras'&&moirasMarkImage.complete&&moirasMarkImage.naturalWidth){
-   const maxMarkWidth=w*.78,maxMarkHeight=(abilityBottom-abilityTop)*1;
+   const maxMarkWidth=w*1.014,maxMarkHeight=(abilityBottom-abilityTop)*1.3;
    const scale=Math.min(maxMarkWidth/moirasMarkImage.naturalWidth,maxMarkHeight/moirasMarkImage.naturalHeight);
    const markWidth=moirasMarkImage.naturalWidth*scale,markHeight=moirasMarkImage.naturalHeight*scale;
    ctx.save();ctx.globalAlpha=1;
