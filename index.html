@@ -605,9 +605,8 @@ function buildGoldFrameMask(source){
   const image=rctx.getImageData(0,0,source.width,source.height),data=image.data,w=source.width,h=source.height;
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
    const i=(y*w+x)*4,R=data[i],G=data[i+1],B=data[i+2];
-   const edge=x<w*.095||x>w*.905||y<h*.055||y>h*.945;
-   const gold=R>75&&G>42&&R>G*1.10&&G>B*1.12&&R-B>35;
-   data[i+3]=edge&&gold?Math.min(255,Math.max(0,(R-B-25)*5)):0;
+   const gold=R>75&&G>42&&R>G*1.10&&G>B*1.12&&R-B>28;
+   data[i+3]=gold?Math.min(255,Math.max(0,(R-B-20)*5)):0;
   }
   mctx.putImageData(image,0,0);
  }catch(error){
@@ -672,6 +671,7 @@ function updateCardInspector(){
  drawCard($('selectedCardCanvas'),c);
  startInspectorGlint();
 }
+function metallicGoldText(ctx,y,size){const g=ctx.createLinearGradient(0,y-size*.62,0,y+size*.62);g.addColorStop(0,'#704719');g.addColorStop(.20,'#c18a35');g.addColorStop(.42,'#fff0b0');g.addColorStop(.56,'#d7aa51');g.addColorStop(.76,'#98601f');g.addColorStop(1,'#e5c477');return g}
 function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lineHeight,color){
  const paragraphs=String(text||'').replace(/\r\n?/g,'\n').split('\n');
  if(!paragraphs.some(p=>p.trim()))return;
@@ -711,7 +711,7 @@ function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lin
  }
  const lh=Math.min(lineHeight,maxHeight/Math.max(1,lines.length));
  ctx.save();ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
- ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle=color;
+ ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle=metallicGoldText(ctx,y,size);
  const total=Math.min(lines.length*lh,maxHeight),top=y-total/2+lh/2;
  lines.forEach((ln,i)=>{
   let cursor=x-ln.width/2;
@@ -721,7 +721,7 @@ function drawEffectRichText(ctx,text,x,y,maxWidth,maxHeight,baseSize,minSize,lin
    ctx.fillText(run.text,cursor,top+i*lh);
    if(run.underline){
     const uy=top+i*lh+size*.38;
-    ctx.save();ctx.strokeStyle=color;ctx.lineWidth=Math.max(1,size*.045);
+    ctx.save();ctx.strokeStyle=metallicGoldText(ctx,uy,size);ctx.lineWidth=Math.max(1,size*.045);
     ctx.beginPath();ctx.moveTo(cursor,uy);ctx.lineTo(cursor+run.width,uy);ctx.stroke();ctx.restore();
    }
    cursor+=run.width;
@@ -771,7 +771,7 @@ function drawCreatureCard(canvas,c){
   if(fitToBox)actualLineHeight=Math.min(maxHeight/Math.max(1,lines.length),Math.max(actualLineHeight,size*1.10));
   ctx.save();
   ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
-  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;
+  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=metallicGoldText(ctx,y,size);
   ctx.textAlign='center';ctx.textBaseline='middle';
   const total=Math.min(lines.length*actualLineHeight,maxHeight),first=y-total/2+actualLineHeight/2;
   lines.forEach((line,i)=>{if(line&&i*actualLineHeight<maxHeight)ctx.fillText(line,x,first+i*actualLineHeight,maxWidth)});
@@ -791,7 +791,7 @@ function drawCreatureCard(canvas,c){
   stat(c.power,.105,.945,.105);
   stat(c.defense,.895,.945,.105);
   ctx.shadowBlur=0;
-  ctx.fillStyle='#3b2a19';ctx.font='normal '+(w*.050)+'px Georgia';
+  ctx.fillStyle=metallicGoldText(ctx,h*.708,w*.050);ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.708,w*.79);
   if(c.trait)drawRichText(c.trait,w*.5,h*.741,w*.72,h*.034,w*.5*.060,w*.5*.052,h*.027,'#4c4030');
   // Habilidades: painel central claro, com margens internas e parágrafos preservados.
@@ -805,7 +805,7 @@ function drawCreatureCard(canvas,c){
   ctx.strokeStyle='rgba(150,112,55,.85)';ctx.lineWidth=Math.max(1,w*.002);
   ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();
   // Flavor limitado à faixa inferior interna; mantém quebras de parágrafo.
-  if(c.flavor)drawRichText(c.flavor,w*.5,h*.926,w*.50,h*.070,w*.024,w*.016,h*.018,'#35291d',true);
+  if(c.flavor)drawRichText(c.flavor,w*.5,h*.926,w*.50,h*.070,w*.024,w*.016,h*.018,'#b8893e',true);
  };
  ctx.clearRect(0,0,w,h);
  if(c.image){
@@ -947,7 +947,7 @@ function drawMagicCard(canvas,c){
   if(fitToBox)actualLineHeight=Math.min(maxHeight/Math.max(1,lines.length),Math.max(actualLineHeight,size*1.10));
   ctx.save();
   ctx.beginPath();ctx.rect(x-maxWidth/2,y-maxHeight/2,maxWidth,maxHeight);ctx.clip();
-  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=color;
+  ctx.font='italic '+size+'px Georgia';ctx.fillStyle=metallicGoldText(ctx,y,size);
   ctx.textAlign='center';ctx.textBaseline='middle';
   const total=Math.min(lines.length*actualLineHeight,maxHeight),first=y-total/2+actualLineHeight/2;
   lines.forEach((line,i)=>{if(line&&i*actualLineHeight<maxHeight)ctx.fillText(line,x,first+i*actualLineHeight,maxWidth)});
@@ -960,9 +960,9 @@ function drawMagicCard(canvas,c){
  ctx.save();ctx.strokeStyle='rgba(201,164,92,.95)';ctx.lineWidth=Math.max(1.5,w*.0025);
  ctx.shadowColor='rgba(201,164,92,.45)';ctx.shadowBlur=3;
  ctx.beginPath();ctx.moveTo(w*.25,h*.884);ctx.lineTo(w*.75,h*.884);ctx.stroke();ctx.restore();
- if(c.flavor)drawRichText(c.flavor,w*.5,h*.926,w*.50,h*.070,w*.024,w*.016,h*.018,'#d8c7a8',true);
+ if(c.flavor)drawRichText(c.flavor,w*.5,h*.926,w*.50,h*.070,w*.024,w*.016,h*.018,'#b8893e',true);
   // Nome no estilo da referência MODELO-MAGIA: serifado, dourado e centralizado.
-  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#e9c56f';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=metallicGoldText(ctx,h*.744,w*.050);
   ctx.font='normal '+(w*.050)+'px Georgia';
   ctx.shadowColor='rgba(0,0,0,.72)';ctx.shadowBlur=2;
   ctx.fillText(String(c.name||'NOVA CARTA').toUpperCase(),w*.5,h*.744,w*.79);
