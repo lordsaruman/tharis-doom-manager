@@ -657,6 +657,10 @@ footer:before{
 
 /* Perfis e economia dos jogadores */
 .player-mode .sector-nav,.player-mode header .actions>button:not(#authBtn):not(#logoutBtn),.player-mode header .actions #cloudStatus,.player-mode .notes-edge-toggle,.player-mode .notes-drawer{display:none!important}
+
+.deck-builder{position:fixed;inset:0;z-index:1200;background:#0b0c10;color:var(--text);display:flex;flex-direction:column;padding:16px;overflow:hidden}.deck-builder-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 4px 14px;border-bottom:1px solid var(--line);flex:none}.deck-builder-head h2{margin:3px 0;color:#e8d2a2}.deck-builder-head-actions{display:flex;align-items:center;gap:12px}.deck-builder-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,.8fr);gap:14px;min-height:0;flex:1;padding-top:14px}.deck-catalog-panel,.deck-analysis-panel{min-height:0;min-width:0;background:#111319;border:1px solid #3d3a42;border-radius:10px;padding:12px;display:flex;flex-direction:column}.deck-catalog-title,.deck-analysis-top,.deck-current-title{display:flex;justify-content:space-between;align-items:center;gap:8px}.deck-catalog-filters{display:grid;grid-template-columns:2fr repeat(4,minmax(90px,1fr));gap:7px;margin:12px 0}.deck-catalog-filters input,.deck-catalog-filters select{min-width:0;width:100%;font-size:12px;padding:8px}.deck-catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:10px;overflow:auto;align-content:start;padding:3px}.deck-card{position:relative;border:1px solid #48434d;border-radius:8px;background:#191a20;padding:7px;cursor:grab;min-width:0}.deck-card:hover{border-color:var(--gold);transform:translateY(-2px)}.deck-card canvas{display:block;width:min(100%,145px);height:auto;aspect-ratio:408/771;margin:auto;border-radius:4px}.deck-card-name{font-size:12px;font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.deck-card-meta{font-size:10px;color:var(--muted);display:flex;justify-content:space-between}.deck-card-add{position:absolute;right:10px;top:10px;background:#17130de8;border:1px solid #c4a66b;border-radius:50%;width:25px;height:25px;padding:0;color:#f0d49b}.deck-analysis-top{padding-bottom:10px;border-bottom:1px solid var(--line)}.deck-analysis-top h3{margin:3px 0;color:#ead4a6}.deck-count{display:flex;flex-direction:column;align-items:center;border:1px solid #8d7045;border-radius:8px;padding:5px 12px;color:#e6c98d}.deck-count strong{font-size:24px}.deck-count span{font-size:9px;letter-spacing:.1em}.deck-analysis-scroll{overflow:auto;min-height:0;flex:1}.deck-stat-block{padding:12px 0;border-bottom:1px solid #34323a}.deck-stat-block h4{font-size:11px;letter-spacing:.09em;color:#d9bd87;margin:0 0 9px}.deck-cost-chart{height:118px;display:flex;align-items:flex-end;gap:6px;padding:6px 3px 0}.deck-cost-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}.deck-cost-bar-wrap{height:82px;width:100%;display:flex;align-items:flex-end;justify-content:center}.deck-cost-bar{width:min(100%,28px);min-height:2px;background:linear-gradient(180deg,#d8bd83,#72552d);border-radius:3px 3px 0 0}.deck-cost-col b,.deck-cost-col small{font-size:10px}.deck-cost-col small{color:var(--muted)}.deck-average-cost{text-align:right;color:var(--muted);font-size:11px;margin-top:5px}.deck-stat-rows{display:grid;gap:7px}.deck-stat-row{display:grid;grid-template-columns:minmax(65px,1fr) 2fr 25px;align-items:center;gap:8px;font-size:11px}.deck-stat-track{height:7px;background:#282830;border-radius:8px;overflow:hidden}.deck-stat-fill{height:100%;background:#a98a54}.deck-stat-row strong{text-align:right}.deck-current-cards{display:grid;gap:5px}.deck-current-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 7px;background:#191a20;border:1px solid #38353d;border-radius:5px;font-size:11px}.deck-current-row small{color:var(--muted)}.deck-current-actions{display:flex;align-items:center;gap:4px}.deck-current-actions button,.deck-current-title button{padding:3px 7px;font-size:10px}.deck-drop-hint{border:1px dashed #90764c;background:#1a1814;color:#cbb991;border-radius:6px;padding:9px;text-align:center;font-size:11px;margin-top:10px}.deck-analysis-panel.drag-over{outline:2px dashed #d5b879;outline-offset:-5px;background:#201d17}.deck-empty{padding:20px 8px;text-align:center;color:var(--muted);font-size:12px}
+@media(max-width:760px){.deck-builder{padding:8px}.deck-builder-layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(260px,.9fr);overflow:auto}.deck-catalog-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.deck-catalog-filters input{grid-column:1/-1}.deck-catalog-grid{grid-template-columns:repeat(auto-fill,minmax(105px,1fr))}.deck-card canvas{width:min(100%,110px)}.deck-analysis-panel{min-height:260px}.deck-builder-head-actions .hint{display:none}}
+
 .player-mode .sector-view{display:none!important}
 .player-mode .sector-nav{display:none!important}
 .player-mode #playerPortal{display:block!important}
@@ -808,6 +812,14 @@ footer:before{
    </form>
    <div id="playerDecksList" class="players-list"><div class="player-empty">Carregando decks…</div></div>
    <div id="playerDeckEditor" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)"></div>
+   <div id="playerDeckBuilder" class="deck-builder" style="display:none" role="dialog" aria-modal="true" aria-label="Construtor de decks">
+    <div class="deck-builder-head"><div><div class="hint">THARIS DOOM · CONSTRUTOR DE DECKS</div><h2 id="deckBuilderTitle">Novo deck</h2></div><div class="deck-builder-head-actions"><span class="hint">Salvamento automático</span><button type="button" id="deckBuilderClose">Concluir</button></div></div>
+    <div class="deck-builder-layout"><section class="deck-catalog-panel"><div class="deck-catalog-title"><strong>BIBLIOTECA DE CARTAS</strong><span id="deckCatalogCount" class="hint"></span></div>
+     <div class="deck-catalog-filters"><input id="deckSearch" placeholder="Buscar cartas…"><select id="deckFilterFaction"><option value="">Todas as facções</option></select><select id="deckFilterType"><option value="">Todos os tipos</option><option>Criatura</option><option>Magias</option><option>Itens</option><option>Construção</option></select><select id="deckFilterRarity"><option value="">Todas as raridades</option></select><select id="deckFilterCost"><option value="">Todos os custos</option></select></div><div id="deckCatalogGrid" class="deck-catalog-grid"></div>
+    </section><aside class="deck-analysis-panel"><div class="deck-analysis-top"><div><div class="hint">BARALHO EM EDIÇÃO</div><h3 id="deckAnalysisName"></h3></div><div class="deck-count"><strong id="deckTotalCount">0</strong><span>CARTAS</span></div></div>
+     <div class="deck-analysis-scroll"><section class="deck-stat-block"><h4>CURVA DE CUSTO</h4><div id="deckCostChart" class="deck-cost-chart"></div><div id="deckAverageCost" class="deck-average-cost"></div></section><section class="deck-stat-block"><h4>TIPOS DE CARTA</h4><div id="deckTypeStats" class="deck-stat-rows"></div></section><section class="deck-stat-block"><h4>FACÇÕES</h4><div id="deckFactionStats" class="deck-stat-rows"></div></section><section class="deck-stat-block"><h4>RARIDADES</h4><div id="deckRarityStats" class="deck-stat-rows"></div></section><section class="deck-stat-block"><div class="deck-current-title"><h4>COMPOSIÇÃO DO DECK</h4><button type="button" id="deckClearAll">Limpar deck</button></div><div id="deckCurrentCards" class="deck-current-cards"></div></section></div><div class="deck-drop-hint">Arraste uma carta para cá ou clique nela para adicionar.</div>
+    </aside></div>
+   </div>
    <p class="hint" style="margin-top:10px">Por enquanto, a montagem utiliza o catálogo de cartas do jogo. Quando a coleção individual estiver pronta, conectaremos o editor às cartas efetivamente adquiridas e às regras oficiais de construção.</p>
   </div>
  </section>
@@ -973,6 +985,17 @@ function initSectorNavigation(){
  $('playerDeckCreateForm').addEventListener('submit',createPlayerDeck);
  $('playerDecksList').addEventListener('click',handlePlayerDeckListClick);
  $('playerDeckEditor').addEventListener('click',handlePlayerDeckEditorClick);
+ $('deckBuilderClose').addEventListener('click',closeDeckBuilder);
+ $('deckSearch').addEventListener('input',renderDeckCatalog);
+ ['deckFilterFaction','deckFilterType','deckFilterRarity','deckFilterCost'].forEach(id=>$(id).addEventListener('change',renderDeckCatalog));
+ $('deckCatalogGrid').addEventListener('click',handleDeckCatalogClick);
+ $('deckCatalogGrid').addEventListener('dragstart',handleDeckDragStart);
+ $('playerDeckBuilder').addEventListener('click',handleDeckBuilderClick);
+ $('deckClearAll').addEventListener('click',clearActiveDeck);
+ const deckDrop=$('playerDeckBuilder').querySelector('.deck-analysis-panel');
+ deckDrop.addEventListener('dragover',event=>{event.preventDefault();deckDrop.classList.add('drag-over')});
+ deckDrop.addEventListener('dragleave',event=>{if(!deckDrop.contains(event.relatedTarget))deckDrop.classList.remove('drag-over')});
+ deckDrop.addEventListener('drop',handleDeckDrop);
  $('returnManagerBtn').addEventListener('click',()=>{document.body.classList.remove('player-mode');render();});
  $('gameAreaBtn').addEventListener('click',async()=>{document.body.classList.add('player-mode');try{await loadPlayerPortal()}catch(error){console.error(error);$('playerDecksList').innerHTML='<div class="player-empty">Não foi possível carregar seus decks: '+escapeHtml(error.message)+'</div>'}});
  $('playersList').addEventListener('click',e=>{const button=e.target.closest('[data-player-adjust]');if(button)adjustPlayerWallet(button.dataset.playerAdjust)});
@@ -1094,10 +1117,9 @@ function renderPlayerDecks(){
  const active=cachedPlayerDecks.find(deck=>deck.id===activePlayerDeckId);
  if(!active){editor.style.display='none';return}
  editor.style.display='block';
- const options=cards.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR')).map(card=>'<option value="'+escapeHtml(card.id)+'">'+escapeHtml(card.name||'Carta sem nome')+' · '+escapeHtml(card.faction||'Sem facção')+' · '+escapeHtml(card.rarity||'')+'</option>').join('');
- const entries=(active.cards||[]).map(item=>{const card=deckCardById(item.card_id);return '<div class="player-transaction"><div><strong>'+escapeHtml(card?.name||'Carta indisponível')+'</strong><small>'+escapeHtml(card?.type||'')+' · '+escapeHtml(card?.faction||'')+' · '+escapeHtml(card?.rarity||'')+'</small></div><div style="display:flex;align-items:center;gap:10px"><b>×'+Number(item.quantity||0)+'</b><button type="button" class="danger" data-deck-remove="'+escapeHtml(item.card_id)+'">Retirar</button></div></div>'}).join('');
- editor.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h3 style="margin:0">'+escapeHtml(active.name)+'</h3><span class="hint">'+(active.cards||[]).reduce((sum,item)=>sum+(Number(item.quantity)||0),0)+' carta(s) no deck</span></div><form id="playerDeckAddForm" class="players-form" style="grid-template-columns:minmax(0,1fr) 90px auto;margin-top:14px"><div class="field"><label for="playerDeckCardSelect">Adicionar carta do catálogo</label><select id="playerDeckCardSelect" required>'+options+'</select></div><div class="field"><label for="playerDeckCardQty">Quantidade</label><input id="playerDeckCardQty" type="number" min="1" max="99" value="1" required></div><button class="primary" type="submit">Adicionar</button></form><div class="player-transactions">'+(entries||'<div class="player-empty">Este deck ainda não possui cartas.</div>')+'</div>';
- $('playerDeckAddForm').addEventListener('submit',addCardToPlayerDeck);
+ const total=(active.cards||[]).reduce((sum,item)=>sum+(Number(item.quantity)||0),0);
+ editor.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><strong>'+escapeHtml(active.name)+'</strong><div class="hint">'+total+' carta(s) no deck</div></div><button type="button" data-deck-build="'+active.id+'">Abrir construtor visual</button></div>';
+ if($('playerDeckBuilder').style.display==='flex')renderDeckBuilder();
 }
 async function loadPlayerDecks(){
  if(!cloudUser||!sb)return;
@@ -1135,6 +1157,7 @@ async function addCardToPlayerDeck(event){
 async function handlePlayerDeckListClick(event){
  const open=event.target.closest('[data-deck-open]'),remove=event.target.closest('[data-deck-delete]');
  if(open){activePlayerDeckId=open.dataset.deckOpen;renderPlayerDecks();return}
+ const build=event.target.closest('[data-deck-build]');if(build){activePlayerDeckId=build.dataset.deckBuild;renderPlayerDecks();openDeckBuilder();return}
  if(remove){
   const deck=cachedPlayerDecks.find(item=>item.id===remove.dataset.deckDelete);if(!deck||!confirm('Excluir o deck "'+deck.name+'"?'))return;
   const {error}=await sb.from('player_decks').delete().eq('id',deck.id);if(error){alert('Não foi possível excluir: '+error.message);return}
@@ -1147,6 +1170,47 @@ async function handlePlayerDeckEditorClick(event){
  const next=(deck.cards||[]).filter(item=>String(item.card_id)!==String(remove.dataset.deckRemove));
  try{await saveActivePlayerDeck(next)}catch(error){alert('Não foi possível retirar a carta: '+error.message)}
 }
+function openDeckBuilder(){const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;$('playerDeckBuilder').style.display='flex';$('deckBuilderTitle').textContent=deck.name;populateDeckFilters();renderDeckCatalog();renderDeckBuilder()}
+function closeDeckBuilder(){$('playerDeckBuilder').style.display='none';$('playerDeckBuilder').querySelector('.deck-analysis-panel').classList.remove('drag-over')}
+function populateDeckFilters(){
+ const set=(id,values,label)=>{const el=$(id),old=el.value;el.innerHTML='<option value="">'+label+'</option>'+values.map(v=>'<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+'</option>').join('');if(values.includes(old))el.value=old};
+ set('deckFilterFaction',[...new Set(cards.map(c=>c.faction).filter(Boolean))].sort(),'Todas as facções');
+ set('deckFilterRarity',[...new Set(cards.map(c=>c.rarity).filter(Boolean))].sort(),'Todas as raridades');
+ set('deckFilterCost',[...new Set(cards.map(c=>String(c.cost??0)))].sort((a,b)=>Number(a)-Number(b)),'Todos os custos');
+}
+function renderDeckCatalog(){
+ const q=$('deckSearch').value.trim().toLocaleLowerCase('pt-BR'),f=$('deckFilterFaction').value,t=$('deckFilterType').value,r=$('deckFilterRarity').value,k=$('deckFilterCost').value;
+ const list=cards.filter(card=>(!q||[card.name,card.description,card.effect,card.flavor,card.faction].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&(!f||card.faction===f)&&(!t||card.type===t)&&(!r||card.rarity===r)&&(!k||String(card.cost??0)===k)).sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR'));
+ $('deckCatalogCount').textContent=list.length+' de '+cards.length+' cartas';
+ $('deckCatalogGrid').innerHTML=list.map(card=>'<article class="deck-card" draggable="true" data-deck-card="'+escapeHtml(card.id)+'"><button type="button" class="deck-card-add" data-deck-add="'+escapeHtml(card.id)+'" title="Adicionar">＋</button><canvas width="408" height="771" data-deck-canvas="'+escapeHtml(card.id)+'"></canvas><div class="deck-card-name">'+escapeHtml(card.name||'Sem nome')+'</div><div class="deck-card-meta"><span>'+escapeHtml(card.type||'')+'</span><span>Custo '+escapeHtml(card.cost??0)+'</span></div></article>').join('')||'<div class="deck-empty">Nenhuma carta encontrada.</div>';
+ $('deckCatalogGrid').querySelectorAll('canvas[data-deck-canvas]').forEach(cv=>{const card=deckCardById(cv.dataset.deckCanvas);if(card)drawCard(cv,card)});
+}
+function renderDeckBuilder(){
+ const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;
+ const entries=(deck.cards||[]).map(item=>({card:deckCardById(item.card_id),quantity:Number(item.quantity)||0})).filter(x=>x.card&&x.quantity>0),total=entries.reduce((s,x)=>s+x.quantity,0),flat=entries.flatMap(x=>Array(x.quantity).fill(x.card));
+ $('deckBuilderTitle').textContent=deck.name;$('deckAnalysisName').textContent=deck.name;$('deckTotalCount').textContent=total;
+ const maxCost=Math.max(6,...flat.map(card=>Math.max(0,Number(card.cost)||0))),counts=Array.from({length:maxCost+1},(_,cost)=>flat.filter(card=>(Number(card.cost)||0)===cost).length),max=Math.max(1,...counts);
+ $('deckCostChart').innerHTML=counts.map((n,cost)=>'<div class="deck-cost-col"><b>'+n+'</b><div class="deck-cost-bar-wrap"><div class="deck-cost-bar" style="height:'+Math.max(n?3:0,n/max*100)+'%"></div></div><small>'+cost+'</small></div>').join('');
+ $('deckAverageCost').textContent='Custo médio: '+(total?(flat.reduce((s,card)=>s+(Number(card.cost)||0),0)/total).toFixed(2).replace('.',','):'0,00');
+ const rows=field=>{const map=new Map();flat.forEach(card=>{const key=card[field]||'Não definido';map.set(key,(map.get(key)||0)+1)});const peak=Math.max(1,...map.values());return [...map].sort((a,b)=>b[1]-a[1]).map(([name,n])=>'<div class="deck-stat-row"><span>'+escapeHtml(name)+'</span><div class="deck-stat-track"><div class="deck-stat-fill" style="width:'+(n/peak*100)+'%"></div></div><strong>'+n+'</strong></div>').join('')||'<div class="deck-empty">Sem cartas</div>'};
+ $('deckTypeStats').innerHTML=rows('type');$('deckFactionStats').innerHTML=rows('faction');$('deckRarityStats').innerHTML=rows('rarity');
+ $('deckCurrentCards').innerHTML=entries.map(({card,quantity})=>'<div class="deck-current-row"><div><strong>'+escapeHtml(card.name||'Carta')+'</strong><br><small>'+escapeHtml(card.type||'')+' · custo '+escapeHtml(card.cost??0)+'</small></div><div class="deck-current-actions"><button type="button" data-deck-quantity="'+escapeHtml(card.id)+'" data-change="-1">−</button><b>'+quantity+'</b><button type="button" data-deck-quantity="'+escapeHtml(card.id)+'" data-change="1">＋</button></div><button type="button" data-deck-remove="'+escapeHtml(card.id)+'">✕</button></div>').join('')||'<div class="deck-empty">Deck vazio. Clique ou arraste cartas da biblioteca para começar.</div>';
+}
+async function changeActiveDeckCard(id,delta){
+ const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;
+ const next=(deck.cards||[]).map(item=>({...item})),entry=next.find(item=>String(item.card_id)===String(id));
+ if(!entry&&delta>0)next.push({card_id:id,quantity:1});else if(entry){entry.quantity=Number(entry.quantity||0)+delta;if(entry.quantity<=0)next.splice(next.indexOf(entry),1)}
+ try{await saveActivePlayerDeck(next);renderDeckBuilder()}catch(error){alert('Não foi possível atualizar o deck: '+error.message)}
+}
+function handleDeckCatalogClick(event){const add=event.target.closest('[data-deck-add]'),tile=event.target.closest('[data-deck-card]'),id=add?.dataset.deckAdd||tile?.dataset.deckCard;if(id)changeActiveDeckCard(id,1)}
+function handleDeckDragStart(event){const tile=event.target.closest('[data-deck-card]');if(!tile)return;event.dataTransfer.setData('text/plain',tile.dataset.deckCard);event.dataTransfer.effectAllowed='copy'}
+function handleDeckDrop(event){event.preventDefault();event.currentTarget.classList.remove('drag-over');const id=event.dataTransfer.getData('text/plain');if(id)changeActiveDeckCard(id,1)}
+async function handleDeckBuilderClick(event){
+ const change=event.target.closest('[data-deck-quantity]'),remove=event.target.closest('[data-deck-remove]');
+ if(change){changeActiveDeckCard(change.dataset.deckQuantity,Number(change.dataset.change));return}
+ if(remove){const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck)return;const next=(deck.cards||[]).filter(item=>String(item.card_id)!==String(remove.dataset.deckRemove));try{await saveActivePlayerDeck(next);renderDeckBuilder()}catch(error){alert('Não foi possível remover: '+error.message)}}
+}
+async function clearActiveDeck(){const deck=cachedPlayerDecks.find(item=>item.id===activePlayerDeckId);if(!deck||!deck.cards?.length||!confirm('Remover todas as cartas deste deck?'))return;try{await saveActivePlayerDeck([]);renderDeckBuilder()}catch(error){alert('Não foi possível limpar: '+error.message)}}
 async function loadActivityLog(){
  if(!cloudUser||!sb){$('activityList').innerHTML='<div class="activity-empty">Entre para consultar o registro compartilhado.</div>';return}
  $('activityList').innerHTML='<div class="activity-empty">Carregando atividades…</div>';
