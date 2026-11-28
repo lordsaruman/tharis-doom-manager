@@ -515,9 +515,11 @@ $('loginBtn').addEventListener('click',async()=>{
  if(!email||!password){$('authMessage').textContent='Informe e-mail e senha.';return}
  button.disabled=true;$('authMessage').textContent='Conectando…';
  try{
-  const {error}=await sb.auth.signInWithPassword({email,password});
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
   if(error)throw error;
   $('authMessage').textContent='Login validado. Carregando sua biblioteca…';
+  $('authModal').classList.remove('open');
+  await handleSession(data.session);
  }catch(error){$('authMessage').textContent='Não foi possível entrar: '+error.message}
  finally{button.disabled=false}
 });
@@ -1350,7 +1352,7 @@ async function setCardsFromCloud(rows){
 async function handleSession(session){
  cloudLibraryReady=false;
  cloudUser=session?.user||null;isAdmin=false;
- if(cloudUser){try{const {data:profile}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();isAdmin=profile?.role==='admin'}catch(error){console.warn('Não foi possível validar o perfil administrativo:',error)}}
+ if(cloudUser){$('authModal').classList.remove('open');$('cloudStatus').textContent='Online · verificando acesso…';try{const {data:profile}=await sb.from('profiles').select('role').eq('id',cloudUser.id).maybeSingle();isAdmin=profile?.role==='admin'}catch(error){console.warn('Não foi possível validar o perfil administrativo:',error)}}
  $('assetsBtn').style.display=isAdmin?'inline-block':'none';
  $('teamBtn').style.display=isAdmin?'inline-block':'none';
  $('authBtn').textContent=cloudUser?'Conta · '+(cloudUser.email||'conectada'):'Entrar';
@@ -1369,6 +1371,7 @@ async function handleSession(session){
   cards=[];$('cloudStatus').textContent='Modo local · não conectado';
  }
  cloudLibraryReady=true;render();
+ if(cloudUser&&$('cloudStatus').textContent==='Erro na sincronização')$('library').innerHTML='<div class="empty" style="grid-column:1/-1">Não foi possível sincronizar a biblioteca: '+escapeHtml($('authMessage').textContent.replace('Falha ao carregar biblioteca: ',''))+'</div>';
 }
 
 
@@ -1453,9 +1456,9 @@ if(sb){
  // INITIAL_SESSION é a fonte única da sessão inicial. O setTimeout evita executar consultas
  // Supabase dentro do callback de autenticação, o que pode bloquear o lock interno do Auth.
  sb.auth.onAuthStateChange((event,session)=>{
-  if(event==='INITIAL_SESSION'||event==='SIGNED_IN'||event==='SIGNED_OUT'||event==='PASSWORD_RECOVERY'){
+  if(event==='INITIAL_SESSION'||event==='SIGNED_OUT'||event==='PASSWORD_RECOVERY'){
    setTimeout(()=>{
-    const mustLoad=event==='INITIAL_SESSION'||event==='SIGNED_OUT'||session?.user?.id!==cloudUser?.id||!cloudLibraryReady;
+    const mustLoad=event==='INITIAL_SESSION'||event==='SIGNED_OUT'||event==='PASSWORD_RECOVERY'||session?.user?.id!==cloudUser?.id||!cloudLibraryReady;
     if(mustLoad)handleSession(session).catch(error=>{
      cloudLibraryReady=true;$('cloudStatus').textContent='Falha ao verificar sessão';
      $('library').innerHTML='<div class="empty" style="grid-column:1/-1">Não foi possível carregar a biblioteca: '+escapeHtml(error.message)+'</div>';
