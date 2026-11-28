@@ -501,6 +501,12 @@ footer:before{
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
+$('authBtn').addEventListener('click',()=>{
+ const modal=$('authModal'),message=$('authMessage');
+ if(!modal||!message){console.error('Janela de autenticação não encontrada.');return}
+ message.textContent=cloudUser?'Você está conectado ao Tharis Doom online.':'Entre com seu usuário do Supabase.';
+ modal.classList.add('open');
+});
 const FACTIONS=['Kalassiria','Monte Celéstia','Baator','Moiras','Caras Galadhon','Yalugoth','Thay',"Baldur's Gate"];
 const KEY='tharisDoomManagerV2',VISUAL_KEY='tharisDoomCardVisualsV1';
 let cards=[],editingId=null,imageData='',imagePath='',cloudUser=null,selectedCardId=null;
@@ -1344,7 +1350,7 @@ async function handleSession(session){
  }
  cloudLibraryReady=true;render();
 }
-$('authBtn').onclick=()=>{$('authMessage').textContent=cloudUser?'Você está conectado ao Tharis Doom online.':'Entre com seu usuário do Supabase.';$('authModal').classList.add('open')};
+
 
 $('assetsBtn').onclick=()=>{if(!isAdmin){alert('Apenas o administrador pode enviar imagens.');return}$('assetStatus').textContent='';$('assetsModal').classList.add('open')};
 $('teamBtn').onclick=()=>{if(!isAdmin){alert('Apenas o administrador pode gerenciar colaboradores.');return}$('inviteMessage').textContent='';$('inviteEmail').value='';$('teamModal').classList.add('open')};
