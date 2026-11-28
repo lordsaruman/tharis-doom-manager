@@ -1163,9 +1163,9 @@ function drawInsigniaFlag(ctx,c,w,h,layer='all'){
  if(factionImg?.complete&&factionImg.naturalWidth)items.push(factionImg);
  if(!items.length)return;
  const size=w*.088,gap=w*.012,pad=w*.012,flagWidth=w*.112;
- const flagX=w*.95-flagWidth/2,flagY=-h*.035;
+ const flagX=w*.95-flagWidth/2,flagY=-h*.055;
  // As insígnias começam somente depois da borda inferior da esfera de custo.
- const emblemTop=Math.max(flagY+pad,h*.115);
+ const emblemTop=Math.max(flagY+pad,h*.095);
  const flagHeight=(emblemTop-flagY)+pad+items.length*size+(items.length-1)*gap+w*.025;
  ctx.save();
  if(layer==='all'||layer==='background'){
