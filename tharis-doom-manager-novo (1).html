@@ -696,8 +696,10 @@ function drawInsigniaFlag(ctx,c,w,h,layer='all'){
  if(factionImg?.complete&&factionImg.naturalWidth)items.push(factionImg);
  if(!items.length)return;
  const size=w*.088,gap=w*.012,pad=w*.012,flagWidth=w*.112;
- const flagHeight=pad*2+items.length*size+(items.length-1)*gap+w*.025;
  const flagX=w*.95-flagWidth/2,flagY=-h*.012;
+ // As insígnias começam somente depois da borda inferior da esfera de custo.
+ const emblemTop=Math.max(flagY+pad,h*.078);
+ const flagHeight=(emblemTop-flagY)+pad+items.length*size+(items.length-1)*gap+w*.025;
  ctx.save();
  if(layer==='all'||layer==='background'){
   ctx.beginPath();
@@ -706,7 +708,7 @@ function drawInsigniaFlag(ctx,c,w,h,layer='all'){
   ctx.fillStyle='rgba(25,20,17,.94)';ctx.fill();ctx.strokeStyle='#c9a45c';ctx.lineWidth=Math.max(1,w*.003);ctx.stroke();
  }
  if(layer==='all'||layer==='emblems'){
-  items.forEach((img,index)=>ctx.drawImage(img,flagX+(flagWidth-size)/2,flagY+pad+index*(size+gap),size,size));
+  items.forEach((img,index)=>ctx.drawImage(img,flagX+(flagWidth-size)/2,emblemTop+index*(size+gap),size,size));
  }
  ctx.restore();
 }
