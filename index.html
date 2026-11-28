@@ -10,7 +10,7 @@
 header{padding:22px clamp(16px,4vw,48px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#111216dd;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
 .brand{display:flex;align-items:center;gap:12px}.brand-mark{width:38px;height:38px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-size:20px}.brand h1{font-size:19px;letter-spacing:.12em;margin:0}.brand small{display:block;color:var(--muted);letter-spacing:.18em;font-size:10px}
 button,.button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:8px;padding:9px 13px;cursor:pointer;font-weight:600}button:hover,.button:hover{border-color:var(--gold)}button.primary{background:var(--gold);color:#17130d;border-color:var(--gold)}button.danger{border-color:#793b42;color:#ffb6bb}.actions{display:flex;gap:8px;flex-wrap:wrap}
-main{max-width:1500px;margin:auto;padding:24px clamp(14px,3vw,40px) 60px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}.stat,.panel{background:linear-gradient(145deg,var(--panel),#171920);border:1px solid var(--line);border-radius:12px}.stat{padding:14px 16px}.stat strong{display:block;font-size:24px;color:var(--gold)}.stat span{color:var(--muted);font-size:12px}
+main{max-width:1500px;margin:auto;padding:24px clamp(14px,3vw,40px) 60px}.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:20px}.stat,.panel{background:linear-gradient(145deg,var(--panel),#171920);border:1px solid var(--line);border-radius:12px}.stat{padding:14px 16px}.stat strong{display:block;font-size:24px;color:var(--gold)}.stat span{color:var(--muted);font-size:12px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.toolbar input,.toolbar select{max-width:260px}
 input,select,textarea{width:100%;background:#111319;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:10px;font:inherit;min-width:0}textarea{min-height:88px;resize:vertical}label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px}.field{margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}.cardtile{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:10px;cursor:pointer;transition:.15s}.cardtile:hover{transform:translateY(-2px);border-color:var(--gold)}.thumb{aspect-ratio:408/771;width:100%;height:auto;border-radius:7px;overflow:hidden;background:#0c0d11;display:block;position:relative;border:1px solid #45404b}.thumb canvas{display:block;width:100%;height:auto;object-fit:contain}.tile-title{font-weight:700;margin:9px 0 3px}.tile-meta{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:5px}.tile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:9px}.tile-stats span{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:5px 2px;border:1px solid #45404b;border-radius:6px;background:#111319}.tile-stats small{font-size:9px;letter-spacing:.04em;color:var(--muted)}.tile-stats b{font-size:15px;color:#f0d28d;font-variant-numeric:tabular-nums}.faction-line{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;color:#d8d2df}.sigil{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;flex:none;background:#19191d;border:1px solid #777;color:#ddd}.sigil svg{width:13px;height:13px}
 .empty{padding:50px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
@@ -412,6 +412,7 @@ footer:before{
 <main>
  <section class="stats">
   <div class="stat"><strong id="statNewCards">0</strong><span>Cartas Novas</span></div>
+  <div class="stat"><strong id="statTypes">0</strong><span>Tipos de cartas</span></div>
   <div class="total-orb-wrap"><div class="total-orb"><strong id="statCards">0</strong><span>CARTAS</span></div></div>
   <div class="stat"><strong id="statFactions">0</strong><span>Facções representadas</span></div>
   <div class="stat"><strong id="statRarities">0</strong><span>Raridades utilizadas</span></div>
@@ -669,6 +670,7 @@ function render(){
  expireNewCardFlags();
  refreshSelects();
  $('statCards').textContent=cards.length;
+ $('statTypes').textContent=new Set(cards.map(c=>c.type).filter(Boolean)).size;
  $('statFactions').textContent=new Set(cards.map(c=>c.faction).filter(Boolean)).size;
    $('statNewCards').textContent=cards.filter(c=>c.isNew).length;
  $('statRarities').textContent=new Set(cards.map(c=>c.rarity).filter(Boolean)).size;
