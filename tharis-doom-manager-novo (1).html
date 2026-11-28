@@ -1239,6 +1239,7 @@ document.querySelectorAll('[data-effect-format]').forEach(btn=>btn.addEventListe
 }));
 ['search','filterFaction','filterRarity','filterType','sort'].forEach(id=>$(id).addEventListener('input',render));
 $('library').addEventListener('click',e=>{const tile=e.target.closest('[data-id]');if(tile){selectedCardId=tile.dataset.id;document.querySelectorAll('.cardtile[data-id]').forEach(el=>el.classList.toggle('is-selected',el.dataset.id===selectedCardId));updateCardInspector()}});
+$('library').addEventListener('dblclick',e=>{const tile=e.target.closest('.cardtile[data-id]');if(!tile)return;const c=cards.find(card=>card.id===tile.dataset.id);if(c)openEditor(c)});
 $('editSelectedBtn').onclick=()=>{const c=cards.find(x=>x.id===selectedCardId);if(c)openEditor(c)};
 
 $('cardVisualsBtn').onclick=()=>{$('cardVisualsStatus').textContent='';if(cardBackArt)$('cardBackPreview').src=cardBackArt;else $('cardBackPreview').removeAttribute('src');if(defaultCardArt)$('defaultCardArtPreview').src=defaultCardArt;else $('defaultCardArtPreview').removeAttribute('src');$('cardVisualsModal').classList.add('open')};
