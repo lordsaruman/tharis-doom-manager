@@ -629,8 +629,8 @@ function drawCreatureCard(canvas,c){
  };
  const paint=()=>{
   // Calcula a bandeira antes da moldura: a esfera de custo é desenhada por cima dela.
-  drawInsigniaFlag(ctx,c,w,h);
   if(creatureFrame.complete&&creatureFrame.naturalWidth)ctx.drawImage(creatureFrame,0,0,w,h);
+  drawInsigniaFlag(ctx,c,w,h);
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#29231b';
   ctx.shadowColor='rgba(255,244,216,.85)';ctx.shadowBlur=1;
   const stat=(value,x,y,size)=>{if(value!==undefined&&value!==null&&value!==''){ctx.font='normal '+(w*size)+'px Georgia';ctx.fillText(String(value),w*x,h*y)}};
