@@ -611,7 +611,7 @@ footer:before{
 .shared-note-actions button:first-child{color:#c6d3a9;border-color:#596b4a}
 .shared-note.is-completed .shared-note-actions button:first-child{color:#d7bd88;border-color:#79613d}
 
-.sector-nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #57452f;background:linear-gradient(180deg,#1b1510,#120e0b);position:sticky;top:0;z-index:6}
+.sector-nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #57452f;background:linear-gradient(180deg,#1b1510,#120e0b);position:relative;z-index:4}
 .sector-nav button{min-width:150px;font-family:'Cinzel',Georgia,serif;font-size:12px;letter-spacing:.08em}
 .sector-nav button.active{background:linear-gradient(180deg,#c5a66c,#987342);color:#1b140b;border-color:#d2b47c}
 .sector-view{display:none}.sector-view.active{display:block}
@@ -887,7 +887,6 @@ function initSectorNavigation(){
  ['glossaryBtn'].forEach(id=>move(id,'sector-rules'));
  ['cardVisualsBtn','assetsBtn','importBtn','exportBtn'].forEach(id=>move(id,'adminTools'));
  const openGlossary=$('openGlossarySector');if(openGlossary)openGlossary.addEventListener('click',()=>openGlossaryModal());
- const glossaryButton=$('glossaryBtn');if(glossaryButton)glossaryButton.addEventListener('click',()=>openGlossaryModal());
  $('activitySearch').addEventListener('input',renderActivityLog);
  $('activityTableFilter').addEventListener('change',renderActivityLog);
  $('activityOperationFilter').addEventListener('change',renderActivityLog);
