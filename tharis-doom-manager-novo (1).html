@@ -1482,6 +1482,7 @@ async function save(){
  saveButton.disabled=true;saveButton.textContent='Revisando ortografia…';
  const spellingReviewFailed=await reviewCardSpelling();
  saveButton.disabled=false;saveButton.textContent='Salvar carta';
+ if(spellingReviewFailed)alert('A revisão ortográfica automática não ficou disponível para todos os campos. A carta será salva com o texto original onde não foi possível revisar.');
  const c=collect();
  const previousCard=cards.find(x=>x.id===c.id);
  if(c.isNew)c.newSince=previousCard?.isNew&&previousCard.newSince?previousCard.newSince:Date.now();else delete c.newSince;
